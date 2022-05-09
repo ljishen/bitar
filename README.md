@@ -20,3 +20,15 @@ Celium is a libary for accessing hardware compression/decompression accelerators
 ## Integration
 
 [TODO]
+
+## Development
+
+```bash
+$ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja -DDPDK_ROOT=<dpdk/install/prefix> \
+-DENABLE_DEVELOPER_MODE:BOOL=ON
+
+$ cmake --build ./build-$(uname -m)
+
+$ LD_LIBRARY_PATH=<dpdk/install/prefix>:$LD_LIBRARY_PATH ./build-$(uname -m)/src/demo_app -l 1-3 -a \
+<device_pci_id>,class=compress -- --file <file> --bytes <size_to_read_from_file>
+```
