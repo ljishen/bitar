@@ -81,7 +81,8 @@ endif()
 project(
   celium
   VERSION 0.0.1
-  DESCRIPTION "Celium provides APIs to access hardware compression/decompression accelerators"
+  DESCRIPTION
+    "Celium is a libary for accessing hardware compression/decompression accelerators"
   HOMEPAGE_URL "https://github.com/ljishen/celium"
   LANGUAGES CXX C)
 
@@ -110,21 +111,27 @@ set(ENABLE_INCLUDE_WHAT_YOU_USE_DEVELOPER_DEFAULT ON)
 # arguments as `project_options`.
 dynamic_project_options(
   # Enable CMAKE_INTERPROCEDURAL_OPTIMIZATION and add flag -march=native
-  ENABLE_INTERPROCEDURAL_OPTIMIZATION
-  ENABLE_NATIVE_OPTIMIZATION
-)
+  ENABLE_INTERPROCEDURAL_OPTIMIZATION ENABLE_NATIVE_OPTIMIZATION)
 
 # Add warnings used by DPDK
 target_compile_options(
   project_warnings
-  INTERFACE # warn if a precompiled header is found in the search path but
-            # cannot be used
-            -Winvalid-pch
-            # warn whenever a pointer is cast so as to remove a type qualifier
+  INTERFACE # warn whenever a pointer is cast so as to remove a type qualifier
             # from the target type
             -Wcast-qual
             # warn about usage of deprecated features
             -Wdeprecated
+            # check the arguments for printf and scanf, etc., have types
+            # appropriate to the format string specified
+            -Wformat
+            # warn if the format string is not a string literal and so cannot be
+            # checked
+            -Wformat-nonliteral
+            # warn about uses of format functions that represent possible
+            # security problems
+            -Wformat-security
+            # warn if a precompiled header is found in the search path but cannot be used
+            -Winvalid-pch
             # warn if a global function is defined without a previous
             # declaration
             -Wmissing-declarations
@@ -158,9 +165,6 @@ target_compile_options(
             # do not warn about accesses to elements of zero-length array
             # members that might overlap other members of the same object
             # -Wno-zero-length-bounds
-            # do not warn about calls to formatted input/output functions that
-            # might result in output truncation
-            # -Wno-format-truncation
             # ~~~
 )
 
@@ -173,7 +177,8 @@ set(DPDK_ROOT
 # searching DPDK libraries: https://linux.die.net/man/1/pkg-config
 prepend_path_to_env(
   PKG_CONFIG_PATH
-  "${DPDK_ROOT}/lib/${MACHINE_HARDWARE_NAME_LOWER}-linux-gnu/pkgconfig:${DPDK_ROOT}/lib64/pkgconfig")
+  "${DPDK_ROOT}/lib/${MACHINE_HARDWARE_NAME_LOWER}-linux-gnu/pkgconfig:${DPDK_ROOT}/lib64/pkgconfig"
+)
 
 add_subdirectory(src)
 
@@ -196,4 +201,4 @@ if(ENABLE_FUZZING)
 endif()
 
 # package the project
-# package_project(TARGETS compress)
+# package_project(TARGETS celium)

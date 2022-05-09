@@ -285,8 +285,6 @@ CheckOptions:
     value: "1;2;3;4;"
   - key: cppcoreguidelines-no-malloc.Allocations
     value: "::malloc;::calloc"
-  - key: misc-throw-by-value-catch-by-reference.MaxSize
-    value: "-1"
   - key: cppcoreguidelines-avoid-magic-numbers.IgnorePowersOf2IntegerValues
     value: "false"
   - key: bugprone-narrowing-conversions.IgnoreConversionFromTypes
