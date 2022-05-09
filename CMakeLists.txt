@@ -82,7 +82,7 @@ project(
   celium
   VERSION 0.0.1
   DESCRIPTION
-    "Celium is a libary for accessing hardware compression/decompression accelerators"
+    "Celium is a library for accessing hardware compression/decompression accelerators"
   HOMEPAGE_URL "https://github.com/ljishen/celium"
   LANGUAGES CXX C)
 
@@ -130,7 +130,8 @@ target_compile_options(
             # warn about uses of format functions that represent possible
             # security problems
             -Wformat-security
-            # warn if a precompiled header is found in the search path but cannot be used
+            # warn if a precompiled header is found in the search path but
+            # cannot be used
             -Winvalid-pch
             # warn if a global function is defined without a previous
             # declaration

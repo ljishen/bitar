@@ -3,7 +3,7 @@
   "name": "celium",
   "version": "0.0.1",
   "homepage": "https://github.com/ljishen/celium",
-  "description": "Celium is a libary for accessing hardware compression/decompression accelerators",
+  "description": "Celium is a library for accessing hardware compression/decompression accelerators",
   "builtin-baseline": "0a02655a930c183e24481fca2425010ef1794521",
   "dependencies": [
     {

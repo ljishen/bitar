@@ -5,7 +5,7 @@
 
 <!-- markdownlint-disable-next-line no-inline-html -->
 <img src="assets/logo.png" width="20%">
-Celium is a libary for accessing hardware compression/decompression accelerators.
+Celium is a library for accessing hardware compression/decompression accelerators.
 
 ---
 
