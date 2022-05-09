@@ -74,7 +74,7 @@ CheckOptions:
   - key: hicpp-use-emplace.SmartPointers
     value: "::std::shared_ptr;::std::unique_ptr;::std::auto_ptr;::std::weak_ptr"
   - key: bugprone-assert-side-effect.IgnoredFunctions
-    value: __builtin_expect
+    value: "__builtin_expect;__builtin_expect"
   - key: hicpp-member-init.IgnoreArrays
     value: "false"
   - key: openmp-exception-escape.IgnoredExceptions
@@ -260,7 +260,7 @@ CheckOptions:
   - key: hicpp-use-auto.RemoveStars
     value: "false"
   - key: readability-suspicious-call-argument.Abbreviations
-    value: "arr=array;cnt=count;idx=index;src=source;stmt=statement;cpy=copy;dest=destination;dist=distancedst=distance;ptr=pointer;wdth=width;str=string;ln=line;srv=server;attr=attribute;ref=reference;buf=buffer;col=column;nr=number;vec=vector;len=length;elem=element;val=value;i=index;var=variable;hght=height;cl=client;num=number;pos=position;lst=list;addr=address"
+    value: "arr=array;cnt=count;idx=index;src=source;stmt=statement;cpy=copy;dest=destination;dist=distancedst=distance;ptr=pointer;wdth=width;str=string;ln=line;srv=server;attr=attribute;ref=reference;vec=vector;len=length;nr=number;col=column;elem=element;val=value;buf=buffer;i=index;var=variable;hght=height;cl=client;num=number;pos=position;lst=list;addr=address"
   - key: bugprone-misplaced-widening-cast.CheckImplicitCasts
     value: "false"
   - key: readability-uppercase-literal-suffix.NewSuffixes
@@ -285,6 +285,8 @@ CheckOptions:
     value: "1;2;3;4;"
   - key: cppcoreguidelines-no-malloc.Allocations
     value: "::malloc;::calloc"
+  - key: misc-throw-by-value-catch-by-reference.MaxSize
+    value: "-1"
   - key: cppcoreguidelines-avoid-magic-numbers.IgnorePowersOf2IntegerValues
     value: "false"
   - key: bugprone-narrowing-conversions.IgnoreConversionFromTypes
