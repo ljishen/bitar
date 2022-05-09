@@ -20,56 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# VS Code files for those working on multiple tools
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
-!.vscode/c_cpp_properties.json
-
-# Local History for Visual Studio Code
-.history/
-
-# Build directories and binary files
-build/
-build-*/
-out/
-cmake-build-*/
-opt/
-
-*.log
+function(prepend_path_to_env env_name env_path)
+  if(DEFINED ENV{${env_name}})
+    set(ENV{${env_name}} "${env_path}:$ENV{${env_name}}")
+  else()
+    set(ENV{${env_name}} "${env_path}")
+  endif()
+endfunction()

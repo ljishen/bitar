@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "arrow-dpdk",
+  "version": "0.0.1",
+  "homepage": "https://github.com/ljishen/arrow-dpdk",
+  "description": "Exploring Performance of SmartNICs using DPDK and Apache Arrow",
+  "builtin-baseline": "0a02655a930c183e24481fca2425010ef1794521",
+  "dependencies": [
+    {
+      "name": "magic-enum",
+      "version>=": "0.7.3#2",
+      "default-features": true
+    },
+    {
+      "name": "fmt",
+      "version>=": "8.1.1#1"
+    },
+    {
+      "name": "curl",
+      "version>=": "7.82.0",
+      "default-features": true
+    },
+    {
+      "name": "cxxopts",
+      "version>=": "3.0.0"
+    }
+  ],
+  "overrides": [
+    {
+      "$explanation": [
+        "Need to pin the version for the system installed Arrow package"
+      ],
+      "name": "openssl",
+      "version-string": "1.1.1n#1"
+    }
+  ],
+  "features": {
+    "arrow": {
+      "description": "Install Apache Arrow",
+      "dependencies": [
+        {
+          "name": "arrow",
+          "version>=": "7.0.0#2",
+          "features": ["dataset", "parquet"],
+          "default-features": false
+        }
+      ]
+    }
+  }
+}
