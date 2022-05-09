@@ -1,9 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
-  "name": "arrow-dpdk",
+  "name": "celium",
   "version": "0.0.1",
-  "homepage": "https://github.com/ljishen/arrow-dpdk",
-  "description": "Exploring Performance of SmartNICs using DPDK and Apache Arrow",
+  "homepage": "https://github.com/ljishen/celium",
+  "description": "Celium provides APIs to access hardware compression/decompression accelerators",
   "builtin-baseline": "0a02655a930c183e24481fca2425010ef1794521",
   "dependencies": [
     {

@@ -79,10 +79,10 @@ endif()
 
 # Set the project name and language
 project(
-  arrow-dpdk
+  celium
   VERSION 0.0.1
-  DESCRIPTION "Exploring Performance of SmartNICs using DPDK and Apache Arrow"
-  HOMEPAGE_URL "https://github.com/ljishen/arrow-dpdk"
+  DESCRIPTION "Celium provides APIs to access hardware compression/decompression accelerators"
+  HOMEPAGE_URL "https://github.com/ljishen/celium"
   LANGUAGES CXX C)
 
 include("${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake")
