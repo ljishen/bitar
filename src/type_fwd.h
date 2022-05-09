@@ -24,8 +24,8 @@
 
 #include <arrow/buffer.h>
 
-namespace arrow_dpdk {
+namespace celium {
 
 using BufferVector = std::vector<std::unique_ptr<arrow::Buffer>>;
 
-}  // namespace arrow_dpdk
+}  // namespace celium

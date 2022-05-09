@@ -47,7 +47,7 @@
 #include "device.h"
 #include "util.h"
 
-namespace arrow_dpdk {
+namespace celium {
 
 namespace {
 
@@ -221,4 +221,4 @@ CompressDriver<Class_MLX5_PCI>::GetDevices(const std::vector<std::uint8_t>& devi
 
 template class CompressDriver<Class_MLX5_PCI>;
 
-}  // namespace arrow_dpdk
+}  // namespace celium

@@ -28,7 +28,7 @@
 #include <fmt/core.h>
 #include <magic_enum.hpp>
 
-namespace arrow_dpdk {
+namespace celium {
 
 template <typename Class, typename Enable>
 Configuration<Class, Enable>::Configuration() {
@@ -107,4 +107,4 @@ rte_comp_xform BlueFieldConfiguration::decompress_xform() const noexcept {
   return xform;
 }
 
-}  // namespace arrow_dpdk
+}  // namespace celium

@@ -33,7 +33,7 @@
 #include "config.h"
 #include "device.h"
 
-namespace arrow_dpdk {
+namespace celium {
 
 template <typename Class,
           typename = internal::IsEnumConstant<internal::DriverClass, Class>>
@@ -65,4 +65,4 @@ class CompressDriver {
   ~CompressDriver() = default;
 };
 
-}  // namespace arrow_dpdk
+}  // namespace celium

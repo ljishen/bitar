@@ -49,7 +49,7 @@
 #include "memory.h"
 #include "util.h"
 
-namespace arrow_dpdk {
+namespace celium {
 
 namespace {
 
@@ -599,4 +599,4 @@ arrow::Status BlueFieldCompressDevice::set_configuration(
       *internal::checked_pointer_cast<BlueFieldConfiguration>(std::move(configuration))));
 }
 
-}  // namespace arrow_dpdk
+}  // namespace celium

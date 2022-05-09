@@ -33,7 +33,7 @@
 #include <rte_config.h>
 #include <magic_enum.hpp>
 
-namespace arrow_dpdk {
+namespace celium {
 
 namespace internal {
 
@@ -181,4 +181,4 @@ class BlueFieldConfiguration : public Configuration<Class_MLX5_PCI> {
   rte_comp_checksum_type checksum_type_ = rte_comp_checksum_type::RTE_COMP_CHECKSUM_NONE;
 };
 
-}  // namespace arrow_dpdk
+}  // namespace celium

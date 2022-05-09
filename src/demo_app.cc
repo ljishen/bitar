@@ -77,7 +77,7 @@ constexpr auto kNumTests = 3;
 
 std::uint32_t num_parallel_tests();
 
-arrow::Result<std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>>
+arrow::Result<std::vector<std::unique_ptr<celium::MLX5CompressDevice>>>
 GetBlueFieldCompressDevices(std::uint64_t max_buffer_size);
 
 arrow::Result<arrow::BufferVector> ReadBuffers(const char* ipc_file_path);
@@ -86,41 +86,41 @@ arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
     const std::string& ipc_file_path, std::int64_t num_bytes);
 
 arrow::Status Release(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<arrow_dpdk::BufferVector>>&
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
+    const std::unordered_map<std::uint8_t, std::vector<celium::BufferVector>>&
         device_to_compressed_buffers_vector);
 
 void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
              std::uint16_t num_qps);
 
-arrow::Result<arrow_dpdk::BufferVector> BenchmarkCompressSync(
-    const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>& device,
+arrow::Result<celium::BufferVector> BenchmarkCompressSync(
+    const std::unique_ptr<celium::MLX5CompressDevice>& device,
     std::uint16_t queue_pair_id,
     const std::unique_ptr<arrow::Buffer>& decompressed_buffer);
 
 arrow::Status BenchmarkDecompressSync(
-    const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>& device,
-    std::uint16_t queue_pair_id, const arrow_dpdk::BufferVector& compressed_buffers,
+    const std::unique_ptr<celium::MLX5CompressDevice>& device,
+    std::uint16_t queue_pair_id, const celium::BufferVector& compressed_buffers,
     const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer);
 
 arrow::Status BenchmarkCompressAsync(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
-    const arrow_dpdk::BufferVector& input_buffer_vector,
-    std::unordered_map<std::uint8_t, std::vector<arrow_dpdk::BufferVector>>&
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
+    const celium::BufferVector& input_buffer_vector,
+    std::unordered_map<std::uint8_t, std::vector<celium::BufferVector>>&
         device_to_compressed_buffers_vector);
 
 arrow::Status BenchmarkDecompressAsync(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<arrow_dpdk::BufferVector>>&
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
+    const std::unordered_map<std::uint8_t, std::vector<celium::BufferVector>>&
         device_to_compressed_buffers_vector,
     const std::vector<std::unique_ptr<arrow::ResizableBuffer>>&
         decompressed_buffer_vector);
 
-arrow::Status EvaluateSync(const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>& device,
+arrow::Status EvaluateSync(const std::unique_ptr<celium::MLX5CompressDevice>& device,
                            const std::unique_ptr<arrow::Buffer>& input_buffer);
 
 arrow::Status EvaluateAsync(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
     const std::unique_ptr<arrow::Buffer>& input_buffer);
 
 arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer);
@@ -132,17 +132,17 @@ std::uint32_t num_parallel_tests() {
   return kNumParallelTests;
 }
 
-arrow::Result<std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>>
+arrow::Result<std::vector<std::unique_ptr<celium::MLX5CompressDevice>>>
 GetBlueFieldCompressDevices(std::uint64_t max_buffer_size) {
-  auto* driver = arrow_dpdk::CompressDriver<arrow_dpdk::Class_MLX5_PCI>::Instance();
+  auto* driver = celium::CompressDriver<celium::Class_MLX5_PCI>::Instance();
   ARROW_ASSIGN_OR_RAISE(auto device_ids, driver->ListAvailableDeviceIds());
 
   RTE_LOG(INFO, USER1, "Found devices with MLX5 driver: [%s]\n",
           fmt::format("{}", fmt::join(device_ids, ", ")).c_str());
 
   ARROW_ASSIGN_OR_RAISE(auto devices, driver->GetDevices(device_ids));
-  auto bluefield_config = std::make_shared<arrow_dpdk::BlueFieldConfiguration>(
-      arrow_dpdk::BlueFieldConfiguration::Defaults());
+  auto bluefield_config = std::make_shared<celium::BlueFieldConfiguration>(
+      celium::BlueFieldConfiguration::Defaults());
   bluefield_config->set_decompressed_seg_size(kDecompressedSegSize);
   bluefield_config->set_burst_size(kBurstSize);
 
@@ -154,7 +154,7 @@ GetBlueFieldCompressDevices(std::uint64_t max_buffer_size) {
   bluefield_config->set_max_preallocate_memzones(max_preallocate_memzones);
 
   for (auto& device : devices) {
-    if (dynamic_cast<arrow_dpdk::BlueFieldCompressDevice*>(device.get()) == nullptr) {
+    if (dynamic_cast<celium::BlueFieldCompressDevice*>(device.get()) == nullptr) {
       return arrow::Status::Invalid("Compress device ", device->device_id(),
                                     " is not a BlueField device");
     }
@@ -177,7 +177,7 @@ arrow::Result<arrow::BufferVector> ReadBuffers(const char* ipc_file_path) {
 
   auto write_options = arrow::ipc::IpcWriteOptions::Defaults();
   write_options.memory_pool =
-      arrow_dpdk::GetMemoryPool(arrow_dpdk::MemoryPoolBackend::Rtememzone);
+      celium::GetMemoryPool(celium::MemoryPoolBackend::Rtememzone);
 
   for (int i = 0; i < num_batches; ++i) {
     ARROW_ASSIGN_OR_RAISE(auto batch, reader->ReadRecordBatch(i));
@@ -196,8 +196,8 @@ arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
 
   ARROW_ASSIGN_OR_RAISE(
       auto buffer,
-      arrow::AllocateBuffer(num_bytes, arrow_dpdk::GetMemoryPool(
-                                           arrow_dpdk::MemoryPoolBackend::Rtememzone)));
+      arrow::AllocateBuffer(num_bytes, celium::GetMemoryPool(
+                                           celium::MemoryPoolBackend::Rtememzone)));
 
   ARROW_ASSIGN_OR_RAISE(auto num_bytes_read,
                         file->Read(num_bytes, buffer->mutable_data()));
@@ -209,8 +209,8 @@ arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
 }
 
 arrow::Status Release(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<arrow_dpdk::BufferVector>>&
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
+    const std::unordered_map<std::uint8_t, std::vector<celium::BufferVector>>&
         device_to_compressed_buffers_vector) {
   for (const auto& [device_id, compressed_buffers_vector] :
        device_to_compressed_buffers_vector) {
@@ -231,8 +231,8 @@ inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
   }
 }
 
-arrow::Result<arrow_dpdk::BufferVector> BenchmarkCompressSync(
-    const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>& device,
+arrow::Result<celium::BufferVector> BenchmarkCompressSync(
+    const std::unique_ptr<celium::MLX5CompressDevice>& device,
     std::uint16_t queue_pair_id,
     const std::unique_ptr<arrow::Buffer>& decompressed_buffer) {
   auto compression_start = std::chrono::high_resolution_clock::now();
@@ -253,8 +253,8 @@ arrow::Result<arrow_dpdk::BufferVector> BenchmarkCompressSync(
 }
 
 arrow::Status BenchmarkDecompressSync(
-    const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>& device,
-    std::uint16_t queue_pair_id, const arrow_dpdk::BufferVector& compressed_buffers,
+    const std::unique_ptr<celium::MLX5CompressDevice>& device,
+    std::uint16_t queue_pair_id, const celium::BufferVector& compressed_buffers,
     const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer) {
   auto decompression_start = std::chrono::high_resolution_clock::now();
 
@@ -274,15 +274,15 @@ arrow::Status BenchmarkDecompressSync(
 }
 
 arrow::Status BenchmarkCompressAsync(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
-    const arrow_dpdk::BufferVector& input_buffer_vector,
-    std::unordered_map<std::uint8_t, std::vector<arrow_dpdk::BufferVector>>&
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
+    const celium::BufferVector& input_buffer_vector,
+    std::unordered_map<std::uint8_t, std::vector<celium::BufferVector>>&
         device_to_compressed_buffers_vector) {
   std::chrono::time_point<std::chrono::high_resolution_clock> compression_end;
 
   auto compress_result_callback =
       [&](std::uint8_t device_id, std::uint16_t queue_pair_id,
-          arrow::Result<arrow_dpdk::BufferVector>&& result) -> int {
+          arrow::Result<celium::BufferVector>&& result) -> int {
     if (!result.ok()) {
       RTE_LOG(ERR, USER1,
               "Failed to complete async compression via queue pair %hu of compress "
@@ -294,10 +294,10 @@ arrow::Status BenchmarkCompressAsync(
 
     device_to_compressed_buffers_vector.at(device_id)[queue_pair_id] =
         std::move(result).ValueUnsafe();
-    return arrow_dpdk::kAsyncReturnOK;
+    return celium::kAsyncReturnOK;
   };
 
-  using CompressParamType = arrow_dpdk::CompressParam<arrow_dpdk::Class_MLX5_PCI,
+  using CompressParamType = celium::CompressParam<celium::Class_MLX5_PCI,
                                                       decltype(compress_result_callback)>;
 
   std::vector<std::unique_ptr<CompressParamType>> compress_param_vector;
@@ -312,7 +312,7 @@ arrow::Status BenchmarkCompressAsync(
 
     compress_param_vector.emplace_back(std::make_unique<CompressParamType>(
         device, queue_pair_id, input_buffer_vector[idx], compress_result_callback));
-    if (arrow_dpdk::CompressAsync(compress_param_vector[idx]) != 0) {
+    if (celium::CompressAsync(compress_param_vector[idx]) != 0) {
       break;
     }
 
@@ -333,7 +333,7 @@ arrow::Status BenchmarkCompressAsync(
               "%hhu.\n",
               queue_pair_id, device_id);
     }
-    async_success &= ret == arrow_dpdk::kAsyncReturnOK;
+    async_success &= ret == celium::kAsyncReturnOK;
 
     Advance(device_id, queue_pair_id, device->num_qps());
   }
@@ -358,8 +358,8 @@ arrow::Status BenchmarkCompressAsync(
 }
 
 arrow::Status BenchmarkDecompressAsync(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<arrow_dpdk::BufferVector>>&
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
+    const std::unordered_map<std::uint8_t, std::vector<celium::BufferVector>>&
         device_to_compressed_buffers_vector,
     const std::vector<std::unique_ptr<arrow::ResizableBuffer>>&
         decompressed_buffer_vector) {
@@ -376,11 +376,11 @@ arrow::Status BenchmarkDecompressAsync(
       return EXIT_FAILURE;
     }
     decompression_end = std::chrono::high_resolution_clock::now();
-    return arrow_dpdk::kAsyncReturnOK;
+    return celium::kAsyncReturnOK;
   };
 
   using DecompressParamType =
-      arrow_dpdk::DecompressParam<arrow_dpdk::Class_MLX5_PCI,
+      celium::DecompressParam<celium::Class_MLX5_PCI,
                                   decltype(decompress_result_callback)>;
 
   std::vector<std::unique_ptr<DecompressParamType>> decompress_param_vector;
@@ -397,7 +397,7 @@ arrow::Status BenchmarkDecompressAsync(
         device, queue_pair_id,
         device_to_compressed_buffers_vector.at(device_id)[queue_pair_id],
         decompressed_buffer_vector[idx], decompress_result_callback));
-    if (arrow_dpdk::DecompressAsync(decompress_param_vector[idx]) != 0) {
+    if (celium::DecompressAsync(decompress_param_vector[idx]) != 0) {
       break;
     }
 
@@ -418,7 +418,7 @@ arrow::Status BenchmarkDecompressAsync(
               "%hhu.\n",
               queue_pair_id, device_id);
     }
-    async_success &= ret == arrow_dpdk::kAsyncReturnOK;
+    async_success &= ret == celium::kAsyncReturnOK;
 
     Advance(device_id, queue_pair_id, device->num_qps());
   }
@@ -440,7 +440,7 @@ arrow::Status BenchmarkDecompressAsync(
   return arrow::Status::OK();
 }
 
-arrow::Status EvaluateSync(const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>& device,
+arrow::Status EvaluateSync(const std::unique_ptr<celium::MLX5CompressDevice>& device,
                            const std::unique_ptr<arrow::Buffer>& input_buffer) {
   const std::uint16_t queue_pair_id = 0;
 
@@ -450,7 +450,7 @@ arrow::Status EvaluateSync(const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>
       "\n==================================================\n",
       queue_pair_id);
 
-  arrow_dpdk::BufferVector compressed_buffers;
+  celium::BufferVector compressed_buffers;
 
   for (int idx = 0; idx < kNumTests; ++idx) {
     ARROW_ASSIGN_OR_RAISE(compressed_buffers,
@@ -480,7 +480,7 @@ arrow::Status EvaluateSync(const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>
       auto decompressed_buffer,
       arrow::AllocateResizableBuffer(
           static_cast<std::int64_t>(compressed_buffers.size() * kDecompressedSegSize),
-          arrow_dpdk::GetMemoryPool(arrow_dpdk::MemoryPoolBackend::Rtememzone)),
+          celium::GetMemoryPool(celium::MemoryPoolBackend::Rtememzone)),
       ARROW_UNUSED(device->Release(compressed_buffers)));
 
   for (int idx = 0; idx < kNumTests; ++idx) {
@@ -507,12 +507,12 @@ arrow::Status EvaluateSync(const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>
 }
 
 arrow::Status EvaluateAsync(
-    const std::vector<std::unique_ptr<arrow_dpdk::MLX5CompressDevice>>& devices,
+    const std::vector<std::unique_ptr<celium::MLX5CompressDevice>>& devices,
     const std::unique_ptr<arrow::Buffer>& input_buffer) {
   std::uint32_t total_num_qps =
       std::accumulate(devices.begin(), devices.end(), 0U,
                       [](std::uint32_t num,
-                         const std::unique_ptr<arrow_dpdk::MLX5CompressDevice>& device) {
+                         const std::unique_ptr<celium::MLX5CompressDevice>& device) {
                         return num + device->num_qps();
                       });
   if (total_num_qps < num_parallel_tests()) {
@@ -539,7 +539,7 @@ arrow::Status EvaluateAsync(
       "\n==================================================\n",
       fmt::join(device_to_qp, ", "));
 
-  arrow_dpdk::BufferVector input_buffer_vector(num_parallel_tests());
+  celium::BufferVector input_buffer_vector(num_parallel_tests());
 
   // Prepare num_parallel_tests() copies of the input_buffer
   for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
@@ -547,13 +547,13 @@ arrow::Status EvaluateAsync(
         input_buffer_vector[idx],
         arrow::AllocateBuffer(
             input_buffer->size(),
-            arrow_dpdk::GetMemoryPool(arrow_dpdk::MemoryPoolBackend::Rtememzone)));
+            celium::GetMemoryPool(celium::MemoryPoolBackend::Rtememzone)));
 
     rte_memcpy(input_buffer_vector[idx]->mutable_data(), input_buffer->data(),
                static_cast<std::size_t>(input_buffer->size()));
   }
 
-  std::unordered_map<std::uint8_t, std::vector<arrow_dpdk::BufferVector>>
+  std::unordered_map<std::uint8_t, std::vector<celium::BufferVector>>
       device_to_compressed_buffers_vector;
 
   device_id = 0;
@@ -595,7 +595,7 @@ arrow::Status EvaluateAsync(
             static_cast<std::int64_t>(
                 device_to_compressed_buffers_vector[device_id][queue_pair_id].size() *
                 kDecompressedSegSize),
-            arrow_dpdk::GetMemoryPool(arrow_dpdk::MemoryPoolBackend::Rtememzone)),
+            celium::GetMemoryPool(celium::MemoryPoolBackend::Rtememzone)),
         ARROW_UNUSED(Release(devices, device_to_compressed_buffers_vector)));
 
     Advance(device_id, queue_pair_id, device->num_qps());
@@ -647,7 +647,7 @@ arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer) {
 
 void SignalHandler(int signal) {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-  arrow_dpdk::CleanupAndExit(EXIT_FAILURE, "Exit by signal {}\n", sys_siglist[signal]);
+  celium::CleanupAndExit(EXIT_FAILURE, "Exit by signal {}\n", sys_siglist[signal]);
 }
 
 int main(int argc, char* argv[]) {
@@ -664,7 +664,7 @@ int main(int argc, char* argv[]) {
 
   auto ret = rte_eal_init(argc, argv);
   if (ret < 0) {
-    arrow_dpdk::CleanupAndExit(EXIT_FAILURE, "Invalid EAL arguments with error {}\n",
+    celium::CleanupAndExit(EXIT_FAILURE, "Invalid EAL arguments with error {}\n",
                                rte_strerror(rte_errno));
   }
   argc -= ret;
@@ -683,34 +683,34 @@ int main(int argc, char* argv[]) {
     auto parse_result = options.parse(argc, argv);
 
     if (parse_result.count("help") != 0) {
-      arrow_dpdk::CleanupAndExit(EXIT_SUCCESS, options.help().c_str());
+      celium::CleanupAndExit(EXIT_SUCCESS, options.help().c_str());
     }
 
     if (parse_result.count("file") == 0) {
-      arrow_dpdk::CleanupAndExit(EXIT_FAILURE, "Missing argument for '--file'\n");
+      celium::CleanupAndExit(EXIT_FAILURE, "Missing argument for '--file'\n");
     }
     file_path = parse_result["file"].as<std::string>();
 
     if (parse_result.count("bytes") == 0) {
-      arrow_dpdk::CleanupAndExit(EXIT_FAILURE, "Missing argument for '--bytes'\n");
+      celium::CleanupAndExit(EXIT_FAILURE, "Missing argument for '--bytes'\n");
     }
     num_bytes_to_read = parse_result["bytes"].as<std::int64_t>();
   } catch (const cxxopts::OptionException& e) {
-    arrow_dpdk::CleanupAndExit(EXIT_FAILURE, e.what());
+    celium::CleanupAndExit(EXIT_FAILURE, e.what());
   }
 
   auto read_buffer_result = ReadFileBuffer(file_path, num_bytes_to_read);
   if (!read_buffer_result.ok()) {
-    arrow_dpdk::CleanupAndExit(EXIT_FAILURE, "Unable to read buffer from file. [{}]\n",
+    celium::CleanupAndExit(EXIT_FAILURE, "Unable to read buffer from file. [{}]\n",
                                read_buffer_result.status().ToString());
   }
   auto input_buffer = std::move(read_buffer_result).ValueOrDie();
 
   auto status = Evaluate(input_buffer);
   if (!status.ok()) {
-    arrow_dpdk::CleanupAndExit(EXIT_FAILURE, "Failed to evaluate. [{}]\n",
+    celium::CleanupAndExit(EXIT_FAILURE, "Failed to evaluate. [{}]\n",
                                status.ToString());
   }
 
-  arrow_dpdk::CleanupAndExit(EXIT_SUCCESS, "\nEverything is OK!\n");
+  celium::CleanupAndExit(EXIT_SUCCESS, "\nEverything is OK!\n");
 }

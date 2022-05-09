@@ -33,7 +33,7 @@ namespace arrow {
 class MemoryPool;
 }  // namespace arrow
 
-namespace arrow_dpdk {
+namespace celium {
 
 class RtememzoneAllocatorTracker {
  public:
@@ -73,4 +73,4 @@ enum class MemoryPoolBackend : std::uint8_t {
 /// \brief Get the memory pool for the selected backend
 arrow::MemoryPool* GetMemoryPool(MemoryPoolBackend backend);
 
-}  // namespace arrow_dpdk
+}  // namespace celium

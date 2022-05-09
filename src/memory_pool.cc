@@ -54,7 +54,7 @@
 #include <rte_memcpy.h>
 #endif
 
-namespace arrow_dpdk {
+namespace celium {
 
 namespace {
 
@@ -336,4 +336,4 @@ arrow::MemoryPool* GetMemoryPool(MemoryPoolBackend backend) {
   }
 }
 
-}  // namespace arrow_dpdk
+}  // namespace celium
