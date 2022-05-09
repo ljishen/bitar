@@ -8,3 +8,15 @@
 Celium is a libary for accessing hardware compression/decompression accelerators.
 
 ---
+
+## Prerequisites
+
+- [DPDK](https://github.com/DPDK/dpdk) >= v21.11
+
+## Support Hardware
+
+- [NVIDIA BLUEFIELD-2 DPU](https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/documents/datasheet-nvidia-bluefield-2-dpu.pdf)
+
+## Integration
+
+[TODO]
