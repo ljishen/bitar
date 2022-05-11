@@ -49,7 +49,7 @@ template <typename E>
 struct enum_range;
 }  // namespace magic_enum::customize
 
-namespace celium {
+namespace bitar {
 
 namespace internal {
 
@@ -242,7 +242,7 @@ class BlueFieldCompressDevice : public MLX5CompressDevice {
       std::uint8_t device_id, std::vector<std::uint32_t> worker_lcores);
 };
 
-}  // namespace celium
+}  // namespace bitar
 
 namespace magic_enum::customize {
 
@@ -251,19 +251,19 @@ namespace magic_enum::customize {
 // The third struct is to add "is_flags" to specialization enum_range.
 // See https://github.com/Neargye/magic_enum/blob/master/doc/limitations.md
 template <>
-struct enum_range<celium::internal::PCIVendorId> {
+struct enum_range<bitar::internal::PCIVendorId> {
   static constexpr int min = 0x15b3;  // Mellanox vendor id
   static constexpr int max = 0x177d;  // Cavium vendor id
 };
 
 template <>
-struct enum_range<celium::internal::PCIDeviceId> {
+struct enum_range<bitar::internal::PCIDeviceId> {
   static constexpr int min = 0xa2d6;  // Mellanox BlueField-2 device id
   static constexpr int max = 0xa300;  // OCTEON TX CN83XX device id
 };
 
 template <>
-struct enum_range<celium::internal::DeviceState> {
+struct enum_range<bitar::internal::DeviceState> {
   static constexpr bool is_flags = true;
 };
 

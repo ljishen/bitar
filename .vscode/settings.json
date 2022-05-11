@@ -6,7 +6,7 @@
     "-isystem",
     "/home/coder/opt/dpdk-v21.11-aarch64/include",
     "-isystem",
-    "/home/coder/projects/celium/build-aarch64/vcpkg_installed/arm64-linux/include"
+    "/home/coder/projects/bitar/build-aarch64/vcpkg_installed/arm64-linux/include"
   ],
   "cmake.buildDirectory": "${workspaceFolder}/build-aarch64",
   "cmake.configureOnOpen": true,
@@ -95,7 +95,7 @@
       "hop": "satya1",
       "host": "satya1-bf",
       "password": "xYd=va4j",
-      "root": "/home/jliu2/projects/celium",
+      "root": "/home/jliu2/projects/bitar",
       "username": "jliu2"
     }
   ],

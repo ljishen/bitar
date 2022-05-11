@@ -25,7 +25,7 @@
 #include <fmt/core.h>
 #include <rte_common.h>
 
-namespace celium {
+namespace bitar {
 
 /// \brief A simple wrapper for the DPDK rte_exit().
 ///
@@ -38,4 +38,4 @@ void CleanupAndExit(int exit_code, fmt::format_string<T...> fmt, T&&... args) {
 
 void CleanupAndExit(int exit_code, const char* msg);
 
-}  // namespace celium
+}  // namespace bitar

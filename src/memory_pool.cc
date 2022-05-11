@@ -54,7 +54,7 @@
 #include <rte_memcpy.h>
 #endif
 
-namespace celium {
+namespace bitar {
 
 namespace {
 
@@ -336,4 +336,4 @@ arrow::MemoryPool* GetMemoryPool(MemoryPoolBackend backend) {
   }
 }
 
-}  // namespace celium
+}  // namespace bitar

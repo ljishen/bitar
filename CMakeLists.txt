@@ -79,11 +79,11 @@ endif()
 
 # Set the project name and language
 project(
-  celium
+  bitar
   VERSION 0.0.1
   DESCRIPTION
-    "Celium is a library for accessing hardware compression/decompression accelerators"
-  HOMEPAGE_URL "https://github.com/ljishen/celium"
+    "bitar is a library for accessing hardware compression/decompression accelerators"
+  HOMEPAGE_URL "https://github.com/ljishen/bitar"
   LANGUAGES CXX C)
 
 include("${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake")
@@ -202,4 +202,4 @@ if(ENABLE_FUZZING)
 endif()
 
 # package the project
-# package_project(TARGETS celium)
+# package_project(TARGETS bitar)

@@ -40,7 +40,7 @@ class Buffer;
 class ResizableBuffer;
 }  // namespace arrow
 
-namespace celium {
+namespace bitar {
 
 static inline constexpr auto kAsyncReturnOK = 2;
 
@@ -50,14 +50,14 @@ struct CompressParam {
   /// The signature of the result_callback should be equivalent to the following:
   /// ---
   /// int func(std::uint8_t device_id, std::uint16_t queue_pair_id,
-  /// arrow::Result<celium::BufferVector>&& result);
+  /// arrow::Result<bitar::BufferVector>&& result);
   /// ---
   /// The return integer of the result_callback can be captured by a later call of
   /// rte_eal_wait_lcore()
   ///
   /// Having this constructor allows make_unique to construct the object without using
   /// brace initialization.
-  CompressParam(const std::unique_ptr<celium::CompressDevice<Class>>& device,
+  CompressParam(const std::unique_ptr<bitar::CompressDevice<Class>>& device,
                 std::uint16_t queue_pair_id,
                 const std::unique_ptr<arrow::Buffer>& decompressed_buffer,
                 const Callback& result_callback)
@@ -66,7 +66,7 @@ struct CompressParam {
         decompressed_buffer_{decompressed_buffer},
         result_callback_{result_callback} {}
 
-  const std::unique_ptr<celium::CompressDevice<Class>>& device_;
+  const std::unique_ptr<bitar::CompressDevice<Class>>& device_;
   const std::uint16_t queue_pair_id_{};
   const std::unique_ptr<arrow::Buffer>& decompressed_buffer_;
   const Callback& result_callback_;
@@ -83,7 +83,7 @@ struct DecompressParam {
   /// ---
   /// The return integer of the result_callback can be captured by a later call of
   /// rte_eal_wait_lcore()
-  DecompressParam(const std::unique_ptr<celium::CompressDevice<Class>>& device,
+  DecompressParam(const std::unique_ptr<bitar::CompressDevice<Class>>& device,
                   std::uint16_t queue_pair_id, const BufferVector& compressed_buffers,
                   const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer,
                   const Callback& result_callback)
@@ -93,7 +93,7 @@ struct DecompressParam {
         decompressed_buffer_{decompressed_buffer},
         result_callback_{result_callback} {}
 
-  const std::unique_ptr<celium::CompressDevice<Class>>& device_;
+  const std::unique_ptr<bitar::CompressDevice<Class>>& device_;
   const std::uint16_t queue_pair_id_{};
   const BufferVector& compressed_buffers_;
   const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer_;
@@ -235,4 +235,4 @@ int DecompressAsync(const std::unique_ptr<DecompressParam<Class, Callback>>& par
                                param->device_->LcoreOf(param->queue_pair_id_));
 }
 
-}  // namespace celium
+}  // namespace bitar

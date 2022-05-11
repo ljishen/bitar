@@ -45,7 +45,7 @@ struct rte_mbuf_ext_shared_info;
 struct rte_mbuf;
 struct rte_memzone;
 
-namespace celium {
+namespace bitar {
 
 static inline constexpr auto kMaxInflightOps = 512;
 static inline constexpr auto kMinPreallocateMemzones = 20;
@@ -210,4 +210,4 @@ class QueuePairMemory {
   friend class CompressDevice<Class, Enable>;
 };
 
-}  // namespace celium
+}  // namespace bitar

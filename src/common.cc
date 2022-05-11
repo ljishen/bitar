@@ -24,11 +24,11 @@
 
 #include <rte_common.h>
 
-namespace celium {
+namespace bitar {
 
 void CleanupAndExit(int exit_code, const char* msg) {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
   rte_exit(exit_code, "%s", msg);
 }
 
-}  // namespace celium
+}  // namespace bitar

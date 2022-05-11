@@ -24,8 +24,8 @@
 
 #include <arrow/buffer.h>
 
-namespace celium {
+namespace bitar {
 
 using BufferVector = std::vector<std::unique_ptr<arrow::Buffer>>;
 
-}  // namespace celium
+}  // namespace bitar

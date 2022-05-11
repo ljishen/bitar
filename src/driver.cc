@@ -47,7 +47,7 @@
 #include "device.h"
 #include "util.h"
 
-namespace celium {
+namespace bitar {
 
 namespace {
 
@@ -221,4 +221,4 @@ CompressDriver<Class_MLX5_PCI>::GetDevices(const std::vector<std::uint8_t>& devi
 
 template class CompressDriver<Class_MLX5_PCI>;
 
-}  // namespace celium
+}  // namespace bitar

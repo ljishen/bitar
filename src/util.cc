@@ -31,7 +31,7 @@
 #include <rte_build_config.h>
 #include <rte_lcore.h>
 
-namespace celium::internal {
+namespace bitar::internal {
 
 arrow::Result<std::string> ReadFileContent(const std::string& path) {
   std::ifstream istrm(path, std::ios::in);
@@ -61,4 +61,4 @@ std::uint32_t GetNextLcore(std::uint32_t start_id, int skip_main, int wrap) {
   return start_id;
 }
 
-}  // namespace celium::internal
+}  // namespace bitar::internal

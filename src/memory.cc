@@ -54,7 +54,7 @@
 #include "type_fwd.h"
 #include "util.h"
 
-namespace celium {
+namespace bitar {
 
 namespace {
 
@@ -88,7 +88,7 @@ __rte_always_inline void UpdateOperation(rte_comp_op* current_op, void* private_
 
 template <typename Class, typename Enable>
 arrow::Status DeviceMemory<Class, Enable>::Preallocate() {
-  auto* memory_pool = GetMemoryPool(celium::MemoryPoolBackend::Rtememzone);
+  auto* memory_pool = GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone);
   auto size = configuration_->compressed_seg_size();
   auto max_preallocate_memzones = configuration_->max_preallocate_memzones();
 
@@ -144,7 +144,7 @@ const rte_memzone* DeviceMemory<Class, Enable>::Take() {
   }
 
   auto&& allocate_result =
-      AllocateOne(GetMemoryPool(celium::MemoryPoolBackend::Rtememzone),
+      AllocateOne(GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone),
                   configuration_->compressed_seg_size());
   if (ARROW_PREDICT_FALSE(!allocate_result.ok())) {
     RTE_LOG(ERR, USER1, "%s\n", allocate_result.status().ToString().c_str());
@@ -177,7 +177,7 @@ arrow::Status DeviceMemory<Class, Enable>::Put(const std::uint8_t* addr) {
 
 template <typename Class, typename Enable>
 DeviceMemory<Class, Enable>::~DeviceMemory() {
-  auto* memory_pool = GetMemoryPool(celium::MemoryPoolBackend::Rtememzone);
+  auto* memory_pool = GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone);
   auto size = configuration_->compressed_seg_size();
   while (!memzone_pool_.empty()) {
     const auto* memzone = memzone_pool_.top();
@@ -634,4 +634,4 @@ arrow::StatusCode QueuePairMemory<Class, Enable>::AppendData(
 
 template class QueuePairMemory<Class_MLX5_PCI>;
 
-}  // namespace celium
+}  // namespace bitar

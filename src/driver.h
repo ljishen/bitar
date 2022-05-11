@@ -33,7 +33,7 @@
 #include "config.h"
 #include "device.h"
 
-namespace celium {
+namespace bitar {
 
 template <typename Class,
           typename = internal::IsEnumConstant<internal::DriverClass, Class>>
@@ -65,4 +65,4 @@ class CompressDriver {
   ~CompressDriver() = default;
 };
 
-}  // namespace celium
+}  // namespace bitar
