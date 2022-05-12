@@ -76,28 +76,5 @@
     "variant": "cpp",
     "bitset": "cpp"
   },
-  "sshfs.configs": [
-    {
-      "name": "mayln1",
-      "host": "mayer.sandia.gov",
-      "privateKeyPath": "$HOME/.ssh/id_rsa_mayer",
-      "username": "jliu2"
-    },
-    {
-      "name": "satya1",
-      "hop": "mayln1",
-      "host": "satya1.ca.sandia.gov",
-      "password": "xYd=va4j",
-      "username": "jliu2"
-    },
-    {
-      "name": "satya1-bf",
-      "hop": "satya1",
-      "host": "satya1-bf",
-      "password": "xYd=va4j",
-      "root": "/home/jliu2/projects/bitar",
-      "username": "jliu2"
-    }
-  ],
   "sshfs.flags": ["DEBUG_SSH2"]
 }
