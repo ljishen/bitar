@@ -30,7 +30,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "config.h"
 #include "device.h"
