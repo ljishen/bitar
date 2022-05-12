@@ -22,15 +22,16 @@
 
 #pragma once
 
+#include <arrow/util/string_builder.h>
+#include <rte_comp.h>
+#include <rte_config.h>
+
 #include <cstdint>
 #include <limits>
 #include <string>
 #include <string_view>
 #include <type_traits>
 
-#include <arrow/util/string_builder.h>
-#include <rte_comp.h>
-#include <rte_config.h>
 #include <magic_enum.hpp>
 
 namespace bitar {

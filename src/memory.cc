@@ -22,15 +22,6 @@
 
 #include "memory.h"
 
-#include <cstdint>
-#include <cstring>
-#include <memory>
-#include <mutex>
-#include <span>
-#include <string>
-#include <unordered_set>
-#include <utility>
-
 #include <arrow/buffer.h>
 #include <arrow/memory_pool.h>
 #include <arrow/result.h>
@@ -48,6 +39,15 @@
 #include <rte_mbuf_core.h>
 #include <rte_memory.h>
 #include <rte_memzone.h>
+
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <mutex>
+#include <span>  // NOLINT
+#include <string>
+#include <unordered_set>
+#include <utility>
 
 #include "config.h"
 #include "memory_pool.h"

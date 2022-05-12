@@ -22,6 +22,16 @@
 
 #include "driver.h"
 
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/util/logging.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <rte_build_config.h>
+#include <rte_compressdev.h>
+#include <rte_config.h>
+#include <rte_lcore.h>
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -33,15 +43,6 @@
 #include <type_traits>
 #include <vector>
 
-#include <arrow/result.h>
-#include <arrow/status.h>
-#include <arrow/util/logging.h>
-#include <fmt/core.h>
-#include <fmt/format.h>
-#include <rte_build_config.h>
-#include <rte_compressdev.h>
-#include <rte_config.h>
-#include <rte_lcore.h>
 #include <magic_enum.hpp>
 
 #include "device.h"

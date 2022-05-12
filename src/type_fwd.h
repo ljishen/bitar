@@ -20,9 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <vector>
+#pragma once
 
 #include <arrow/buffer.h>
+
+#include <memory>
+#include <vector>
 
 namespace bitar {
 

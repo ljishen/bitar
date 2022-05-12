@@ -22,10 +22,11 @@
 
 #include "config.h"
 
+#include <fmt/core.h>
+
 #include <cstdint>
 #include <limits>
 
-#include <fmt/core.h>
 #include <magic_enum.hpp>
 
 namespace bitar {

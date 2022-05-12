@@ -22,20 +22,20 @@
 
 #pragma once
 
-#include <cstdint>
-#include <deque>
-#include <memory>
-#include <mutex>
-#include <span>
-#include <stack>
-#include <type_traits>
-#include <unordered_set>
-
 #include <arrow/status.h>
 #include <rte_common.h>
 #include <rte_compressdev.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
+
+#include <cstdint>
+#include <deque>
+#include <memory>
+#include <mutex>
+#include <span>  // NOLINT
+#include <stack>
+#include <type_traits>
+#include <unordered_set>
 
 #include "config.h"
 #include "type_fwd.h"

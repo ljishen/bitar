@@ -20,19 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <chrono>
-#include <csignal>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <memory>
-#include <numeric>
-#include <string>
-#include <type_traits>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <arrow/buffer.h>
 #include <arrow/io/file.h>
 #include <arrow/io/type_fwd.h>
@@ -50,8 +37,22 @@
 #include <rte_launch.h>
 #include <rte_lcore.h>
 #include <rte_log.h>
-#include <cxxopts.hpp>
 #include <ext/alloc_traits.h>
+
+#include <chrono>
+#include <csignal>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <memory>
+#include <numeric>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <cxxopts.hpp>
 
 #include "common.h"
 #include "config.h"
@@ -94,13 +95,12 @@ void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
              std::uint16_t num_qps);
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
-    const std::unique_ptr<bitar::MLX5CompressDevice>& device,
-    std::uint16_t queue_pair_id,
+    const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
     const std::unique_ptr<arrow::Buffer>& decompressed_buffer);
 
 arrow::Status BenchmarkDecompressSync(
-    const std::unique_ptr<bitar::MLX5CompressDevice>& device,
-    std::uint16_t queue_pair_id, const bitar::BufferVector& compressed_buffers,
+    const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
+    const bitar::BufferVector& compressed_buffers,
     const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer);
 
 arrow::Status BenchmarkCompressAsync(
@@ -176,8 +176,7 @@ arrow::Result<arrow::BufferVector> ReadBuffers(const char* ipc_file_path) {
   buffers.reserve(static_cast<std::size_t>(num_batches));
 
   auto write_options = arrow::ipc::IpcWriteOptions::Defaults();
-  write_options.memory_pool =
-      bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone);
+  write_options.memory_pool = bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone);
 
   for (int i = 0; i < num_batches; ++i) {
     ARROW_ASSIGN_OR_RAISE(auto batch, reader->ReadRecordBatch(i));
@@ -196,8 +195,8 @@ arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
 
   ARROW_ASSIGN_OR_RAISE(
       auto buffer,
-      arrow::AllocateBuffer(num_bytes, bitar::GetMemoryPool(
-                                           bitar::MemoryPoolBackend::Rtememzone)));
+      arrow::AllocateBuffer(num_bytes,
+                            bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)));
 
   ARROW_ASSIGN_OR_RAISE(auto num_bytes_read,
                         file->Read(num_bytes, buffer->mutable_data()));
@@ -232,8 +231,7 @@ inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
 }
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
-    const std::unique_ptr<bitar::MLX5CompressDevice>& device,
-    std::uint16_t queue_pair_id,
+    const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
     const std::unique_ptr<arrow::Buffer>& decompressed_buffer) {
   auto compression_start = std::chrono::high_resolution_clock::now();
 
@@ -253,8 +251,8 @@ arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
 }
 
 arrow::Status BenchmarkDecompressSync(
-    const std::unique_ptr<bitar::MLX5CompressDevice>& device,
-    std::uint16_t queue_pair_id, const bitar::BufferVector& compressed_buffers,
+    const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
+    const bitar::BufferVector& compressed_buffers,
     const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer) {
   auto decompression_start = std::chrono::high_resolution_clock::now();
 
@@ -297,8 +295,8 @@ arrow::Status BenchmarkCompressAsync(
     return bitar::kAsyncReturnOK;
   };
 
-  using CompressParamType = bitar::CompressParam<bitar::Class_MLX5_PCI,
-                                                      decltype(compress_result_callback)>;
+  using CompressParamType =
+      bitar::CompressParam<bitar::Class_MLX5_PCI, decltype(compress_result_callback)>;
 
   std::vector<std::unique_ptr<CompressParamType>> compress_param_vector;
   compress_param_vector.reserve(num_parallel_tests());
@@ -380,8 +378,7 @@ arrow::Status BenchmarkDecompressAsync(
   };
 
   using DecompressParamType =
-      bitar::DecompressParam<bitar::Class_MLX5_PCI,
-                                  decltype(decompress_result_callback)>;
+      bitar::DecompressParam<bitar::Class_MLX5_PCI, decltype(decompress_result_callback)>;
 
   std::vector<std::unique_ptr<DecompressParamType>> decompress_param_vector;
   decompress_param_vector.reserve(num_parallel_tests());
@@ -509,12 +506,11 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
 arrow::Status EvaluateAsync(
     const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
     const std::unique_ptr<arrow::Buffer>& input_buffer) {
-  std::uint32_t total_num_qps =
-      std::accumulate(devices.begin(), devices.end(), 0U,
-                      [](std::uint32_t num,
-                         const std::unique_ptr<bitar::MLX5CompressDevice>& device) {
-                        return num + device->num_qps();
-                      });
+  std::uint32_t total_num_qps = std::accumulate(
+      devices.begin(), devices.end(), 0U,
+      [](std::uint32_t num, const std::unique_ptr<bitar::MLX5CompressDevice>& device) {
+        return num + device->num_qps();
+      });
   if (total_num_qps < num_parallel_tests()) {
     return arrow::Status::Cancelled("Total # of allocated queue pairs (", total_num_qps,
                                     ") < num_parallel_tests (", num_parallel_tests(),
@@ -665,7 +661,7 @@ int main(int argc, char* argv[]) {
   auto ret = rte_eal_init(argc, argv);
   if (ret < 0) {
     bitar::CleanupAndExit(EXIT_FAILURE, "Invalid EAL arguments with error {}\n",
-                               rte_strerror(rte_errno));
+                          rte_strerror(rte_errno));
   }
   argc -= ret;
   argv += ret;
@@ -702,14 +698,13 @@ int main(int argc, char* argv[]) {
   auto read_buffer_result = ReadFileBuffer(file_path, num_bytes_to_read);
   if (!read_buffer_result.ok()) {
     bitar::CleanupAndExit(EXIT_FAILURE, "Unable to read buffer from file. [{}]\n",
-                               read_buffer_result.status().ToString());
+                          read_buffer_result.status().ToString());
   }
   auto input_buffer = std::move(read_buffer_result).ValueOrDie();
 
   auto status = Evaluate(input_buffer);
   if (!status.ok()) {
-    bitar::CleanupAndExit(EXIT_FAILURE, "Failed to evaluate. [{}]\n",
-                               status.ToString());
+    bitar::CleanupAndExit(EXIT_FAILURE, "Failed to evaluate. [{}]\n", status.ToString());
   }
 
   bitar::CleanupAndExit(EXIT_SUCCESS, "\nEverything is OK!\n");

@@ -22,14 +22,14 @@
 
 #include "util.h"
 
-#include <fstream>
-#include <iterator>
-#include <string>
-
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <rte_build_config.h>
 #include <rte_lcore.h>
+
+#include <fstream>
+#include <iterator>
+#include <string>
 
 namespace bitar::internal {
 

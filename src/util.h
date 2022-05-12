@@ -22,14 +22,15 @@
 
 #pragma once
 
-#include <cstdint>
-#include <memory>
-#include <string>
-
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/util/macros.h>
 #include <rte_launch.h>
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
 #include "config.h"
 #include "device.h"

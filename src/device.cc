@@ -22,15 +22,6 @@
 
 #include "device.h"
 
-#include <array>
-#include <cstdint>
-#include <cstdlib>
-#include <memory>
-#include <span>
-#include <string>
-#include <string_view>
-#include <utility>
-
 #include <arrow/buffer.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
@@ -43,6 +34,16 @@
 #include <rte_log.h>
 #include <rte_mbuf.h>
 #include <rte_mbuf_core.h>
+
+#include <array>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <span>  // NOLINT
+#include <string>
+#include <string_view>
+#include <utility>
+
 #include <magic_enum.hpp>
 
 #include "config.h"

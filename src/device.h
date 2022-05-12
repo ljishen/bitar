@@ -22,16 +22,16 @@
 
 #pragma once
 
-#include <cstdint>
-#include <memory>
-#include <type_traits>
-#include <vector>
-
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/util/macros.h>
 #include <fmt/core.h>
 #include <rte_common.h>
+
+#include <cstdint>
+#include <memory>
+#include <type_traits>
+#include <vector>
 
 #include "config.h"
 #include "memory.h"
