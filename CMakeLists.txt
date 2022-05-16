@@ -79,6 +79,11 @@ else()
   list(APPEND VCPKG_MANIFEST_FEATURES "system-arrow-deps")
 endif()
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
+
+# Define the features of the project
+include(Features)
+
 # Set the project name and language
 project(
   bitar
@@ -107,6 +112,32 @@ list(APPEND CMAKE_PROGRAM_PATH "${IWYU_ROOT}/bin")
 set(ENABLE_CLANG_TIDY_DEVELOPER_DEFAULT OFF)
 set(ENABLE_CPPCHECK_DEVELOPER_DEFAULT OFF)
 set(ENABLE_INCLUDE_WHAT_YOU_USE_DEVELOPER_DEFAULT ON)
+
+if(FEATURE_TESTS)
+  set(OPT_ENABLE_CLANG_TIDY "ENABLE_CLANG_TIDY")
+  set(OPT_ENABLE_COVERAGE "ENABLE_COVERAGE")
+  set(OPT_ENABLE_CPPCHECK "ENABLE_CPPCHECK")
+
+  string(FIND "$ENV{PATH}" "$ENV{VSINSTALLDIR}" index_of_vs_install_dir)
+  if(# not windows
+     NOT
+     "${CMAKE_SYSTEM_NAME}"
+     STREQUAL
+     "Windows"
+     # or is MSVC and has run vcvarsall
+     OR (MSVC AND "${index_of_vs_install_dir}" STREQUAL "-1"))
+    set(OPT_ENABLE_SANITIZER_ADDRESS "ENABLE_SANITIZER_ADDRESS")
+    set(OPT_ENABLE_SANITIZER_UNDEFINED_BEHAVIOR "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR")
+    set(OPT_ENABLE_SANITIZER_LEAK "ENABLE_SANITIZER_LEAK")
+    set(OPT_WARNINGS_AS_ERRORS OFF)
+  endif()
+endif()
+
+if(FEATURE_DOCS)
+  set(OPT_ENABLE_DOXYGEN "ENABLE_DOXYGEN")
+else()
+  set(OPT_ENABLE_DOXYGEN OFF)
+endif()
 
 # Initialize project_options variable related to this project. This overwrites
 # `project_options` and sets `project_warnings`. This also accepts the same
@@ -171,7 +202,7 @@ target_compile_options(
             # ~~~
 )
 
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/Utilities.cmake")
+include(Utilities)
 
 set(DPDK_ROOT
     "/usr/local"

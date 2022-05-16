@@ -58,6 +58,15 @@
           "version>=": "1.18.1#1"
         }
       ]
+    },
+    "tests": {
+      "description": "Build the tests",
+      "dependencies": [
+        {
+          "name": "catch2",
+          "version>=": "2.13.9"
+        }
+      ]
     }
   }
 }
