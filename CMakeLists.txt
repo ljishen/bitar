@@ -184,6 +184,7 @@ prepend_path_to_env(
 )
 
 add_subdirectory(src)
+add_subdirectory(apps)
 
 # Adding the tests:
 option(ENABLE_TESTING "Enable the tests" ON)

@@ -58,21 +58,15 @@ elseif(TARGET arrow_shared)
   list(APPEND ARROW_LIBRARIES arrow_shared)
 endif()
 
-target_link_system_libraries(bitar PRIVATE magic_enum::magic_enum fmt::fmt
-                             CURL::libcurl ${ARROW_LIBRARIES})
-
+target_link_system_libraries(bitar PRIVATE magic_enum::magic_enum fmt::fmt)
 # Force the use of compile-time format string checks:
 # https://fmt.dev/latest/api.html#compile-time-format-string-checks
-target_compile_definitions(bitar PUBLIC FMT_ENFORCE_COMPILE_STRING)
+target_compile_definitions(bitar PRIVATE FMT_ENFORCE_COMPILE_STRING)
+
+target_link_system_libraries(bitar PUBLIC CURL::libcurl ${ARROW_LIBRARIES})
 target_compile_definitions(bitar PUBLIC ARROW_NO_DEPRECATED_API)
 
 target_include_directories(bitar PUBLIC ${CMAKE_CURRENT_LIST_DIR})
-
-add_executable(demo_app demo_app.cc)
-target_link_libraries(demo_app PRIVATE bitar project_warnings project_options)
-find_package(cxxopts CONFIG REQUIRED)
-target_link_system_libraries(demo_app PRIVATE fmt::fmt ${ARROW_LIBRARIES}
-                             cxxopts::cxxopts)
 
 if("${ARROW_ROOT}" STREQUAL "")
   # This is the case when the arrow library is installed by vcpkg. But this
@@ -84,7 +78,7 @@ if("${ARROW_ROOT}" STREQUAL "")
   endforeach()
 
   target_link_system_libraries(
-    demo_app PRIVATE lz4::lz4 unofficial::brotli::brotlidec-static
+    bitar INTERFACE lz4::lz4 unofficial::brotli::brotlidec-static
     unofficial::brotli::brotlienc-static
     unofficial::brotli::brotlicommon-static)
 endif()
