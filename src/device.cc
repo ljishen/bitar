@@ -113,7 +113,7 @@ __rte_always_inline std::uint64_t GetErrorCount(std::uint16_t num_bursted_ops,
 
 template <typename Class, typename Enable>
 arrow::Status CompressDevice<Class, Enable>::Initialize(
-    std::shared_ptr<Configuration<Class>> configuration __rte_unused) {
+    std::shared_ptr<Configuration<Class>> ARROW_ARG_UNUSED(configuration) /*unused*/) {
   ARROW_RETURN_NOT_OK(ValidateConfiguration());
   ARROW_RETURN_NOT_OK(PreAllocateMemory());
 

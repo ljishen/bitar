@@ -22,18 +22,6 @@
 
 #include "memory_pool.h"
 
-#include <cstddef>
-#include <cstdint>
-#include <limits>
-#include <mutex>
-#include <string>
-#include <unordered_map>
-#include <utility>
-
-#if !defined(__x86_64__) || __GLIBCXX__ < 20210728
-#include <string_view>
-#endif
-
 #include <arrow/memory_pool.h>
 #include <arrow/status.h>
 #include <arrow/util/logging.h>
@@ -44,6 +32,16 @@
 #include <rte_lcore.h>
 #include <rte_malloc.h>
 #include <rte_memzone.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <mutex>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
+
 #include <magic_enum.hpp>
 
 #ifdef __aarch64__

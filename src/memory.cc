@@ -61,7 +61,8 @@ namespace {
 constexpr auto kCacheSizeAmplifier = 2;
 constexpr auto kMaxInflightMbufs = kMaxInflightOps * 16;
 
-void ExternalBufferDummyCallback(void* addr __rte_unused, void* opaque __rte_unused) {}
+void ExternalBufferDummyCallback(void* ARROW_ARG_UNUSED(addr) /*unused*/,
+                                 void* ARROW_ARG_UNUSED(opaque) /*unused*/) {}
 
 arrow::Result<const rte_memzone*> AllocateOne(arrow::MemoryPool* memory_pool,
                                               std::uint16_t size) {

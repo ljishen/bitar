@@ -26,7 +26,6 @@
 #include <arrow/status.h>
 #include <arrow/util/macros.h>
 #include <fmt/core.h>
-#include <rte_common.h>
 
 #include <cstdint>
 #include <memory>
@@ -199,7 +198,8 @@ class DeviceManager {
             typename = internal::IsEnumConstant<internal::PCIDeviceId, PCIDeviceId>,
             typename = internal::IsEnumConstant<internal::DriverClass, Class>>
   arrow::Result<CompressDevice<Class>*> Create(
-      std::uint8_t device_id, std::vector<std::uint32_t> worker_lcores __rte_unused) {
+      std::uint8_t device_id,
+      std::vector<std::uint32_t> ARROW_ARG_UNUSED(worker_lcores) /*unused*/) {
     return arrow::Status::NotImplemented("Unsupported compress device ", +device_id);
   }
 
