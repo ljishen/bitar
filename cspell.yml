@@ -23,6 +23,8 @@
 ---
 version: "0.2" # the version of the setting file.  Always 0.2
 language: en, en-GB # current active spelling language
+enableFiletypes:
+  - cmake
 words: # list of words to be always considered correct
   - Jianshen
   - bitar
@@ -31,4 +33,15 @@ words: # list of words to be always considered correct
   - xforms
   - mtod
   - NOLINTNEXTLINE
+  - CMAKE
   - DXBF
+  - DPDK
+  - libdpdk
+  - endforeach
+  - libcurl
+  - STREQUAL
+  - vcpkg
+  - brotli
+  - brotlidec
+  - brotlienc
+  - brotlicommon
