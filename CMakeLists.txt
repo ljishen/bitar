@@ -59,7 +59,7 @@ endif()
 
 set(VCPKG_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/opt/${MACHINE_HARDWARE_NAME_LOWER}/vcpkg"
-    CACHE STRING "vcpkg installation prefix")
+    CACHE PATH "vcpkg installation prefix")
 get_filename_component(_VCPKG_PARENT_DIR "${VCPKG_ROOT}" DIRECTORY)
 file(MAKE_DIRECTORY "${_VCPKG_PARENT_DIR}")
 # Use vcpkg for library management - should be called before defining project():
@@ -70,7 +70,7 @@ run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
 
 set(ARROW_ROOT
     ""
-    CACHE STRING "Apache Arrow installation prefix")
+    CACHE PATH "Apache Arrow installation prefix")
 if("${ARROW_ROOT}" STREQUAL "")
   # Build the Arrow libraries using vcpkg if the installation prefix is not
   # specified. This is required to be set before project().
@@ -97,7 +97,7 @@ include("${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake")
 
 set(IWYU_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/opt/include-what-you-use/build-${MACHINE_HARDWARE_NAME_LOWER}"
-    CACHE STRING "include-what-you-use installation prefix")
+    CACHE PATH "include-what-you-use installation prefix")
 # Add the search path for finding include-what-you-use. This must be set before
 # calling dynamic_project_options() or project_options()
 list(APPEND CMAKE_PROGRAM_PATH "${IWYU_ROOT}/bin")
@@ -206,7 +206,7 @@ include(Utilities)
 
 set(DPDK_ROOT
     "/usr/local"
-    CACHE STRING "DPDK installation prefix")
+    CACHE PATH "DPDK installation prefix")
 # Paths in PKG_CONFIG_PATH precedes the pkg-config default directory for
 # searching DPDK libraries: https://linux.die.net/man/1/pkg-config
 prepend_path_to_env(
@@ -216,10 +216,6 @@ prepend_path_to_env(
 
 add_subdirectory(src)
 add_subdirectory(apps)
-
-if(FEATURE_TESTS)
-  add_subdirectory(test)
-endif()
 
 # package the project
 # package_project(TARGETS bitar)
