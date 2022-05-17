@@ -120,17 +120,17 @@ if(FEATURE_TESTS)
 
   string(FIND "$ENV{PATH}" "$ENV{VSINSTALLDIR}" index_of_vs_install_dir)
   if(# not windows
-     NOT
-     "${CMAKE_SYSTEM_NAME}"
-     STREQUAL
-     "Windows"
+     NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Windows"
      # or is MSVC and has run vcvarsall
      OR (MSVC AND "${index_of_vs_install_dir}" STREQUAL "-1"))
     set(OPT_ENABLE_SANITIZER_ADDRESS "ENABLE_SANITIZER_ADDRESS")
-    set(OPT_ENABLE_SANITIZER_UNDEFINED_BEHAVIOR "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR")
+    set(OPT_ENABLE_SANITIZER_UNDEFINED_BEHAVIOR
+        "ENABLE_SANITIZER_UNDEFINED_BEHAVIOR")
     set(OPT_ENABLE_SANITIZER_LEAK "ENABLE_SANITIZER_LEAK")
     set(OPT_WARNINGS_AS_ERRORS OFF)
   endif()
+
+  add_subdirectory(test)
 endif()
 
 if(FEATURE_DOCS)
@@ -217,22 +217,8 @@ prepend_path_to_env(
 add_subdirectory(src)
 add_subdirectory(apps)
 
-# Adding the tests:
-option(ENABLE_TESTING "Enable the tests" ON)
-if(ENABLE_TESTING)
-  enable_testing()
-  message(
-    "Building Tests. Be sure to check out test/constexpr_tests for constexpr
-testing")
+if(FEATURE_TESTS)
   add_subdirectory(test)
-endif()
-
-option(ENABLE_FUZZING "Enable the fuzz tests" OFF)
-if(ENABLE_FUZZING)
-  message(
-    "Building Fuzz Tests, using fuzzing sanitizer https://www.llvm.org/docs/LibFuzzer.html"
-  )
-  add_subdirectory(fuzz_test)
 endif()
 
 # package the project
