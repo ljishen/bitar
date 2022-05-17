@@ -21,7 +21,14 @@
 # SOFTWARE.
 
 ---
-BasedOnStyle: Google
-ColumnLimit: 90
-DerivePointerAlignment: false
-IncludeBlocks: Preserve
+version: "0.2" # the version of the setting file.  Always 0.2
+language: en, en-GB # current active spelling language
+words: # list of words to be always considered correct
+  - Jianshen
+  - bitar
+  - lcore
+  - lcores
+  - xforms
+  - mtod
+  - NOLINTNEXTLINE
+  - DXBF
