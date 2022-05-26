@@ -28,11 +28,11 @@ cmake_minimum_required(VERSION 3.19)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 11)
 
-# Add project_options v0.22.1
+# Add project_options v0.22.4
 include(FetchContent)
 FetchContent_Declare(
   _project_options
-  URL https://github.com/aminya/project_options/archive/refs/tags/v0.22.1.zip)
+  URL https://github.com/aminya/project_options/archive/refs/tags/v0.22.4.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
 
