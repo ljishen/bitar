@@ -23,6 +23,34 @@
 
 set -euo pipefail
 
+OS_RELEASE_FILE=/etc/os-release
+
+if ! [[ -f "$OS_RELEASE_FILE" ]]; then
+    echo >&2 "[ERROR] Unable to read from file $OS_RELEASE_FILE"
+    exit 1
+fi
+
+# ID should be a lower-case string
+#   https://www.freedesktop.org/software/systemd/man/os-release.html#ID=
+# shellcheck source=/dev/null
+OS_ID_CODENAME=$(. $OS_RELEASE_FILE && echo "${ID:-}_${VERSION_CODENAME:-}")
+if [[ -z "$OS_ID_CODENAME" ]]; then
+    echo >&2 "[ERROR] Unable to read the ID and CODENAME of the operating system." \
+        "Abort installation."
+    exit 1
+fi
+
+if ! [[ "$OS_ID_CODENAME" =~ ^(ubuntu|debian)_ ]]; then
+    echo >&2 "[ERROR] We only support installing dependencies on Debian and" \
+        "Ubuntu derivatives."
+    exit 1
+fi
+
+if [[ "$OS_ID_CODENAME" == "debian_"* && "$OS_ID_CODENAME" != "debian_bullseye" ]]; then
+    echo >&2 "[ERROR] For Debian OS, we require at least Debian 11 (bullseye)."
+    exit 1
+fi
+
 APT_NO_RECOMMENDS="sudo apt -y --no-install-recommends"
 
 cat <<EOF
@@ -62,23 +90,6 @@ cat <<EOF
 # ---------------------------------------------------
 EOF
 
-OS_RELEASE_FILE=/etc/os-release
-
-if ! [[ -f "$OS_RELEASE_FILE" ]]; then
-    echo >&2 "[ERROR] Unable to read from file $OS_RELEASE_FILE"
-    exit 1
-fi
-
-# ID should be a lower-case string
-#   https://www.freedesktop.org/software/systemd/man/os-release.html#ID=
-# shellcheck source=/dev/null
-OS_ID_CODENAME=$(. $OS_RELEASE_FILE && echo "${ID:-}_${VERSION_CODENAME:-}")
-if [[ -z "$OS_ID_CODENAME" ]]; then
-    echo >&2 "[ERROR] Unable to read the ID and CODENAME of the" \
-        "operating system. Aborting."
-    exit 1
-fi
-
 # Install the latest version through additional APT repository
 if [[ "$OS_ID_CODENAME" == "ubuntu_"* ]]; then
     # Use the Kitware APT repository, but it only supports
@@ -87,10 +98,6 @@ if [[ "$OS_ID_CODENAME" == "ubuntu_"* ]]; then
     curl -fsSL https://apt.kitware.com/kitware-archive.sh | sudo sh
     $APT_NO_RECOMMENDS install cmake cmake-curses-gui
 elif [[ "$OS_ID_CODENAME" == "debian_"* ]]; then
-    if [[ "$OS_ID_CODENAME" != "debian_bullseye" ]]; then
-        echo >&2 "[ERROR] For Debian OS, we require at least Debian 11 (bullseye)."
-        exit 1
-    fi
     cat <<EOF | sudo tee /etc/apt/sources.list.d/backports.list >/dev/null
 deb http://deb.debian.org/debian bullseye-backports main contrib non-free
 deb-src http://deb.debian.org/debian bullseye-backports main contrib non-free
@@ -98,11 +105,33 @@ EOF
     sudo apt update &&
         $APT_NO_RECOMMENDS -t bullseye-backports install \
             cmake cmake-curses-gui
-else
-    echo >&2 "[ERROR] We only support installing dependencies on Debian and" \
-        "Ubuntu derivatives."
-    exit 1
 fi
+
+cat <<EOF
+
+# ---------------------------------------------------
+# -------- Install/Update GCC Software -------
+# ---------------------------------------------------
+EOF
+
+GCC_VERSION=11
+
+if [[ "$OS_ID_CODENAME" == "ubuntu_"* ]]; then
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y &&
+        $APT_NO_RECOMMENDS install g++-$GCC_VERSION
+elif [[ "$OS_ID_CODENAME" == "debian_"* ]]; then
+    cat <<EOF | sudo tee /etc/apt/sources.list.d/debian-testing.list >/dev/null
+deb http://deb.debian.org/debian testing main contrib non-free
+deb-src http://deb.debian.org/debian testing main contrib non-free
+EOF
+    sudo apt update &&
+        $APT_NO_RECOMMENDS -t testing install g++-$GCC_VERSION
+fi
+
+sudo update-alternatives \
+    --install /usr/bin/gcc gcc /usr/bin/gcc-$GCC_VERSION $GCC_VERSION \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-$GCC_VERSION \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-$GCC_VERSION
 
 cat <<EOF
 
@@ -128,7 +157,7 @@ exec {BASH_XTRACEFD}>&-
 # Create symbolic links
 CLANG_BINS=(llvm-symbolizer clang-tidy clang-format clang clang++)
 for bin in "${CLANG_BINS[@]}"; do
-    bin_path="$(which "$bin"-"$LLVM_VERSION")"
+    bin_path="$(which "$bin"-$LLVM_VERSION)"
     sudo ln --force --symbolic "$bin_path" "$(dirname "$bin_path")"/"$bin"
 done
 
