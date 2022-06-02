@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "homepage": "https://github.com/ljishen/bitar",
   "description": "bitar is a library for accessing hardware compression/decompression accelerators",
-  "builtin-baseline": "e162e68c7e5103d85f3599211bb1fe706964f553",
+  "builtin-baseline": "c48c0c05bdaa7490585b10c83932b5a58722e463",
   "dependencies": [
     {
       "name": "magic-enum",
@@ -15,22 +15,14 @@
       "version>=": "8.1.1#1"
     },
     {
-      "name": "curl",
-      "version>=": "7.82.0",
-      "default-features": true
-    },
-    {
       "name": "cxxopts",
       "version>=": "3.0.0"
     }
   ],
   "overrides": [
     {
-      "$explanation": [
-        "Need to pin the version used by system-installed Apache Arrow"
-      ],
-      "name": "openssl",
-      "version-string": "1.1.1n#1"
+      "name": "re2",
+      "version": "2020-10-01#1"
     }
   ],
   "features": {
@@ -39,24 +31,26 @@
       "dependencies": [
         {
           "name": "arrow",
-          "version>=": "7.0.0#2",
-          "features": ["dataset", "parquet"],
-          "default-features": false
+          "version>=": "8.0.0",
+          "default-features": false,
+          "features": ["dataset", "parquet"]
         }
       ]
     },
     "system-arrow-deps": {
       "description": "Install dependencies for system-installed Apache Arrow",
       "dependencies": [
-        "openssl",
-        {
-          "name": "re2",
-          "version>=": "2021-11-01"
-        },
         {
           "name": "c-ares",
           "version>=": "1.18.1#1"
-        }
+        },
+        {
+          "name": "curl",
+          "version>=": "7.83.1#2",
+          "default-features": false,
+          "features": ["non-http"]
+        },
+        "re2"
       ]
     },
     "tests": {
@@ -64,7 +58,7 @@
       "dependencies": [
         {
           "name": "catch2",
-          "version>=": "2.13.9"
+          "version>=": "3.0.1#1"
         }
       ]
     }

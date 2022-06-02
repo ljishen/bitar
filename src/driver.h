@@ -43,7 +43,7 @@ class CompressDriver {
   CompressDriver(CompressDriver&&) = delete;
   CompressDriver& operator=(CompressDriver&&) = delete;
 
-  /// \brief Return the global CompressDriver intstance of the type.
+  /// \brief Return the global CompressDriver instance of the type.
   static CompressDriver<Class>* Instance();
 
   /// \brief Get Devices with selected device_ids

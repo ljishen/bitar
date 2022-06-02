@@ -178,7 +178,7 @@ int LcoreDecompressFunc(void* decompress_param) {
 #define ARROW_RETURN_NOT_STATUS_OK_ELSE_IMPL(code_name, rexpr, msg, else_) \
   do {                                                                     \
     auto&& code_name = (rexpr);                                            \
-    if (ARROW_PREDICT_FALSE(code_name != ::arrow::StatusCode::OK)) {       \
+    if (ARROW_PREDICT_FALSE((code_name) != ::arrow::StatusCode::OK)) {     \
       else_;                                                               \
       return ::arrow::Status::FromArgs(code_name, msg);                    \
     }                                                                      \
@@ -195,7 +195,7 @@ int LcoreDecompressFunc(void* decompress_param) {
 #define ARROW_RETURN_NEGATIVE_NOT_STATUS_OK_IMPL(code_name, rexpr)               \
   do {                                                                           \
     auto&& code_name = (rexpr);                                                  \
-    if (ARROW_PREDICT_FALSE(code_name != ::arrow::StatusCode::OK)) {             \
+    if (ARROW_PREDICT_FALSE((code_name) != ::arrow::StatusCode::OK)) {           \
       return -static_cast<std::underlying_type_t<arrow::StatusCode>>(code_name); \
     }                                                                            \
   } while (false)

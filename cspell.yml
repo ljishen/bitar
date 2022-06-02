@@ -21,27 +21,59 @@
 # SOFTWARE.
 
 ---
+$schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
 version: "0.2" # the version of the setting file.  Always 0.2
 language: en, en-GB # current active spelling language
 enableFiletypes:
   - cmake
-words: # list of words to be always considered correct
-  - Jianshen
-  - bitar
-  - lcore
-  - lcores
-  - xforms
-  - mtod
-  - NOLINTNEXTLINE
+words: # list of words to be always considered to be correct
   - CMAKE
-  - DXBF
+  - Cavium
+  - DCHECK
   - DPDK
-  - libdpdk
-  - endforeach
-  - libcurl
+  - DXBF
+  - IOVA
+  - Jemalloc
+  - Jianshen
+  - MEMZONE
+  - Mimalloc
+  - NOLINTBEGIN
+  - NOLINTNEXTLINE
+  - NOLINTEND
+  - OCTEON
+  - Ostreamable
+  - Rtemalloc
+  - Rtememzone
   - STREQUAL
-  - vcpkg
+  - bitar
   - brotli
+  - brotlicommon
   - brotlidec
   - brotlienc
-  - brotlicommon
+  - compressdev
+  - cppcoreguidelines
+  - cxxopts
+  - endforeach
+  - extbuf
+  - hicpp
+  - istrm
+  - lcore
+  - lcores
+  - libcurl
+  - libdpdk
+  - libzstd
+  - memzones
+  - mtod
+  - nodiscard
+  - pktmbuf
+  - rdtsc
+  - rexpr
+  - shinfo
+  - stoi
+  - subspan
+  - vcpkg
+  - xform
+  - xforms
+  - vformat
+  - zmalloc
+  - zstd
