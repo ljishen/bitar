@@ -643,7 +643,7 @@ arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer) {
 
 void SignalHandler(int signal) {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-  bitar::CleanupAndExit(EXIT_FAILURE, "Exit by signal {}\n", sys_siglist[signal]);
+  bitar::CleanupAndExit(EXIT_FAILURE, "Exit by signal {}\n", strsignal(signal));
 }
 
 int main(int argc, char* argv[]) {
