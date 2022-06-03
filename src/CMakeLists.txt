@@ -49,7 +49,7 @@ target_compile_definitions(bitar PUBLIC ALLOW_EXPERIMENTAL_API)
 
 set(DEPENDENCIES_CONFIGURED magic_enum fmt Arrow)
 foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
-  find_package(${DEPENDENCY} CONFIG REQUIRED)
+  find_package(${DEPENDENCY} QUIET REQUIRED CONFIG)
 endforeach()
 
 target_link_system_libraries(bitar PRIVATE magic_enum::magic_enum fmt::fmt)
@@ -75,7 +75,7 @@ if("${ARROW_ROOT}" STREQUAL "")
   # that depend on us.
   set(ARROW_DEPENDENCIES_CONFIGURED zstd lz4 Snappy unofficial-brotli)
   foreach(DEPENDENCY ${ARROW_DEPENDENCIES_CONFIGURED})
-    find_package(${DEPENDENCY} CONFIG REQUIRED)
+    find_package(${DEPENDENCY} REQUIRED CONFIG)
   endforeach()
 
   set(ARROW_DEPENDENCIES BZip2 ZLIB)
@@ -102,6 +102,6 @@ if("${ARROW_ROOT}" STREQUAL "")
     unofficial::brotli::brotlicommon-static)
 else()
   # This is the case when the system-installed Arrow library is used.
-  find_package(CURL CONFIG REQUIRED)
+  find_package(CURL REQUIRED CONFIG)
   target_link_system_libraries(bitar INTERFACE CURL::libcurl)
 endif()

@@ -19,12 +19,6 @@
       "version>=": "3.0.0"
     }
   ],
-  "overrides": [
-    {
-      "name": "re2",
-      "version": "2020-10-01#1"
-    }
-  ],
   "features": {
     "vcpkg-arrow": {
       "description": "Install Apache Arrow from vcpkg",
@@ -33,7 +27,7 @@
           "name": "arrow",
           "version>=": "8.0.0",
           "default-features": false,
-          "features": ["dataset", "parquet"]
+          "features": ["parquet"]
         }
       ]
     },
@@ -41,16 +35,11 @@
       "description": "Install dependencies for system-installed Apache Arrow",
       "dependencies": [
         {
-          "name": "c-ares",
-          "version>=": "1.18.1#1"
-        },
-        {
           "name": "curl",
           "version>=": "7.83.1#2",
           "default-features": false,
           "features": ["non-http"]
-        },
-        "re2"
+        }
       ]
     },
     "tests": {
