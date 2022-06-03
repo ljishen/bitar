@@ -166,7 +166,7 @@ int LcoreDecompressFunc(void* decompress_param) {
 #define ARROW_ASSIGN_OR_RAISE_NEGATIVE_ELSE(lhs, rexpr, msg, else_)                \
   do {                                                                             \
     lhs = (rexpr);                                                                 \
-    if (lhs < 0) {                                                                 \
+    if ((lhs) < 0) {                                                               \
       else_;                                                                       \
       return ::arrow::Status::FromArgs(static_cast<arrow::StatusCode>(-lhs), msg); \
     }                                                                              \

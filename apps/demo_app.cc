@@ -642,7 +642,7 @@ arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer) {
 }
 
 void SignalHandler(int signal) {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   bitar::CleanupAndExit(EXIT_FAILURE, "Exit by signal {}\n", strsignal(signal));
 }
 
