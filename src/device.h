@@ -166,7 +166,7 @@ class CompressDevice {
   /// \return A status code indicating whether dequeueing is successful or not
   template <typename Callback>
   arrow::StatusCode DequeueBurst(std::uint16_t queue_pair_id, rte_comp_op** dequeue_ops,
-                                 Callback&& dequeue_callback,
+                                 std::uint16_t burst_size, Callback&& dequeue_callback,
                                  QueuePairMemory<Class>* memory);
 
   /// \brief Release the memory associated with the queue pair and the compressed buffers.

@@ -179,6 +179,7 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
   auto* memory = qp_memory_[queue_pair_id].get();
   auto** enqueue_ops = memory->enqueue_ops();
   auto** dequeue_ops = memory->dequeue_ops();
+  std::uint16_t burst_size = configuration_->burst_size();
 
   std::span<const std::uint8_t> decompressed_buffer_span{
       decompressed_buffer->data(),
@@ -215,7 +216,7 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
         ARROW_UNUSED(ReleaseAll(queue_pair_id, compressed_buffers)));
 
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
-        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
         fmt::format("Failed to dequeue compression operations from compress device {:d} "
                     "via queue pair {:d}",
                     device_id_, queue_pair_id),
@@ -231,7 +232,7 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
 
   while (memory->has_pending_operations()) {
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
-        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
         fmt::format(
             "Failed to dequeue pending compression operations from compress device {:d} "
             "via queue pair {:d}",
@@ -268,6 +269,7 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
   auto* memory = qp_memory_[queue_pair_id].get();
   auto** enqueue_ops = memory->enqueue_ops();
   auto** dequeue_ops = memory->dequeue_ops();
+  std::uint16_t burst_size = configuration_->burst_size();
 
   std::span<const std::uint8_t> decompressed_buffer_span{
       decompressed_buffer->data(),
@@ -293,7 +295,7 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
                     device_id_, queue_pair_id));
 
     ARROW_RETURN_NOT_STATUS_OK(
-        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
         fmt::format(
             "Failed to dequeue decompression operations from compress device {:d} "
             "via queue pair {:d}",
@@ -309,7 +311,7 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
 
   while (memory->has_pending_operations()) {
     ARROW_RETURN_NOT_STATUS_OK(
-        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
         fmt::format("Failed to dequeue pending decompression operations from compress "
                     "device {:d} via queue pair {:d}",
                     device_id_, queue_pair_id));
@@ -493,10 +495,10 @@ arrow::StatusCode CompressDevice<Class, Enable>::EnqueueBurst(
 template <typename Class, typename Enable>
 template <typename Callback>
 arrow::StatusCode CompressDevice<Class, Enable>::DequeueBurst(
-    std::uint16_t queue_pair_id, rte_comp_op** dequeue_ops, Callback&& dequeue_callback,
-    QueuePairMemory<Class>* memory) {
-  auto num_dequeued = rte_compressdev_dequeue_burst(
-      device_id_, queue_pair_id, dequeue_ops, configuration_->burst_size());
+    std::uint16_t queue_pair_id, rte_comp_op** dequeue_ops, std::uint16_t burst_size,
+    Callback&& dequeue_callback, QueuePairMemory<Class>* memory) {
+  auto num_dequeued =
+      rte_compressdev_dequeue_burst(device_id_, queue_pair_id, dequeue_ops, burst_size);
 
   auto errors = GetErrorCount(num_dequeued, device_id_);
   if (ARROW_PREDICT_FALSE(errors > 0)) {
