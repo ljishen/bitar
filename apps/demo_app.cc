@@ -656,7 +656,8 @@ int main(int argc, char* argv[]) {
     std::quick_exit(EXIT_FAILURE);
   }
 
-  std::string program{*argv};
+  // We can't reduce the scope of the variable because argv may be modified afterwards.
+  std::string program{*argv};  // cppcheck-suppress[variableScope]
 
   auto ret = rte_eal_init(argc, argv);
   if (ret < 0) {
