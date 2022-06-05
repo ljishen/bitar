@@ -74,7 +74,8 @@
     "cstdarg": "cpp",
     "span": "cpp",
     "variant": "cpp",
-    "bitset": "cpp"
+    "bitset": "cpp",
+    "rope": "cpp"
   },
   "sshfs.flags": ["DEBUG_SSH2"]
 }

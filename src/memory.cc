@@ -116,6 +116,7 @@ arrow::Status DeviceMemory<Class, Enable>::Preallocate() {
   }
 
   num_preallocated_memzones = static_cast<std::uint16_t>(memzone_pool_.size());
+  occupied_memzones_.reserve(num_preallocated_memzones);
 
   RTE_LOG(INFO, USER1,
           "Successfully allocated %hu memzones of %hu bytes each (allowing to "
@@ -503,9 +504,12 @@ arrow::StatusCode QueuePairMemory<Class, Enable>::AccumulateUnused(
 template <typename Class, typename Enable>
 __rte_always_inline arrow::StatusCode QueuePairMemory<Class, Enable>::RecycleResources(
     rte_comp_op* operation) {
+#ifndef NDEBUG
   if (ARROW_PREDICT_FALSE(pending_operations_.front() != operation)) {
     return arrow::StatusCode::Invalid;
   }
+#endif
+
   pending_operations_.pop_front();
 
   rte_pktmbuf_free(operation->m_src);
