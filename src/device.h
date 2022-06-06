@@ -85,8 +85,7 @@ class CompressDevice {
   CompressDevice& operator=(CompressDevice&&) = delete;
 
   /// \brief Initialize this compress device with a corresponding type of configuration.
-  virtual arrow::Status Initialize(
-      std::shared_ptr<Configuration<Class>> configuration) = 0;
+  virtual arrow::Status Initialize(std::unique_ptr<Configuration<Class>> configuration);
 
   /// \brief Compress a buffer with the device via the \p queue_pair_id
   /// \param[in] queue_pair_id this value must be within [0, num_qps())
@@ -139,10 +138,10 @@ class CompressDevice {
   virtual arrow::Status ValidateConfiguration();
 
   /// \brief Return the generic configuration of this device.
-  [[nodiscard]] auto configuration() const noexcept;
+  [[nodiscard]] const auto& configuration() const noexcept;
 
   virtual arrow::Status set_configuration(
-      std::shared_ptr<Configuration<Class>> configuration);
+      std::unique_ptr<Configuration<Class>> configuration);
 
   /// \brief Return the state the compress device.
   [[nodiscard]] auto state() const noexcept { return state_; }
@@ -166,7 +165,7 @@ class CompressDevice {
   /// \return A status code indicating whether dequeueing is successful or not
   template <typename Callback>
   arrow::StatusCode DequeueBurst(std::uint16_t queue_pair_id, rte_comp_op** dequeue_ops,
-                                 std::uint16_t burst_size, Callback&& dequeue_callback,
+                                 Callback&& dequeue_callback,
                                  QueuePairMemory<Class>* memory);
 
   /// \brief Release the memory associated with the queue pair and the compressed buffers.
@@ -175,7 +174,7 @@ class CompressDevice {
   const std::uint8_t device_id_;
   const std::vector<std::uint32_t> worker_lcores_;
 
-  std::shared_ptr<Configuration<Class>> configuration_;
+  std::unique_ptr<Configuration<Class>> configuration_;
   internal::DeviceState state_{internal::DeviceState::kUndefined};
 
   // device_memory_ needs to be constructed before qp_memory_ and destructed after
@@ -224,18 +223,13 @@ class BlueFieldCompressDevice : public MLX5CompressDevice {
   BlueFieldCompressDevice(BlueFieldCompressDevice&&) noexcept = default;
   BlueFieldCompressDevice& operator=(BlueFieldCompressDevice&&) = delete;
 
-  arrow::Status Initialize(
-      std::shared_ptr<Configuration<Class_MLX5_PCI>> configuration) override;
-
   ~BlueFieldCompressDevice() override = default;
 
  protected:
   arrow::Status ValidateConfiguration() override;
 
-  [[nodiscard]] std::shared_ptr<BlueFieldConfiguration> configuration() const noexcept;
-
   arrow::Status set_configuration(
-      std::shared_ptr<Configuration<Class_MLX5_PCI>> configuration) override;
+      std::unique_ptr<Configuration<Class_MLX5_PCI>> configuration) override;
 
   friend arrow::Result<MLX5CompressDevice*> DeviceManager::Create<
       PCIVendorId_MELLANOX, PCIDeviceId_MELLANOX_CONNECTX6DXBF, Class_MLX5_PCI>(

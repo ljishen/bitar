@@ -40,6 +40,7 @@
 #include <rte_memory.h>
 #include <rte_memzone.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -198,7 +199,7 @@ DeviceMemory<Class, Enable>::~DeviceMemory() {
 
 template <typename Class, typename Enable>
 DeviceMemory<Class, Enable>::DeviceMemory(
-    std::uint8_t device_id, const std::shared_ptr<Configuration<Class>>& configuration)
+    std::uint8_t device_id, const std::unique_ptr<Configuration<Class>>& configuration)
     : device_id_{device_id}, configuration_{configuration} {}
 
 template class DeviceMemory<Class_MLX5_PCI>;
@@ -582,7 +583,7 @@ QueuePairMemory<Class, Enable>::~QueuePairMemory() {
 template <typename Class, typename Enable>
 QueuePairMemory<Class, Enable>::QueuePairMemory(
     std::uint8_t device_id, std::uint16_t queue_pair_id,
-    const std::shared_ptr<Configuration<Class>>& configuration,
+    const std::unique_ptr<Configuration<Class>>& configuration,
     const std::unique_ptr<DeviceMemory<Class>>& device_memory)
     : device_id_{device_id},
       queue_pair_id_{queue_pair_id},

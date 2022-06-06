@@ -78,10 +78,10 @@ class DeviceMemory {
 
  private:
   DeviceMemory(std::uint8_t device_id,
-               const std::shared_ptr<Configuration<Class>>& configuration);
+               const std::unique_ptr<Configuration<Class>>& configuration);
 
   const std::uint8_t device_id_;
-  const std::shared_ptr<Configuration<Class>>& configuration_;
+  const std::unique_ptr<Configuration<Class>>& configuration_;
 
   std::stack<const rte_memzone*> memzone_pool_;
   std::unordered_set<const rte_memzone*> occupied_memzones_;
@@ -148,7 +148,7 @@ class QueuePairMemory {
 
  private:
   QueuePairMemory(std::uint8_t device_id, std::uint16_t queue_pair_id,
-                  const std::shared_ptr<Configuration<Class>>& configuration,
+                  const std::unique_ptr<Configuration<Class>>& configuration,
                   const std::unique_ptr<DeviceMemory<Class>>& device_memory);
 
   /// \return arrow::StatusCode::OK on success, or arrow::StatusCode::OutOfMemory if not
@@ -161,7 +161,7 @@ class QueuePairMemory {
 
   const std::uint8_t device_id_;
   const std::uint16_t queue_pair_id_;
-  const std::shared_ptr<Configuration<Class>>& configuration_;
+  const std::unique_ptr<Configuration<Class>>& configuration_;
   const std::unique_ptr<DeviceMemory<Class>>& device_memory_;
 
   std::uint16_t num_ops_assembled_ = 0;

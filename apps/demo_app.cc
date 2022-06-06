@@ -141,24 +141,26 @@ GetBlueFieldCompressDevices(std::uint64_t max_buffer_size) {
           fmt::format("{}", fmt::join(device_ids, ", ")).c_str());
 
   ARROW_ASSIGN_OR_RAISE(auto devices, driver->GetDevices(device_ids));
-  auto bluefield_config = std::make_shared<bitar::BlueFieldConfiguration>(
-      bitar::BlueFieldConfiguration::Defaults());
-  bluefield_config->set_decompressed_seg_size(kDecompressedSegSize);
-  bluefield_config->set_burst_size(kBurstSize);
-
-  auto max_preallocate_memzones_total =
-      (max_buffer_size + bluefield_config->decompressed_seg_size() - 1) /
-      bluefield_config->decompressed_seg_size() * num_parallel_tests();
-  auto max_preallocate_memzones = static_cast<std::uint16_t>(
-      (max_preallocate_memzones_total + devices.size() - 1) / devices.size());
-  bluefield_config->set_max_preallocate_memzones(max_preallocate_memzones);
 
   for (auto& device : devices) {
     if (dynamic_cast<bitar::BlueFieldCompressDevice*>(device.get()) == nullptr) {
       return arrow::Status::Invalid("Compress device ", device->device_id(),
                                     " is not a BlueField device");
     }
-    ARROW_RETURN_NOT_OK(device->Initialize(bluefield_config));
+
+    auto bluefield_config = std::make_unique<bitar::BlueFieldConfiguration>(
+        bitar::BlueFieldConfiguration::Defaults());
+    bluefield_config->set_decompressed_seg_size(kDecompressedSegSize);
+    bluefield_config->set_burst_size(kBurstSize);
+
+    auto max_preallocate_memzones_total =
+        (max_buffer_size + bluefield_config->decompressed_seg_size() - 1) /
+        bluefield_config->decompressed_seg_size() * num_parallel_tests();
+    auto max_preallocate_memzones = static_cast<std::uint16_t>(
+        (max_preallocate_memzones_total + devices.size() - 1) / devices.size());
+    bluefield_config->set_max_preallocate_memzones(max_preallocate_memzones);
+
+    ARROW_RETURN_NOT_OK(device->Initialize(std::move(bluefield_config)));
   }
 
   return devices;

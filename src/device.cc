@@ -113,7 +113,8 @@ __rte_always_inline std::uint64_t GetErrorCount(std::uint16_t num_bursted_ops,
 
 template <typename Class, typename Enable>
 arrow::Status CompressDevice<Class, Enable>::Initialize(
-    std::shared_ptr<Configuration<Class>> ARROW_ARG_UNUSED(configuration) /*unused*/) {
+    std::unique_ptr<Configuration<Class>> configuration) {
+  ARROW_RETURN_NOT_OK(set_configuration(std::move(configuration)));
   ARROW_RETURN_NOT_OK(ValidateConfiguration());
   ARROW_RETURN_NOT_OK(PreAllocateMemory());
 
@@ -179,7 +180,6 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
   auto* memory = qp_memory_[queue_pair_id].get();
   auto** enqueue_ops = memory->enqueue_ops();
   auto** dequeue_ops = memory->dequeue_ops();
-  std::uint16_t burst_size = configuration_->burst_size();
 
   std::span<const std::uint8_t> decompressed_buffer_span{
       decompressed_buffer->data(),
@@ -216,7 +216,7 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
         ARROW_UNUSED(ReleaseAll(queue_pair_id, compressed_buffers)));
 
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
-        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
         fmt::format("Failed to dequeue compression operations from compress device {:d} "
                     "via queue pair {:d}",
                     device_id_, queue_pair_id),
@@ -232,7 +232,7 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
 
   while (memory->has_pending_operations()) {
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
-        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
         fmt::format(
             "Failed to dequeue pending compression operations from compress device {:d} "
             "via queue pair {:d}",
@@ -269,7 +269,6 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
   auto* memory = qp_memory_[queue_pair_id].get();
   auto** enqueue_ops = memory->enqueue_ops();
   auto** dequeue_ops = memory->dequeue_ops();
-  std::uint16_t burst_size = configuration_->burst_size();
 
   std::span<const std::uint8_t> decompressed_buffer_span{
       decompressed_buffer->data(),
@@ -295,7 +294,7 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
                     device_id_, queue_pair_id));
 
     ARROW_RETURN_NOT_STATUS_OK(
-        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
         fmt::format(
             "Failed to dequeue decompression operations from compress device {:d} "
             "via queue pair {:d}",
@@ -311,7 +310,7 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
 
   while (memory->has_pending_operations()) {
     ARROW_RETURN_NOT_STATUS_OK(
-        DequeueBurst(queue_pair_id, dequeue_ops, burst_size, dequeue_callback, memory),
+        DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
         fmt::format("Failed to dequeue pending decompression operations from compress "
                     "device {:d} via queue pair {:d}",
                     device_id_, queue_pair_id));
@@ -420,13 +419,13 @@ arrow::Status CompressDevice<Class, Enable>::ValidateConfiguration() {
 }
 
 template <typename Class, typename Enable>
-auto CompressDevice<Class, Enable>::configuration() const noexcept {
+const auto& CompressDevice<Class, Enable>::configuration() const noexcept {
   return configuration_;
 }
 
 template <typename Class, typename Enable>
 arrow::Status CompressDevice<Class, Enable>::set_configuration(
-    std::shared_ptr<Configuration<Class>> configuration) {
+    std::unique_ptr<Configuration<Class>> configuration) {
   configuration_ = std::move(configuration);
   return arrow::Status::OK();
 }
@@ -495,10 +494,10 @@ arrow::StatusCode CompressDevice<Class, Enable>::EnqueueBurst(
 template <typename Class, typename Enable>
 template <typename Callback>
 arrow::StatusCode CompressDevice<Class, Enable>::DequeueBurst(
-    std::uint16_t queue_pair_id, rte_comp_op** dequeue_ops, std::uint16_t burst_size,
-    Callback&& dequeue_callback, QueuePairMemory<Class>* memory) {
-  auto num_dequeued =
-      rte_compressdev_dequeue_burst(device_id_, queue_pair_id, dequeue_ops, burst_size);
+    std::uint16_t queue_pair_id, rte_comp_op** dequeue_ops, Callback&& dequeue_callback,
+    QueuePairMemory<Class>* memory) {
+  auto num_dequeued = rte_compressdev_dequeue_burst(
+      device_id_, queue_pair_id, dequeue_ops, configuration_->burst_size());
 
   auto errors = GetErrorCount(num_dequeued, device_id_);
   if (ARROW_PREDICT_FALSE(errors > 0)) {
@@ -561,14 +560,9 @@ arrow::Result<MLX5CompressDevice*> DeviceManager::Create<
   return new BlueFieldCompressDevice(device_id, std::move(worker_lcores));
 }
 
-arrow::Status BlueFieldCompressDevice::Initialize(
-    std::shared_ptr<Configuration<Class_MLX5_PCI>> configuration) {
-  ARROW_RETURN_NOT_OK(set_configuration(std::move(configuration)));
-  return MLX5CompressDevice::Initialize(this->configuration());
-}
-
 arrow::Status BlueFieldCompressDevice::ValidateConfiguration() {
-  auto bluefield_configuration = configuration();
+  const auto* bluefield_configuration =
+      dynamic_cast<BlueFieldConfiguration*>(configuration().get());
 
   /// BlueField device only supports RTE_COMP_HUFFMAN_FIXED and
   /// RTE_COMP_HUFFMAN_DYNAMIC
@@ -583,23 +577,15 @@ arrow::Status BlueFieldCompressDevice::ValidateConfiguration() {
   return MLX5CompressDevice::ValidateConfiguration();
 }
 
-std::shared_ptr<BlueFieldConfiguration> BlueFieldCompressDevice::configuration()
-    const noexcept {
-  return internal::checked_pointer_cast<BlueFieldConfiguration>(
-      MLX5CompressDevice::configuration());
-}
-
 arrow::Status BlueFieldCompressDevice::set_configuration(
-    std::shared_ptr<Configuration<Class_MLX5_PCI>> configuration) {
+    std::unique_ptr<Configuration<Class_MLX5_PCI>> configuration) {
   if (configuration->type_name() != kBlueFieldConfigurationTypeName) {
     return arrow::Status::Invalid("Configuration of type ", configuration->type_name(),
                                   " cannot be applied to compress device of type ",
                                   kBlueFieldConfigurationTypeName);
   }
 
-  // Freeze the configuration by making a copy of it
-  return MLX5CompressDevice::set_configuration(std::make_shared<BlueFieldConfiguration>(
-      *internal::checked_pointer_cast<BlueFieldConfiguration>(std::move(configuration))));
+  return MLX5CompressDevice::set_configuration(std::move(configuration));
 }
 
 }  // namespace bitar
