@@ -30,9 +30,13 @@ words: # list of words to be always considered to be correct
   - CMAKE
   - Cavium
   - DCHECK
+  - DENABLE
   - DPDK
   - DXBF
+  - MSVC
+  - INTERPROCEDURAL
   - IOVA
+  - IWYU
   - Jemalloc
   - Jianshen
   - MEMZONE
@@ -45,6 +49,19 @@ words: # list of words to be always considered to be correct
   - Rtemalloc
   - Rtememzone
   - STREQUAL
+  - TOLOWER
+  - VSINSTALLDIR
+  - Wcast
+  - Wdeprecated
+  - Wformat
+  - Winvalid
+  - Wmissing
+  - Wnested
+  - Wpointer
+  - Wstrict
+  - Wundef
+  - Wwrite
+  - aarch
   - bitar
   - brotli
   - brotlicommon
@@ -55,6 +72,7 @@ words: # list of words to be always considered to be correct
   - cppcheck
   - cppcoreguidelines
   - cxxopts
+  - deps
   - endforeach
   - extbuf
   - hicpp
@@ -67,15 +85,21 @@ words: # list of words to be always considered to be correct
   - memzones
   - mtod
   - nodiscard
+  - nonliteral
+  - pkgconfig
   - pktmbuf
+  - precompiled
   - rdtsc
   - rexpr
+  - scanf
   - shinfo
   - stoi
+  - struct
   - subspan
   - vcpkg
   - xform
   - xforms
+  - vcvarsall
   - vformat
   - zmalloc
   - zstd
