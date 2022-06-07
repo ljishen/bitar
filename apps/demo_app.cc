@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "demo_app.h"
+
 #include <arrow/buffer.h>
 #include <arrow/io/file.h>
 #include <arrow/io/type_fwd.h>
@@ -69,62 +71,13 @@
 #include <rte_memcpy.h>
 #endif
 
-constexpr auto kBitsPerByte = 8;
-constexpr auto kGigabit = 1e9;
-constexpr auto kMicroseconds = 1e6;
-
-constexpr auto kDecompressedSegSize = 59460;
-constexpr auto kBurstSize = 32 * 1;
-constexpr auto kNumTests = 3;
-
 std::uint32_t num_parallel_tests();
 
-arrow::Result<std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>>
-GetBlueFieldCompressDevices(std::uint64_t max_buffer_size);
-
-arrow::Result<arrow::BufferVector> ReadBuffers(const char* ipc_file_path);
-
-arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
-    const std::string& ipc_file_path, std::int64_t num_bytes);
-
-arrow::Status Release(
-    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
-        device_to_compressed_buffers_vector);
+void PrintPerfNumbers(std::int64_t total_bytes, std::uint64_t start_tsc,
+                      std::uint64_t end_tsc = rte_rdtsc_precise());
 
 void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
              std::uint16_t num_qps);
-
-arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
-    const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
-    const std::unique_ptr<arrow::Buffer>& decompressed_buffer);
-
-arrow::Status BenchmarkDecompressSync(
-    const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
-    const bitar::BufferVector& compressed_buffers,
-    const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer);
-
-arrow::Status BenchmarkCompressAsync(
-    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const bitar::BufferVector& input_buffer_vector,
-    std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
-        device_to_compressed_buffers_vector);
-
-arrow::Status BenchmarkDecompressAsync(
-    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
-        device_to_compressed_buffers_vector,
-    const std::vector<std::unique_ptr<arrow::ResizableBuffer>>&
-        decompressed_buffer_vector);
-
-arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& device,
-                           const std::unique_ptr<arrow::Buffer>& input_buffer);
-
-arrow::Status EvaluateAsync(
-    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const std::unique_ptr<arrow::Buffer>& input_buffer);
-
-arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer);
 
 void SignalHandler(int signal);
 
@@ -224,13 +177,13 @@ arrow::Status Release(
   return arrow::Status::OK();
 }
 
-inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
-                    std::uint16_t num_qps) {
-  ++queue_pair_id;
-  if (queue_pair_id == num_qps) {
-    queue_pair_id = 0;
-    ++device_id;
-  }
+void PrintPerfNumbers(std::int64_t total_bytes, std::uint64_t start_tsc,
+                      std::uint64_t end_tsc) {
+  auto duration =
+      static_cast<double>(end_tsc - start_tsc) / static_cast<double>(rte_get_tsc_hz());
+  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
+             duration * kMicroseconds,
+             static_cast<double>(total_bytes) * kBitsPerByte / kGigabit / duration);
 }
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
@@ -241,12 +194,7 @@ arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
   ARROW_ASSIGN_OR_RAISE(auto compressed_buffers,
                         device->Compress(queue_pair_id, decompressed_buffer));
 
-  auto duration = static_cast<double>(rte_rdtsc_precise() - start_tsc) /
-                  static_cast<double>(rte_get_tsc_hz());
-  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
-             duration * kMicroseconds,
-             static_cast<double>(decompressed_buffer->size()) * kBitsPerByte / kGigabit /
-                 duration);
+  PrintPerfNumbers(decompressed_buffer->size(), start_tsc);
 
   return compressed_buffers;
 }
@@ -260,14 +208,18 @@ arrow::Status BenchmarkDecompressSync(
   ARROW_RETURN_NOT_OK(
       device->Decompress(queue_pair_id, compressed_buffers, decompressed_buffer));
 
-  auto duration = static_cast<double>(rte_rdtsc_precise() - start_tsc) /
-                  static_cast<double>(rte_get_tsc_hz());
-  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
-             duration * kMicroseconds,
-             static_cast<double>(decompressed_buffer->size()) * kBitsPerByte / kGigabit /
-                 duration);
+  PrintPerfNumbers(decompressed_buffer->size(), start_tsc);
 
   return arrow::Status::OK();
+}
+
+inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
+                    std::uint16_t num_qps) {
+  ++queue_pair_id;
+  if (queue_pair_id == num_qps) {
+    queue_pair_id = 0;
+    ++device_id;
+  }
 }
 
 arrow::Status BenchmarkCompressAsync(
@@ -342,13 +294,8 @@ arrow::Status BenchmarkCompressAsync(
     return arrow::Status::IOError("Failed to complete async compression");
   }
 
-  auto duration = static_cast<double>(rte_rdtsc_precise() - start_tsc) /
-                  static_cast<double>(rte_get_tsc_hz());
-  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
-             duration * kMicroseconds,
-             num_parallel_tests() *
-                 static_cast<double>(input_buffer_vector.front()->size()) * kBitsPerByte /
-                 kGigabit / duration);
+  PrintPerfNumbers(num_parallel_tests() * input_buffer_vector.front()->size(), start_tsc,
+                   end_tsc);
 
   return arrow::Status::OK();
 }
@@ -423,13 +370,8 @@ arrow::Status BenchmarkDecompressAsync(
     return arrow::Status::IOError("Failed to complete async decompression");
   }
 
-  auto duration = static_cast<double>(rte_rdtsc_precise() - start_tsc) /
-                  static_cast<double>(rte_get_tsc_hz());
-  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
-             duration * kMicroseconds,
-             num_parallel_tests() *
-                 static_cast<double>(decompressed_buffer_vector.front()->size()) *
-                 kBitsPerByte / kGigabit / duration);
+  PrintPerfNumbers(num_parallel_tests() * decompressed_buffer_vector.front()->size(),
+                   start_tsc, end_tsc);
 
   return arrow::Status::OK();
 }

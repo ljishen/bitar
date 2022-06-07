@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_executable(demo_app demo_app.cc)
+add_executable(demo_app demo_app.cc demo_app.h)
 target_link_libraries(demo_app PRIVATE bitar project_warnings project_options)
 
 set(DEPENDENCIES_CONFIGURED fmt cxxopts)
