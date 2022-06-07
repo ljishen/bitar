@@ -38,6 +38,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <iterator>
 #include <memory>
 #include <span>  // NOLINT
 #include <string>
@@ -326,8 +327,8 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
 
 template <typename Class, typename Enable>
 arrow::Status CompressDevice<Class, Enable>::Release(const BufferVector& buffers) {
-  for (const auto& buffer : buffers) {
-    ARROW_RETURN_NOT_OK(device_memory_->Put(buffer->data()));
+  for (auto it = std::crbegin(buffers); it != std::crend(buffers); ++it) {
+    ARROW_RETURN_NOT_OK(device_memory_->Put((*it)->data()));
   }
   return arrow::Status::OK();
 }
