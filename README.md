@@ -30,6 +30,6 @@ $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja -DDPDK_ROOT=<d
 $ cmake --build ./build-$(uname -m)
 
 $ LD_LIBRARY_PATH=<dpdk/install/prefix>/lib/$(uname -m)-linux-gnu:<dpdk/install/prefix>/lib64:\
-$LD_LIBRARY_PATH ./build-$(uname -m)/src/demo_app -l 1-3 -a <device_pci_id>,class=compress -- \
+$LD_LIBRARY_PATH ./build-$(uname -m)/apps/demo_app -l 1-3 -a <device_pci_id>,class=compress -- \
 --file <file> --bytes <size_to_read_from_file>
 ```
