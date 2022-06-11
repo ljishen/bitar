@@ -4,7 +4,7 @@
     "-DALLOW_EXPERIMENTAL_API",
     "-std=c++20",
     "-isystem",
-    "/home/coder/opt/dpdk-v21.11-aarch64/include",
+    "/home/coder/opt/dpdk-v22.03-aarch64/include",
     "-isystem",
     "/home/coder/projects/bitar/build-aarch64/vcpkg_installed/arm64-linux/include"
   ],
@@ -13,7 +13,7 @@
   "cmake.configureSettings": {
     "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/aarch64/vcpkg/scripts/buildsystems/vcpkg.cmake",
     "ARROW_ROOT": "/usr",
-    "DPDK_ROOT": "${env:HOME}/opt/dpdk-v21.11-aarch64"
+    "DPDK_ROOT": "${env:HOME}/opt/dpdk-v22.03-aarch64"
   },
   "cmake.generator": "Ninja",
   "files.associations": {

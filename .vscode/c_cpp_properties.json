@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${env:HOME}/opt/dpdk-v21.11-aarch64/include",
+                "${env:HOME}/opt/dpdk-v22.03-aarch64/include",
                 "${workspaceFolder}/build-aarch64/vcpkg_installed/arm64-linux/include"
             ],
             "defines": [],

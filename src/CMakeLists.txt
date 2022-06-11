@@ -69,7 +69,7 @@ target_compile_definitions(bitar PUBLIC ARROW_NO_DEPRECATED_API)
 target_include_directories(bitar PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 if("${ARROW_ROOT}" STREQUAL "")
-  # This is the case when the vcpkg-installed Arrow library is used. Since the
+  # This is the case where the vcpkg-installed Arrow library is used. Since the
   # Arrow library depends but does not statically link the compression
   # libraries, we need to expose these compression libraries to be used by apps
   # that depend on us.

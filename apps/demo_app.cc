@@ -37,11 +37,9 @@
 #include <rte_eal.h>
 #include <rte_errno.h>
 #include <rte_launch.h>
-#include <rte_lcore.h>
 #include <rte_log.h>
 #include <ext/alloc_traits.h>
 
-#include <csignal>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -55,10 +53,10 @@
 
 #include <cxxopts.hpp>
 
+#include "app_common.h"
 #include "common.h"
 #include "config.h"
 #include "device.h"
-#include "driver.h"
 #include "memory_pool.h"
 #include "type_fwd.h"
 #include "util.h"
@@ -71,54 +69,43 @@
 #include <rte_memcpy.h>
 #endif
 
-std::uint32_t num_parallel_tests();
+namespace bitar::app {
+
+namespace {
 
 void PrintPerfNumbers(std::int64_t total_bytes, std::uint64_t start_tsc,
-                      std::uint64_t end_tsc = rte_rdtsc_precise());
-
-void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
-             std::uint16_t num_qps);
-
-void SignalHandler(int signal);
-
-std::uint32_t num_parallel_tests() {
-  static std::uint32_t kNumParallelTests = rte_lcore_count() - 1;
-  return kNumParallelTests;
+                      std::uint64_t end_tsc = rte_rdtsc_precise()) {
+  auto duration =
+      static_cast<double>(end_tsc - start_tsc) / static_cast<double>(rte_get_tsc_hz());
+  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
+             duration * kMicroseconds,
+             static_cast<double>(total_bytes) * kBitsPerByte / kGigabit / duration);
 }
 
-arrow::Result<std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>>
-GetBlueFieldCompressDevices(std::uint64_t max_buffer_size) {
-  auto* driver = bitar::CompressDriver<bitar::Class_MLX5_PCI>::Instance();
-  ARROW_ASSIGN_OR_RAISE(auto device_ids, driver->ListAvailableDeviceIds());
+inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
+                    std::uint16_t num_qps) {
+  ++queue_pair_id;
+  if (queue_pair_id == num_qps) {
+    queue_pair_id = 0;
+    ++device_id;
+  }
+}
 
-  RTE_LOG(INFO, USER1, "Found devices with MLX5 driver: [%s]\n",
-          fmt::format("{}", fmt::join(device_ids, ", ")).c_str());
-
-  ARROW_ASSIGN_OR_RAISE(auto devices, driver->GetDevices(device_ids));
-
-  for (auto& device : devices) {
-    if (dynamic_cast<bitar::BlueFieldCompressDevice*>(device.get()) == nullptr) {
-      return arrow::Status::Invalid("Compress device ", device->device_id(),
-                                    " is not a BlueField device");
+arrow::Status Release(
+    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
+    const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
+        device_to_compressed_buffers_vector) {
+  for (const auto& [device_id, compressed_buffers_vector] :
+       device_to_compressed_buffers_vector) {
+    for (const auto& compressed_buffers : compressed_buffers_vector) {
+      ARROW_RETURN_NOT_OK(devices[device_id]->Release(compressed_buffers));
     }
-
-    auto bluefield_config = std::make_unique<bitar::BlueFieldConfiguration>(
-        bitar::BlueFieldConfiguration::Defaults());
-    bluefield_config->set_decompressed_seg_size(kDecompressedSegSize);
-    bluefield_config->set_burst_size(kBurstSize);
-
-    auto max_preallocate_memzones_total =
-        (max_buffer_size + bluefield_config->decompressed_seg_size() - 1) /
-        bluefield_config->decompressed_seg_size() * num_parallel_tests();
-    auto max_preallocate_memzones = static_cast<std::uint16_t>(
-        (max_preallocate_memzones_total + devices.size() - 1) / devices.size());
-    bluefield_config->set_max_preallocate_memzones(max_preallocate_memzones);
-
-    ARROW_RETURN_NOT_OK(device->Initialize(std::move(bluefield_config)));
   }
 
-  return devices;
+  return arrow::Status::OK();
 }
+
+}  // namespace
 
 arrow::Result<arrow::BufferVector> ReadBuffers(const char* ipc_file_path) {
   ARROW_ASSIGN_OR_RAISE(auto file, arrow::io::MemoryMappedFile::Open(
@@ -163,29 +150,6 @@ arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
   return buffer;
 }
 
-arrow::Status Release(
-    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
-        device_to_compressed_buffers_vector) {
-  for (const auto& [device_id, compressed_buffers_vector] :
-       device_to_compressed_buffers_vector) {
-    for (const auto& compressed_buffers : compressed_buffers_vector) {
-      ARROW_RETURN_NOT_OK(devices[device_id]->Release(compressed_buffers));
-    }
-  }
-
-  return arrow::Status::OK();
-}
-
-void PrintPerfNumbers(std::int64_t total_bytes, std::uint64_t start_tsc,
-                      std::uint64_t end_tsc) {
-  auto duration =
-      static_cast<double>(end_tsc - start_tsc) / static_cast<double>(rte_get_tsc_hz());
-  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
-             duration * kMicroseconds,
-             static_cast<double>(total_bytes) * kBitsPerByte / kGigabit / duration);
-}
-
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
     const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
     const std::unique_ptr<arrow::Buffer>& decompressed_buffer) {
@@ -211,15 +175,6 @@ arrow::Status BenchmarkDecompressSync(
   PrintPerfNumbers(decompressed_buffer->size(), start_tsc);
 
   return arrow::Status::OK();
-}
-
-inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
-                    std::uint16_t num_qps) {
-  ++queue_pair_id;
-  if (queue_pair_id == num_qps) {
-    queue_pair_id = 0;
-    ++device_id;
-  }
 }
 
 arrow::Status BenchmarkCompressAsync(
@@ -580,20 +535,10 @@ arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer) {
   return arrow::Status::OK();
 }
 
-void SignalHandler(int signal) {
-  // NOLINTNEXTLINE(concurrency-mt-unsafe)
-  bitar::CleanupAndExit(EXIT_FAILURE, "Exit by signal {}\n", strsignal(signal));
-}
+}  // namespace bitar::app
 
 int main(int argc, char* argv[]) {
-  if (std::signal(SIGTERM, SignalHandler) == SIG_ERR) {
-    RTE_LOG(CRIT, USER1, "Unable to install the signal handler for SIGTERM\n");
-    std::quick_exit(EXIT_FAILURE);
-  }
-  if (std::signal(SIGINT, SignalHandler) == SIG_ERR) {
-    RTE_LOG(CRIT, USER1, "Unable to install the signal handler for SIGINT\n");
-    std::quick_exit(EXIT_FAILURE);
-  }
+  bitar::app::InstallSignalHandler();
 
   // We can't reduce the scope of the variable because argv may be modified afterwards.
   std::string program{*argv};  // cppcheck-suppress[variableScope]
@@ -635,14 +580,14 @@ int main(int argc, char* argv[]) {
     bitar::CleanupAndExit(EXIT_FAILURE, e.what());
   }
 
-  auto read_buffer_result = ReadFileBuffer(file_path, num_bytes_to_read);
+  auto read_buffer_result = bitar::app::ReadFileBuffer(file_path, num_bytes_to_read);
   if (!read_buffer_result.ok()) {
     bitar::CleanupAndExit(EXIT_FAILURE, "Unable to read buffer from file. [{}]\n",
                           read_buffer_result.status().ToString());
   }
   auto input_buffer = std::move(read_buffer_result).ValueOrDie();
 
-  auto status = Evaluate(input_buffer);
+  auto status = bitar::app::Evaluate(input_buffer);
   if (!status.ok()) {
     bitar::CleanupAndExit(EXIT_FAILURE, "Failed to evaluate. [{}]\n", status.ToString());
   }

@@ -173,7 +173,12 @@ IWYU_HOME="$SCRIPT_DIR"/../opt/include-what-you-use
 IWYU_BUILD_DIRNAME=build-"$(uname -m)"
 
 if [[ -x "$IWYU_HOME"/"$IWYU_BUILD_DIRNAME"/bin/include-what-you-use ]]; then
-    echo "[INFO] include-what-you-use is already installed."
+    echo "[INFO] include-what-you-use is already installed. Updating..."
+    cd "$IWYU_HOME"
+    OLD_COMMIT_HASH=$(git rev-parse HEAD)
+    git remote set-branches --add origin clang_$LLVM_VERSION &&
+        git fetch origin clang_$LLVM_VERSION &&
+        git reset --hard origin/clang_$LLVM_VERSION
 else
     if [[ -d "$IWYU_HOME" ]]; then
         rm --force --recursive "$IWYU_HOME"
@@ -181,7 +186,13 @@ else
     git clone --single-branch --branch clang_$LLVM_VERSION \
         https://github.com/include-what-you-use/include-what-you-use.git \
         "$IWYU_HOME" && cd "$IWYU_HOME"
-    mkdir --parents "$IWYU_BUILD_DIRNAME" && cd "$IWYU_BUILD_DIRNAME"
+fi
+
+CURRENT_COMMIT_HASH=$(git rev-parse HEAD)
+if [[ "${OLD_COMMIT_HASH:-}" != "$CURRENT_COMMIT_HASH" ]]; then
+    rm --force --recursive "$IWYU_BUILD_DIRNAME" &&
+        mkdir --parents "$IWYU_BUILD_DIRNAME" &&
+        cd "$IWYU_BUILD_DIRNAME"
     cmake -G "Unix Makefiles" -DCMAKE_PREFIX_PATH="/usr/lib/llvm-$LLVM_VERSION" ..
     # Generate executable $IWYU_HOME/$IWYU_BUILD_DIRNAME/bin/include-what-you-use
     make -j

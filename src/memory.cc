@@ -62,9 +62,6 @@ namespace {
 constexpr auto kCacheSizeAmplifier = 2;
 constexpr auto kMaxInflightMbufs = kMaxInflightOps * 16;
 
-void ExternalBufferDummyCallback(void* ARROW_ARG_UNUSED(addr) /*unused*/,
-                                 void* ARROW_ARG_UNUSED(opaque) /*unused*/) {}
-
 arrow::Result<const rte_memzone*> AllocateOne(arrow::MemoryPool* memory_pool,
                                               std::uint16_t size) {
   auto* tracker = RtememzoneAllocatorTracker::Instance();
@@ -72,6 +69,37 @@ arrow::Result<const rte_memzone*> AllocateOne(arrow::MemoryPool* memory_pool,
   std::uint8_t* addr = nullptr;
   ARROW_RETURN_NOT_OK(memory_pool->Allocate(size, &addr));
   return tracker->Of(addr);
+}
+
+void ExternalBufferDummyCallback(void* ARROW_ARG_UNUSED(addr) /*unused*/,
+                                 void* ARROW_ARG_UNUSED(opaque) /*unused*/) {}
+
+arrow::StatusCode AppendData(rte_mbuf** head, rte_mbuf* tail, void* buf_addr,
+                             rte_iova_t buf_iova, std::uint16_t buf_len,
+                             rte_mbuf_ext_shared_info* shinfo) {
+  // Chain the mbuf early to be able to release associated resources if needed
+  auto* head_mbuf = *head;
+  if (head_mbuf == nullptr) {
+    *head = tail;
+  } else {
+    if (ARROW_PREDICT_FALSE(rte_pktmbuf_chain(head_mbuf, tail) != 0)) {
+      RTE_LOG(ERR, USER1, "Chain segment limit exceeded\n");
+      return arrow::StatusCode::CapacityError;
+    }
+
+    // Update the packet length of the head mbuf after chaining each additional mbuf
+    head_mbuf->pkt_len += buf_len;
+  }
+
+  rte_pktmbuf_attach_extbuf(tail, buf_addr, buf_iova, buf_len, shinfo);
+  rte_mbuf_ext_refcnt_update(shinfo, 1);
+
+  if (ARROW_PREDICT_FALSE(rte_pktmbuf_append(tail, buf_len) == nullptr)) {
+    RTE_LOG(ERR, USER1, "Not enough space in the mbuf to allocate data\n");
+    return arrow::StatusCode::CapacityError;
+  }
+
+  return arrow::StatusCode::OK;
 }
 
 __rte_always_inline void UpdateOperation(rte_comp_op* current_op, void* private_xform) {
@@ -604,35 +632,6 @@ arrow::StatusCode QueuePairMemory<Class, Enable>::BulkAllocate(std::uint16_t num
           rte_pktmbuf_alloc_bulk(mbuf_pool_.get(), mbufs_.get(), num_mbufs) < 0)) {
     RTE_LOG(ERR, USER1, "Not enough entries in the mbuf pool\n");
     return arrow::StatusCode::OutOfMemory;
-  }
-
-  return arrow::StatusCode::OK;
-}
-
-template <typename Class, typename Enable>
-arrow::StatusCode QueuePairMemory<Class, Enable>::AppendData(
-    rte_mbuf** head, rte_mbuf* tail, void* buf_addr, rte_iova_t buf_iova,
-    std::uint16_t buf_len, rte_mbuf_ext_shared_info* shinfo) {
-  // Chain the mbuf early to be able to release associated resources if needed
-  auto* head_mbuf = *head;
-  if (head_mbuf == nullptr) {
-    *head = tail;
-  } else {
-    if (ARROW_PREDICT_FALSE(rte_pktmbuf_chain(head_mbuf, tail) != 0)) {
-      RTE_LOG(ERR, USER1, "Chain segment limit exceeded\n");
-      return arrow::StatusCode::CapacityError;
-    }
-
-    // Update the packet length of the head mbuf after chaining each additional mbuf
-    head_mbuf->pkt_len += buf_len;
-  }
-
-  rte_pktmbuf_attach_extbuf(tail, buf_addr, buf_iova, buf_len, shinfo);
-  rte_mbuf_ext_refcnt_update(shinfo, 1);
-
-  if (ARROW_PREDICT_FALSE(rte_pktmbuf_append(tail, buf_len) == nullptr)) {
-    RTE_LOG(ERR, USER1, "Not enough space in the mbuf to allocate data\n");
-    return arrow::StatusCode::CapacityError;
   }
 
   return arrow::StatusCode::OK;

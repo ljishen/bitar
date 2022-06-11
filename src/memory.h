@@ -23,7 +23,6 @@
 #pragma once
 
 #include <arrow/status.h>
-#include <rte_common.h>
 #include <rte_compressdev.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
@@ -154,10 +153,6 @@ class QueuePairMemory {
   /// \return arrow::StatusCode::OK on success, or arrow::StatusCode::OutOfMemory if not
   /// enough entries in the mempool
   arrow::StatusCode BulkAllocate(std::uint16_t num_ops, std::uint32_t num_mbufs);
-
-  arrow::StatusCode AppendData(rte_mbuf** head, rte_mbuf* tail, void* buf_addr,
-                               rte_iova_t buf_iova, std::uint16_t buf_len,
-                               rte_mbuf_ext_shared_info* shinfo);
 
   const std::uint8_t device_id_;
   const std::uint16_t queue_pair_id_;

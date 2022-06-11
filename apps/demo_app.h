@@ -42,26 +42,14 @@ namespace arrow {
 class ResizableBuffer;
 }
 
-static inline constexpr auto kBitsPerByte = 8;
-static inline constexpr auto kGigabit = 1e9;
-static inline constexpr auto kMicroseconds = 1e6;
+namespace bitar::app {
 
-static inline constexpr auto kDecompressedSegSize = 59460;
-static inline constexpr auto kBurstSize = 32 * 1;
 static inline constexpr auto kNumTests = 3;
-
-arrow::Result<std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>>
-GetBlueFieldCompressDevices(std::uint64_t max_buffer_size);
 
 arrow::Result<arrow::BufferVector> ReadBuffers(const char* ipc_file_path);
 
 arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
     const std::string& ipc_file_path, std::int64_t num_bytes);
-
-arrow::Status Release(
-    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
-        device_to_compressed_buffers_vector);
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
     const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
@@ -93,3 +81,5 @@ arrow::Status EvaluateAsync(
     const std::unique_ptr<arrow::Buffer>& input_buffer);
 
 arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer);
+
+}  // namespace bitar::app

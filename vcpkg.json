@@ -19,6 +19,12 @@
       "version>=": "3.0.0"
     }
   ],
+  "overrides": [
+    {
+      "name": "openssl",
+      "version-string": "1.1.1n#1"
+    }
+  ],
   "features": {
     "vcpkg-arrow": {
       "description": "Install Apache Arrow from vcpkg",
@@ -37,9 +43,9 @@
         {
           "name": "curl",
           "version>=": "7.83.1#2",
-          "default-features": false,
-          "features": ["non-http"]
-        }
+          "default-features": false
+        },
+        "openssl"
       ]
     },
     "tests": {
