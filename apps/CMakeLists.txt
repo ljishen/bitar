@@ -23,10 +23,10 @@
 add_executable(demo_app app_common.cc app_common.h demo_app.cc demo_app.h)
 target_link_libraries(demo_app PRIVATE bitar project_warnings project_options)
 
-set(DEPENDENCIES_CONFIGURED fmt cxxopts)
+set(DEPENDENCIES_CONFIGURED cxxopts fmt)
 foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
   find_package(${DEPENDENCY} CONFIG REQUIRED)
 endforeach()
 
-target_link_system_libraries(demo_app PRIVATE fmt::fmt cxxopts::cxxopts)
+target_link_system_libraries(demo_app PRIVATE cxxopts::cxxopts fmt::fmt)
 target_compile_definitions(demo_app PRIVATE FMT_ENFORCE_COMPILE_STRING)

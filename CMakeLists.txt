@@ -39,14 +39,14 @@ include("${_project_options_SOURCE_DIR}/Index.cmake")
 # CMAKE_HOST_SYSTEM_PROCESSOR work only after setting the project name with
 # project(), but VCPKG_FORCE_SYSTEM_BINARIES needs to be set before project().
 execute_process(
-  COMMAND "uname" "--machine"
+  COMMAND uname --machine
   OUTPUT_VARIABLE MACHINE_HARDWARE_NAME
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL LAST)
 string(TOLOWER "${MACHINE_HARDWARE_NAME}" MACHINE_HARDWARE_NAME_LOWER)
 
 # vcpkg: Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm,
 # s390x, and ppc64le platforms. See
-# https://github.com/microsoft/vcpkg-tool/blob/2022-05-05/src/vcpkg.cpp#L250-L259
+# https://github.com/microsoft/vcpkg-tool/blob/2022-06-15/src/vcpkg.cpp#L249-L258
 if((MACHINE_HARDWARE_NAME_LOWER MATCHES "^arm"
     OR MACHINE_HARDWARE_NAME_LOWER MATCHES "^aarch64"
     OR MACHINE_HARDWARE_NAME_LOWER MATCHES "^s390x"
@@ -72,7 +72,7 @@ set(ARROW_ROOT
     ""
     CACHE PATH "Apache Arrow installation prefix")
 if("${ARROW_ROOT}" STREQUAL "")
-  # Build the Arrow libraries using vcpkg if the installation prefix is not
+  # Build the Arrow libraries using vcpkg when the installation prefix is not
   # specified. This is required to be set before project().
   list(APPEND VCPKG_MANIFEST_FEATURES "vcpkg-arrow")
 else()
@@ -80,6 +80,27 @@ else()
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
+
+include(Utilities)
+
+# System default installed DPDK will be at /usr/local
+set(DPDK_ROOT
+    ""
+    CACHE PATH "DPDK installation prefix")
+if("${DPDK_ROOT}" STREQUAL "")
+  # Build the DPDK libraries using vcpkg when the installation prefix is not
+  # specified. This is required to be set before project().
+  list(APPEND VCPKG_MANIFEST_FEATURES "dpdk")
+else()
+  # Paths in PKG_CONFIG_PATH precedes the pkg-config default directory for
+  # searching DPDK libraries: https://linux.die.net/man/1/pkg-config
+  prepend_path_to_env(
+    PKG_CONFIG_PATH
+    # The first path is for Debian-based OS, and the second path is for Red
+    # Hat-based OS
+    "${DPDK_ROOT}/lib/${MACHINE_HARDWARE_NAME_LOWER}-linux-gnu/pkgconfig:${DPDK_ROOT}/lib64/pkgconfig"
+  )
+endif()
 
 # Define the features of the project
 include(Features)
@@ -202,18 +223,6 @@ target_compile_options(
             # members that might overlap other members of the same object
             # -Wno-zero-length-bounds
             # ~~~
-)
-
-include(Utilities)
-
-set(DPDK_ROOT
-    "/usr/local"
-    CACHE PATH "DPDK installation prefix")
-# Paths in PKG_CONFIG_PATH precedes the pkg-config default directory for
-# searching DPDK libraries: https://linux.die.net/man/1/pkg-config
-prepend_path_to_env(
-  PKG_CONFIG_PATH
-  "${DPDK_ROOT}/lib/${MACHINE_HARDWARE_NAME_LOWER}-linux-gnu/pkgconfig:${DPDK_ROOT}/lib64/pkgconfig"
 )
 
 add_subdirectory(src)
