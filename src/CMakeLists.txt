@@ -20,9 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_library(bitar "")
+add_library(${PROJECT_NAME} "")
 target_sources(
-  bitar
+  ${PROJECT_NAME}
   PRIVATE common.cc
           common.h
           config.cc
@@ -39,23 +39,12 @@ target_sources(
           util.cc
           util.h)
 
-target_link_libraries(bitar PRIVATE project_warnings project_options)
+target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings project_options)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk>=21.11.0)
-
-target_link_system_libraries(bitar PUBLIC PkgConfig::DPDK)
-target_compile_definitions(bitar PUBLIC ALLOW_EXPERIMENTAL_API)
-
-set(DEPENDENCIES_CONFIGURED fmt magic_enum Arrow)
+set(DEPENDENCIES_CONFIGURED Arrow fmt magic_enum)
 foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
   find_package(${DEPENDENCY} QUIET REQUIRED CONFIG)
 endforeach()
-
-target_link_system_libraries(bitar PRIVATE fmt::fmt magic_enum::magic_enum)
-# Force the use of compile-time format string checks:
-# https://fmt.dev/latest/api.html#compile-time-format-string-checks
-target_compile_definitions(bitar PRIVATE FMT_ENFORCE_COMPILE_STRING)
 
 if(TARGET arrow_static)
   list(APPEND ARROW_LIBRARIES arrow_static)
@@ -63,10 +52,8 @@ elseif(TARGET arrow_shared)
   list(APPEND ARROW_LIBRARIES arrow_shared)
 endif()
 
-target_link_system_libraries(bitar PUBLIC ${ARROW_LIBRARIES})
-target_compile_definitions(bitar PUBLIC ARROW_NO_DEPRECATED_API)
-
-target_include_directories(bitar PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_link_system_libraries(${PROJECT_NAME} PUBLIC ${ARROW_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME} PUBLIC ARROW_NO_DEPRECATED_API)
 
 if("${ARROW_ROOT}" STREQUAL "")
   # This is the case where the vcpkg-installed Arrow library is used. Since the
@@ -90,7 +77,7 @@ if("${ARROW_ROOT}" STREQUAL "")
   endif()
 
   target_link_system_libraries(
-    bitar
+    ${PROJECT_NAME}
     INTERFACE
     ${ZSTD_LIBRARIES}
     lz4::lz4
@@ -103,5 +90,18 @@ if("${ARROW_ROOT}" STREQUAL "")
 else()
   # This is the case when the system-installed Arrow library is used.
   find_package(CURL REQUIRED CONFIG)
-  target_link_system_libraries(bitar INTERFACE CURL::libcurl)
+  target_link_system_libraries(${PROJECT_NAME} INTERFACE CURL::libcurl)
 endif()
+
+target_link_system_libraries(${PROJECT_NAME} PRIVATE fmt::fmt
+                             magic_enum::magic_enum)
+# Force the use of compile-time format string checks:
+# https://fmt.dev/latest/api.html#compile-time-format-string-checks
+target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_ENFORCE_COMPILE_STRING)
+
+find_package(dpdk QUIET REQUIRED)
+
+target_link_system_libraries(${PROJECT_NAME} PUBLIC DPDK::dpdk)
+target_compile_definitions(${PROJECT_NAME} PUBLIC ALLOW_EXPERIMENTAL_API)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
