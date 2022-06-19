@@ -20,9 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-if(NOT "${DPDK_ROOT}" STREQUAL "")
-  # This is the case where DPDK is not installed by vcpkg, and the DPDK
-  # installation prefix is provided by the user.
+if("${DPDK_ROOT}" STREQUAL "")
+  # This is the case where DPDK is installed with vcpkg.
+  find_package(dpdk REQUIRED CONFIG)
+else()
+  # This is the case where the installation prefix of DPDK is specified by the user.
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
 
