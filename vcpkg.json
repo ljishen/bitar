@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "homepage": "https://github.com/ljishen/bitar",
   "description": "bitar is a library for accessing hardware compression/decompression accelerators",
-  "builtin-baseline": "0a47bb7c7f32e636dff5cb18561d5ef59c4982a2",
+  "builtin-baseline": "c06de125e9f4abd6d1591c5a158b29a97d8b0977",
   "dependencies": [
     {
       "name": "cxxopts",

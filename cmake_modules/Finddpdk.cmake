@@ -24,14 +24,17 @@ if("${DPDK_ROOT}" STREQUAL "")
   # This is the case where DPDK is installed with vcpkg.
   find_package(dpdk REQUIRED CONFIG)
 else()
-  # This is the case where the installation prefix of DPDK is specified by the user.
+  # This is the case where the installation prefix of DPDK is specified by user.
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
+  pkg_check_modules(LIBDPDK REQUIRED IMPORTED_TARGET libdpdk)
 
-  add_library(DPDK::dpdk ALIAS PkgConfig::DPDK)
+  add_library(DPDK::dpdk ALIAS PkgConfig::LIBDPDK)
 
   find_package_handle_standard_args(
     dpdk
-    REQUIRED_VARS DPDK_LIBRARIES DPDK_INCLUDE_DIRS
-    VERSION_VAR DPDK_VERSION)
+    REQUIRED_VARS LIBDPDK_INCLUDE_DIRS LIBDPDK_LIBRARIES
+    VERSION_VAR LIBDPDK_VERSION)
+
+  mark_as_advanced(LIBDPDK_INCLUDE_DIRS LIBDPDK_LIBRARIES LIBDPDK_VERSION)
+  unset(LIBDPDK_FOUND)
 endif()
