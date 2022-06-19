@@ -27,5 +27,9 @@ if(NOT "${DPDK_ROOT}" STREQUAL "")
   pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
 
   add_library(DPDK::dpdk ALIAS PkgConfig::DPDK)
-  set(DPDK_dpdk_FOUND 1)
+
+  find_package_handle_standard_args(
+    dpdk
+    REQUIRED_VARS DPDK_LIBRARIES DPDK_INCLUDE_DIRS
+    VERSION_VAR DPDK_VERSION)
 endif()

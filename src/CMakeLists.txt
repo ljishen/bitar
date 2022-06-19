@@ -99,7 +99,7 @@ target_link_system_libraries(${PROJECT_NAME} PRIVATE fmt::fmt
 # https://fmt.dev/latest/api.html#compile-time-format-string-checks
 target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_ENFORCE_COMPILE_STRING)
 
-find_package(dpdk QUIET REQUIRED)
+find_package(dpdk 21.11.0 QUIET REQUIRED)
 
 target_link_system_libraries(${PROJECT_NAME} PUBLIC DPDK::dpdk)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ALLOW_EXPERIMENTAL_API)
