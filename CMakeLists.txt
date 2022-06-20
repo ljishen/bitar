@@ -46,7 +46,7 @@ string(TOLOWER "${MACHINE_HARDWARE_NAME}" MACHINE_HARDWARE_NAME_LOWER)
 
 # vcpkg: Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm,
 # s390x, and ppc64le platforms. See
-# https://github.com/microsoft/vcpkg-tool/blob/2022-06-15/src/vcpkg.cpp#L249-L258
+# https://github.com/microsoft/vcpkg-tool/blob/2022-06-17/src/vcpkg.cpp#L249-L258
 if((MACHINE_HARDWARE_NAME_LOWER MATCHES "^arm"
     OR MACHINE_HARDWARE_NAME_LOWER MATCHES "^aarch64"
     OR MACHINE_HARDWARE_NAME_LOWER MATCHES "^s390x"
@@ -63,7 +63,7 @@ set(VCPKG_ROOT
 get_filename_component(_VCPKG_PARENT_DIR "${VCPKG_ROOT}" DIRECTORY)
 file(MAKE_DIRECTORY "${_VCPKG_PARENT_DIR}")
 # Use vcpkg for library management - should be called before defining project():
-# https://github.com/microsoft/vcpkg/tree/2022.05.10#vcpkg-as-a-submodule. If
+# https://github.com/microsoft/vcpkg/tree/2022.06.16.1#vcpkg-as-a-submodule. If
 # updating vcpkg dependencies is required, use "-DENABLE_VCPKG_UPDATE:BOOL=ON"
 run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
           "https://github.com/ljishen/vcpkg.git")

@@ -66,7 +66,7 @@ if("${ARROW_ROOT}" STREQUAL "")
   endforeach()
 
   set(ARROW_DEPENDENCIES BZip2 ZLIB)
-  foreach(DEPENDENCY ${ARROW_DEPENDENCIES_CONFIGURED})
+  foreach(DEPENDENCY ${ARROW_DEPENDENCIES})
     find_package(${DEPENDENCY} REQUIRED)
   endforeach()
 
