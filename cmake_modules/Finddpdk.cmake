@@ -27,14 +27,13 @@ else()
   # This is the case where the installation prefix of DPDK is specified by user.
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(LIBDPDK REQUIRED IMPORTED_TARGET libdpdk)
+  mark_as_advanced(LIBDPDK_INCLUDE_DIRS LIBDPDK_LIBRARIES LIBDPDK_VERSION)
 
   add_library(DPDK::dpdk ALIAS PkgConfig::LIBDPDK)
+  unset(LIBDPDK_FOUND)
 
   find_package_handle_standard_args(
     dpdk
     REQUIRED_VARS LIBDPDK_INCLUDE_DIRS LIBDPDK_LIBRARIES
     VERSION_VAR LIBDPDK_VERSION)
-
-  mark_as_advanced(LIBDPDK_INCLUDE_DIRS LIBDPDK_LIBRARIES LIBDPDK_VERSION)
-  unset(LIBDPDK_FOUND)
 endif()

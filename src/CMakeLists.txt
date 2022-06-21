@@ -41,8 +41,12 @@ target_sources(
 
 target_link_libraries(${PROJECT_NAME} PRIVATE project_options project_warnings)
 
-set(DEPENDENCIES_CONFIGURED Arrow fmt magic_enum)
-foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
+set(PUBLIC_DEPENDENCIES_CONFIGURED "Arrow 7.0.0")
+foreach(DEPENDENCY ${PUBLIC_DEPENDENCIES_CONFIGURED})
+  string(REPLACE " " ";" DEPENDENCY "${DEPENDENCY}")
+  # Use QUIET to silence the possible dependencies looking for by
+  # ArrowConfig.cmake. This is not a problem because if possible dependencies
+  # are not found, arrow_bundled_dependencies will be used.
   find_package(${DEPENDENCY} QUIET REQUIRED CONFIG)
 endforeach()
 
@@ -60,13 +64,13 @@ if("${ARROW_ROOT}" STREQUAL "")
   # Arrow library depends but does not statically link the compression
   # libraries, we need to expose these compression libraries to be used by apps
   # that depend on us.
-  set(ARROW_DEPENDENCIES_CONFIGURED Snappy lz4 unofficial-brotli zstd)
-  foreach(DEPENDENCY ${ARROW_DEPENDENCIES_CONFIGURED})
+  set(INTERFACE_DEPENDENCIES_CONFIGURED Snappy lz4 unofficial-brotli zstd)
+  foreach(DEPENDENCY ${INTERFACE_DEPENDENCIES_CONFIGURED})
     find_package(${DEPENDENCY} REQUIRED CONFIG)
   endforeach()
 
-  set(ARROW_DEPENDENCIES BZip2 ZLIB)
-  foreach(DEPENDENCY ${ARROW_DEPENDENCIES})
+  set(INTERFACE_DEPENDENCIES BZip2 ZLIB)
+  foreach(DEPENDENCY ${INTERFACE_DEPENDENCIES})
     find_package(${DEPENDENCY} REQUIRED)
   endforeach()
 
@@ -79,19 +83,25 @@ if("${ARROW_ROOT}" STREQUAL "")
   target_link_system_libraries(
     ${PROJECT_NAME}
     INTERFACE
-    ${ZSTD_LIBRARIES}
-    lz4::lz4
     Snappy::snappy
-    BZip2::BZip2
-    ZLIB::ZLIB
+    lz4::lz4
     unofficial::brotli::brotlidec-static
     unofficial::brotli::brotlienc-static
-    unofficial::brotli::brotlicommon-static)
+    unofficial::brotli::brotlicommon-static
+    ${ZSTD_LIBRARIES}
+    BZip2::BZip2
+    ZLIB::ZLIB)
 else()
   # This is the case when the system-installed Arrow library is used.
-  find_package(CURL REQUIRED CONFIG)
+  set(INTERFACE_DEPENDENCIES_CONFIGURED CURL)
+  find_package(${INTERFACE_DEPENDENCIES_CONFIGURED} REQUIRED CONFIG)
   target_link_system_libraries(${PROJECT_NAME} INTERFACE CURL::libcurl)
 endif()
+
+set(PRIVATE_DEPENDENCIES_CONFIGURED fmt magic_enum)
+foreach(DEPENDENCY ${PRIVATE_DEPENDENCIES_CONFIGURED})
+  find_package(${DEPENDENCY} REQUIRED CONFIG)
+endforeach()
 
 target_link_system_libraries(${PROJECT_NAME} PRIVATE fmt::fmt
                              magic_enum::magic_enum)
@@ -99,9 +109,33 @@ target_link_system_libraries(${PROJECT_NAME} PRIVATE fmt::fmt
 # https://fmt.dev/latest/api.html#compile-time-format-string-checks
 target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_ENFORCE_COMPILE_STRING)
 
-find_package(dpdk 21.11.0 QUIET REQUIRED)
+set(PUBLIC_DEPENDENCIES "dpdk 21.11.0")
+foreach(DEPENDENCY ${PUBLIC_DEPENDENCIES})
+  string(REPLACE " " ";" DEPENDENCY "${DEPENDENCY}")
+  find_package(${DEPENDENCY} REQUIRED)
+endforeach()
 
 target_link_system_libraries(${PROJECT_NAME} PUBLIC DPDK::dpdk)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ALLOW_EXPERIMENTAL_API)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>"
+                         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+
+package_project(
+  TARGETS
+  ${PROJECT_NAME}
+  project_options
+  project_warnings
+  PUBLIC_INCLUDES
+  "${CMAKE_CURRENT_LIST_DIR}"
+  INTERFACE_DEPENDENCIES_CONFIGURED
+  ${INTERFACE_DEPENDENCIES_CONFIGURED}
+  PUBLIC_DEPENDENCIES_CONFIGURED
+  ${PUBLIC_DEPENDENCIES_CONFIGURED}
+  INTERFACE_DEPENDENCIES
+  ${INTERFACE_DEPENDENCIES}
+  PUBLIC_DEPENDENCIES
+  ${PUBLIC_DEPENDENCIES}
+  PRIVATE_DEPENDENCIES_CONFIGURED
+  ${PRIVATE_DEPENDENCIES_CONFIGURED})

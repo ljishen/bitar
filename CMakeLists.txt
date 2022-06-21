@@ -79,7 +79,7 @@ else()
   list(APPEND VCPKG_MANIFEST_FEATURES "system-arrow-deps")
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
 
 include(Utilities)
 
@@ -227,6 +227,3 @@ target_compile_options(
 
 add_subdirectory(src)
 add_subdirectory(apps)
-
-# package the project
-# package_project(TARGETS bitar)
