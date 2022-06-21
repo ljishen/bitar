@@ -5,31 +5,39 @@
 
 <!-- markdownlint-disable-next-line no-inline-html -->
 <img src="assets/logo.png" width="25%">
-bitar is a library for accessing hardware compression/decompression accelerators.
+Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators.
 
 ---
 
 ## Prerequisites
 
-- [DPDK](https://github.com/DPDK/dpdk) >= v21.11
+- Linux (with kernel >= 4.4) or FreeBSD
+- For Linux, glibc >= 2.7 (reported by `ldd --version`)
+- [DPDK](https://github.com/DPDK/dpdk) >= v21.11 (can be installed via vcpkg)
+- [Apache Arrow](https://github.com/apache/arrow) >= 7.0.0 (can be installed via vcpkg)
 
-## Support Hardware
+## Supported Hardware
 
 - [NVIDIA BLUEFIELD-2 DPU](https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/documents/datasheet-nvidia-bluefield-2-dpu.pdf)
 
 ## Integration
 
-[TODO]
+Bitar can be easily installed and integrated via vcpkg
+```bash
+vcpkg install bitar
+```
 
 ## Development
 
 ```bash
-$ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja -DDPDK_ROOT=<dpdk/install/prefix> \
--DENABLE_DEVELOPER_MODE:BOOL=ON
+$ # If DPDK_ROOT or ARROW_ROOT is omitted, the corresponding libraries will be install via vcpkg.
+$ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
+[-DDPDK_ROOT:PATH=<dpdk_install_prefix>] [-DARROW_ROOT:PATH=<arrow_install_prefix>] \
+-DCMAKE_BUILD_TYPE:BOOL=Debug -DENABLE_DEVELOPER_MODE:BOOL=ON -DFEATURE_TESTS:BOOL=ON
 
 $ cmake --build ./build-$(uname -m)
 
-$ LD_LIBRARY_PATH=<dpdk/install/prefix>/lib/$(uname -m)-linux-gnu:<dpdk/install/prefix>/lib64:\
+$ LD_LIBRARY_PATH=<dpdk_install_prefix>/lib/$(uname -m)-linux-gnu:<dpdk/install/prefix>/lib64:\
 $LD_LIBRARY_PATH ./build-$(uname -m)/apps/demo_app -l 1-3 -a <device_pci_id>,class=compress -- \
 --file <file> --bytes <size_to_read_from_file>
 ```

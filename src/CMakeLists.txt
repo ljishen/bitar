@@ -39,7 +39,7 @@ target_sources(
           util.cc
           util.h)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings project_options)
+target_link_libraries(${PROJECT_NAME} PRIVATE project_options project_warnings)
 
 set(DEPENDENCIES_CONFIGURED Arrow fmt magic_enum)
 foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
