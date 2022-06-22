@@ -22,3 +22,4 @@
 
 # Suppress warnings from all headers of packages install by vcpkg
 *:*/vcpkg/packages/*-linux/include/*
+*:*/vcpkg_installed/*-linux/include/*

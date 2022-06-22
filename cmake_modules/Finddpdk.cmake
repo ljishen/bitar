@@ -22,7 +22,19 @@
 
 if("${DPDK_ROOT}" STREQUAL "")
   # This is the case where DPDK is installed with vcpkg.
-  find_package(dpdk REQUIRED CONFIG)
+  find_package(unofficial-dpdk QUIET REQUIRED CONFIG)
+  mark_as_advanced(LIBDPDK_STATIC_INCLUDE_DIRS LIBDPDK_STATIC_LIBRARIES
+                   LIBDPDK_VERSION)
+
+  add_library(DPDK::dpdk ALIAS unofficial::dpdk::dpdk)
+  unset(unofficial-dpdk_FOUND)
+
+  # Since the vcpkg triplet always use static linkage for the dpdk port, we can
+  # safely only report the static include_dirs.
+  find_package_handle_standard_args(
+    dpdk
+    REQUIRED_VARS LIBDPDK_STATIC_INCLUDE_DIRS LIBDPDK_STATIC_LIBRARIES
+    VERSION_VAR LIBDPDK_VERSION)
 else()
   # This is the case where the installation prefix of DPDK is specified by user.
   find_package(PkgConfig REQUIRED)
