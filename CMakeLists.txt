@@ -166,8 +166,20 @@ endif()
 # `project_options` and sets `project_warnings`. This also accepts the same
 # arguments as `project_options`.
 dynamic_project_options(
-  # Enable CMAKE_INTERPROCEDURAL_OPTIMIZATION and add flag -march=native
-  ENABLE_INTERPROCEDURAL_OPTIMIZATION ENABLE_NATIVE_OPTIMIZATION)
+  # Enable CMAKE_INTERPROCEDURAL_OPTIMIZATION
+  ENABLE_INTERPROCEDURAL_OPTIMIZATION
+  # Add flag -march=native
+  ENABLE_NATIVE_OPTIMIZATION
+  CPPCHECK_OPTIONS
+  --enable=style,performance,warning,portability
+  --inline-suppr
+  # We cannot act on a bug/missing feature of cppcheck
+  --suppress=internalAstError
+  # if a file does not have an internalAstError, we get an unmatchedSuppression
+  # error
+  --suppress=unmatchedSuppression
+  --inconclusive
+  --suppressions-list=${CMAKE_CURRENT_LIST_DIR}/suppressions.txt)
 
 # Add warnings used by DPDK
 target_compile_options(
