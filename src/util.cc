@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "util.h"
+#include "include/util.h"
 
 #include <arrow/result.h>
 #include <arrow/status.h>

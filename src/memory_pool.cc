@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "memory_pool.h"
+#include "include/memory_pool.h"
 
 #include <arrow/memory_pool.h>
 #include <arrow/status.h>

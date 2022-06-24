@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "device.h"
+#include "include/device.h"
 
 #include <arrow/buffer.h>
 #include <arrow/result.h>
@@ -47,9 +47,9 @@
 
 #include <magic_enum.hpp>
 
-#include "config.h"
-#include "memory.h"
-#include "util.h"
+#include "include/config.h"
+#include "include/memory.h"
+#include "include/util.h"
 
 namespace bitar {
 

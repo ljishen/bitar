@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "memory.h"
+#include "include/memory.h"
 
 #include <arrow/buffer.h>
 #include <arrow/memory_pool.h>
@@ -50,10 +50,10 @@
 #include <unordered_set>
 #include <utility>
 
-#include "config.h"
-#include "memory_pool.h"
-#include "type_fwd.h"
-#include "util.h"
+#include "include/config.h"
+#include "include/memory_pool.h"
+#include "include/type_fwd.h"
+#include "include/util.h"
 
 namespace bitar {
 

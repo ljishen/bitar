@@ -23,21 +23,21 @@
 add_library(${PROJECT_NAME} "")
 target_sources(
   ${PROJECT_NAME}
-  PRIVATE common.cc
-          common.h
+  PRIVATE include/common.h
+          include/config.h
+          include/device.h
+          include/driver.h
+          include/memory_pool.h
+          include/memory.h
+          include/type_fwd.h
+          include/util.h
+          common.cc
           config.cc
-          config.h
           device.cc
-          device.h
           driver.cc
-          driver.h
           memory_pool.cc
-          memory_pool.h
           memory.cc
-          memory.h
-          type_fwd.h
-          util.cc
-          util.h)
+          util.cc)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE project_options project_warnings)
 
@@ -118,9 +118,11 @@ endforeach()
 target_link_system_libraries(${PROJECT_NAME} PUBLIC DPDK::dpdk)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ALLOW_EXPERIMENTAL_API)
 
+set(INCLUDE_DIR "include")
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>"
-                         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+  ${PROJECT_NAME}
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${INCLUDE_DIR}>"
+         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 package_project(
   TARGETS
@@ -128,7 +130,7 @@ package_project(
   project_options
   project_warnings
   PUBLIC_INCLUDES
-  "${CMAKE_CURRENT_LIST_DIR}"
+  "${INCLUDE_DIR}"
   INTERFACE_DEPENDENCIES_CONFIGURED
   ${INTERFACE_DEPENDENCIES_CONFIGURED}
   PUBLIC_DEPENDENCIES_CONFIGURED
