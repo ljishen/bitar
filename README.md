@@ -23,6 +23,7 @@ Bitar is a C++ library to simplify accessing hardware compression/decompression 
 ## Integration
 
 Bitar can be easily installed and integrated via vcpkg
+
 ```bash
 vcpkg install bitar
 ```
@@ -38,7 +39,8 @@ $ # sudo sh -c 'echo 1024 > /sys/devices/system/node/node1/hugepages/hugepages-2
 $ # If DPDK_ROOT or ARROW_ROOT is omitted, the corresponding libraries will be install via vcpkg.
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
 [-DDPDK_ROOT:PATH=<dpdk_install_prefix>] [-DARROW_ROOT:PATH=<arrow_install_prefix>] \
--DCMAKE_BUILD_TYPE:BOOL=Debug -DENABLE_DEVELOPER_MODE:BOOL=ON -DFEATURE_TESTS:BOOL=ON
+-DFEATURE_APPS:BOOL=ON -DFEATURE_TESTS:BOOL=ON \
+-DCMAKE_BUILD_TYPE:BOOL=Debug -DENABLE_DEVELOPER_MODE:BOOL=ON
 
 $ cmake --build ./build-$(uname -m)
 

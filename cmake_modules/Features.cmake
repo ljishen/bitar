@@ -20,11 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Building the tests
-option(FEATURE_TESTS "Enable the tests" OFF)
+# Build the apps (including the demo_app)
+option(FEATURE_APPS "Build the apps" OFF)
+
+# Build the docs
+option(FEATURE_DOCS "Build the docs" OFF)
+
+# Build the tests
+option(FEATURE_TESTS "Build the tests" OFF)
 if(FEATURE_TESTS)
   list(APPEND VCPKG_MANIFEST_FEATURES "tests")
 endif()
-
-# Building the docs
-option(FEATURE_DOCS "Enable the docs" OFF)

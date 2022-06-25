@@ -238,4 +238,7 @@ target_compile_options(
 )
 
 add_subdirectory(src)
-add_subdirectory(apps)
+
+if(FEATURE_APPS)
+  add_subdirectory(apps)
+endif()
