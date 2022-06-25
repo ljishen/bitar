@@ -118,19 +118,27 @@ endforeach()
 target_link_system_libraries(${PROJECT_NAME} PUBLIC DPDK::dpdk)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ALLOW_EXPERIMENTAL_API)
 
-set(INCLUDE_DIR "include")
+include(GNUInstallDirs) # Define GNU standard installation directories such as
+                        # CMAKE_INSTALL_INCLUDEDIR
+
+set(PUBLIC_INCLUDES "include")
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${INCLUDE_DIR}>"
-         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+  PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${PUBLIC_INCLUDES}>"
+         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>")
+
+get_target_property(public_headers ${PROJECT_NAME} SOURCES)
+list(FILTER public_headers INCLUDE REGEX "${PUBLIC_INCLUDES}/.+\.h$")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER
+                                                 "${public_headers}")
+install(TARGETS ${PROJECT_NAME}
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
 
 package_project(
   TARGETS
   ${PROJECT_NAME}
   project_options
   project_warnings
-  PUBLIC_INCLUDES
-  "${INCLUDE_DIR}"
   INTERFACE_DEPENDENCIES_CONFIGURED
   ${INTERFACE_DEPENDENCIES_CONFIGURED}
   PUBLIC_DEPENDENCIES_CONFIGURED
