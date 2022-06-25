@@ -30,6 +30,11 @@ vcpkg install bitar
 ## Development
 
 ```bash
+$ # Reserve hugepages
+$ sudo sh -c 'echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages'
+$ # On a NUMA machine, we need
+$ # sudo sh -c 'echo 1024 > /sys/devices/system/node/node1/hugepages/hugepages-2048kB/nr_hugepages'
+
 $ # If DPDK_ROOT or ARROW_ROOT is omitted, the corresponding libraries will be install via vcpkg.
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
 [-DDPDK_ROOT:PATH=<dpdk_install_prefix>] [-DARROW_ROOT:PATH=<arrow_install_prefix>] \
@@ -37,7 +42,8 @@ $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
 
 $ cmake --build ./build-$(uname -m)
 
-$ LD_LIBRARY_PATH=<dpdk_install_prefix>/lib/$(uname -m)-linux-gnu:<dpdk/install/prefix>/lib64:\
-$LD_LIBRARY_PATH ./build-$(uname -m)/apps/demo_app -l 1-3 -a <device_pci_id>,class=compress -- \
+# Omit LD_LIBRARY_PATH if DPDK is installed via vcpkg
+$ LD_LIBRARY_PATH=<dpdk_install_prefix>/lib/$(uname -m)-linux-gnu:<dpdk/install/prefix>/lib64:$LD_LIBRARY_PATH \
+./build-$(uname -m)/apps/demo_app --in-memory -l 1-3 -a <device_pci_id>,class=compress -- \
 --file <file> --bytes <size_to_read_from_file>
 ```
