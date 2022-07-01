@@ -36,16 +36,24 @@ $ sudo sh -c 'echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-204
 $ # On a NUMA machine, we need
 $ # sudo sh -c 'echo 1024 > /sys/devices/system/node/node1/hugepages/hugepages-2048kB/nr_hugepages'
 
-$ # If DPDK_ROOT or ARROW_ROOT is omitted, the corresponding libraries will be install via vcpkg.
+$ # When DPDK or Arrow library is not found, it will be automatically built from source.
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
-[-DDPDK_ROOT:PATH=<dpdk_install_prefix>] [-DARROW_ROOT:PATH=<arrow_install_prefix>] \
--DFEATURE_APPS:BOOL=ON -DFEATURE_TESTS:BOOL=ON \
--DCMAKE_BUILD_TYPE:BOOL=Debug -DENABLE_DEVELOPER_MODE:BOOL=ON
+[-Ddpdk_ROOT:PATH=<dpdk-install-prefix>] [-DArrow_ROOT:PATH=<arrow-install-prefix>] \
+-DBITAR_BUILD_APPS:BOOL=ON -DBITAR_BUILD_TESTS:BOOL=ON \
+-DENABLE_DEVELOPER_MODE:BOOL=ON -DCMAKE_BUILD_TYPE:BOOL=Debug
 
 $ cmake --build ./build-$(uname -m)
+$ cmake --install ./build-$(uname -m) --prefix <install-prefix>
 
-# Omit LD_LIBRARY_PATH if DPDK is installed via vcpkg
-$ LD_LIBRARY_PATH=<dpdk_install_prefix>/lib/$(uname -m)-linux-gnu:<dpdk/install/prefix>/lib64:$LD_LIBRARY_PATH \
-./build-$(uname -m)/apps/demo_app --in-memory -l 1-3 -a <device_pci_id>,class=compress -- \
---file <file> --bytes <size_to_read_from_file>
+# LD_LIBRARY_PATH can be omitted if DPDK is built from source via vcpkg
+$ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-prefix>/lib64:$LD_LIBRARY_PATH \
+./build-$(uname -m)/apps/demo_app --in-memory -l 1-3 -a <device-pci-id>,class=compress -- \
+--file <file> --bytes <size-to-read-from-file>
 ```
+
+### Advanced CMake Configuration Options
+
+- `VCPKG_ROOT`: the prefix to an installed vcpkg instance (install automatically if not specified)
+- `BITAR_BUILD_ARROW`: set this on to force building the Arrow dependency from source
+- `BITAR_ARROW_GIT_REPOSITORY`: the git repository to fetch the Arrow source (default to the official repository)
+- `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash of the Arrow repository

@@ -24,7 +24,7 @@ if(NOT BITAR_BUILD_ARROW)
   # Use QUIET to silence the possible dependencies looking for by
   # ArrowConfig.cmake. This is not a problem because if possible dependencies
   # are not found, arrow_bundled_dependencies will be used.
-  find_package(${CMAKE_FIND_PACKAGE_NAME} 7.0.0 QUIET CONFIG)
+  find_package(${CMAKE_FIND_PACKAGE_NAME} QUIET CONFIG)
 endif()
 
 if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
@@ -184,10 +184,14 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
 
   add_library(Arrow::arrow INTERFACE IMPORTED)
   target_link_system_libraries(Arrow::arrow INTERFACE ${_arrow_library})
+
   get_target_property(_arrow_include_dirs ${_arrow_library} INCLUDE_DIRECTORIES)
-  set_target_properties(Arrow::arrow PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                                "${_arrow_include_dirs}")
+  # This is the case where Arrow is built from source
+  if(DEFINED _arrow_include_dir)
+    set_target_properties(Arrow::arrow PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+                                                  "${_arrow_include_dirs}")
+    unset(_arrow_include_dirs)
+  endif()
 
   unset(_arrow_library)
-  unset(_arrow_include_dirs)
 endif()

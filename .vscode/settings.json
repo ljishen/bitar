@@ -13,7 +13,11 @@
   "cmake.configureSettings": {
     "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/aarch64/src/vcpkg/scripts/buildsystems/vcpkg.cmake",
     "Arrow_ROOT": "/usr",
-    "dpdk_ROOT": "${env:HOME}/opt/dpdk-v22.03-aarch64"
+    "dpdk_ROOT": "${env:HOME}/opt/dpdk-v22.03-aarch64",
+    "BITAR_BUILD_APPS": true,
+    "BITAR_BUILD_TESTS": true,
+    "BITAR_BUILD_ARROW": false,
+    "ENABLE_DEVELOPER_MODE": true
   },
   "cmake.generator": "Ninja",
   "files.associations": {

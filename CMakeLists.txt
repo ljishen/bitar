@@ -100,6 +100,7 @@ else()
     "${dpdk_ROOT}/lib/${machine_hardware_name_lower}-linux-gnu/pkgconfig:${dpdk_ROOT}/lib64/pkgconfig"
   )
 endif()
+set(dpdk_minimum_required_version 21.11.0)
 
 # Define the features of the project
 include(Features)
@@ -121,6 +122,7 @@ option(BITAR_BUILD_ARROW
 if(BITAR_BUILD_ARROW)
   unset(Arrow_ROOT)
 endif()
+set(arrow_minimum_required_version 7.0.0)
 
 set(IWYU_ROOT
     "${MACHINE_OPTIONAL_DIR}"

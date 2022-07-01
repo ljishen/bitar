@@ -30,7 +30,7 @@ endforeach()
 target_link_system_libraries(demo_app PRIVATE cxxopts::cxxopts fmt::fmt)
 target_compile_definitions(demo_app PRIVATE FMT_ENFORCE_COMPILE_STRING)
 
-find_package(Arrow REQUIRED)
+find_package(Arrow "${arrow_minimum_required_version}" REQUIRED)
 target_link_system_libraries(demo_app PRIVATE Arrow::arrow)
 target_compile_definitions(demo_app PRIVATE ARROW_NO_DEPRECATED_API)
 if(Arrow_IS_SYSTEM_INSTALLED)

@@ -45,24 +45,25 @@ set(PRIVATE_DEPENDENCIES_CONFIGURED fmt magic_enum)
 foreach(DEPENDENCY ${PRIVATE_DEPENDENCIES_CONFIGURED})
   find_package(${DEPENDENCY} REQUIRED CONFIG)
 endforeach()
-
 target_link_system_libraries(${PROJECT_NAME} PRIVATE fmt::fmt
                              magic_enum::magic_enum)
 # Force the use of compile-time format string checks:
 # https://fmt.dev/latest/api.html#compile-time-format-string-checks
 target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_ENFORCE_COMPILE_STRING)
 
-set(PUBLIC_DEPENDENCIES "dpdk 21.11.0")
+set(PUBLIC_DEPENDENCIES "dpdk ${dpdk_minimum_required_version}")
 foreach(DEPENDENCY ${PUBLIC_DEPENDENCIES})
   string(REPLACE " " ";" DEPENDENCY "${DEPENDENCY}")
   find_package(${DEPENDENCY} REQUIRED)
 endforeach()
-
 target_link_system_libraries(${PROJECT_NAME} PUBLIC DPDK::dpdk)
 target_compile_definitions(${PROJECT_NAME} PUBLIC ALLOW_EXPERIMENTAL_API)
 
-set(PRIVATE_DEPENDENCIES Arrow)
-find_package(${PRIVATE_DEPENDENCIES} REQUIRED)
+set(PRIVATE_DEPENDENCIES "Arrow ${arrow_minimum_required_version}")
+foreach(DEPENDENCY ${PRIVATE_DEPENDENCIES})
+  string(REPLACE " " ";" DEPENDENCY "${DEPENDENCY}")
+  find_package(${DEPENDENCY} REQUIRED)
+endforeach()
 target_link_system_libraries(${PROJECT_NAME} PRIVATE Arrow::arrow)
 # Disable APIs that have been deprecated
 # https://arrow.apache.org/docs/developers/cpp/building.html#deprecations-and-api-changes
