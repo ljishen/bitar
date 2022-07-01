@@ -34,10 +34,12 @@
 #include <arrow/util/macros.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <rte_cycles.h>
 #include <rte_eal.h>
 #include <rte_errno.h>
 #include <rte_launch.h>
 #include <rte_log.h>
+#include <rte_memcpy.h>
 #include <ext/alloc_traits.h>
 
 #include <cstdint>
@@ -60,14 +62,6 @@
 #include "memory_pool.h"
 #include "type_fwd.h"
 #include "util.h"
-
-#ifdef __aarch64__
-#include <rte_cycles_64.h>
-#include <rte_memcpy_64.h>
-#else
-#include <rte_cycles.h>
-#include <rte_memcpy.h>
-#endif
 
 namespace bitar::app {
 

@@ -27,10 +27,12 @@
 #include <arrow/util/logging.h>
 #include <fmt/format.h>
 #include <rte_common.h>
+#include <rte_cycles.h>
 #include <rte_debug.h>
 #include <rte_errno.h>
 #include <rte_lcore.h>
 #include <rte_malloc.h>
+#include <rte_memcpy.h>
 #include <rte_memzone.h>
 
 #include <cstddef>
@@ -43,14 +45,6 @@
 #include <utility>
 
 #include <magic_enum.hpp>
-
-#ifdef __aarch64__
-#include <rte_cycles_64.h>
-#include <rte_memcpy_64.h>
-#else
-#include <rte_cycles.h>
-#include <rte_memcpy.h>
-#endif
 
 namespace bitar {
 

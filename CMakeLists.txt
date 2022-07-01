@@ -188,6 +188,12 @@ dynamic_project_options(
   --inconclusive
   --suppressions-list=${CMAKE_CURRENT_LIST_DIR}/suppressions.txt)
 
+if(DEFINED CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
+  list(
+    APPEND CMAKE_CXX_INCLUDE_WHAT_YOU_USE
+    "-Xiwyu;--mapping_file=${CMAKE_CURRENT_LIST_DIR}/iwyu.imp;-w")
+endif()
+
 # Add warnings used by DPDK
 target_compile_options(
   project_warnings
