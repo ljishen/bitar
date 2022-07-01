@@ -110,7 +110,7 @@ project(
   bitar
   VERSION 0.0.1
   DESCRIPTION
-    "bitar is a library for accessing hardware compression/decompression accelerators"
+    "Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators."
   HOMEPAGE_URL "https://github.com/ljishen/bitar"
   LANGUAGES CXX C)
 
