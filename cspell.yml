@@ -73,6 +73,7 @@ words: # list of words to be always considered to be correct
   - cppcoreguidelines
   - cxxopts
   - deps
+  - dpdk
   - endforeach
   - extbuf
   - hicpp

@@ -11,9 +11,9 @@
   "cmake.buildDirectory": "${workspaceFolder}/build-aarch64",
   "cmake.configureOnOpen": true,
   "cmake.configureSettings": {
-    "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/aarch64/vcpkg/scripts/buildsystems/vcpkg.cmake",
-    "ARROW_ROOT": "/usr",
-    "DPDK_ROOT": "${env:HOME}/opt/dpdk-v22.03-aarch64"
+    "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/aarch64/src/vcpkg/scripts/buildsystems/vcpkg.cmake",
+    "Arrow_ROOT": "/usr",
+    "dpdk_ROOT": "${env:HOME}/opt/dpdk-v22.03-aarch64"
   },
   "cmake.generator": "Ninja",
   "files.associations": {

@@ -28,77 +28,76 @@ cmake_minimum_required(VERSION 3.19)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 11)
 
-# Add project_options v0.22.4
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
+
+execute_process(
+  COMMAND uname --machine
+  OUTPUT_VARIABLE machine_hardware_name
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL LAST)
+string(TOLOWER "${machine_hardware_name}" machine_hardware_name_lower)
+
+set(MACHINE_OPTIONAL_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/opt/${machine_hardware_name_lower}")
+file(MAKE_DIRECTORY "${MACHINE_OPTIONAL_DIR}")
+list(APPEND CMAKE_PROGRAM_PATH "${MACHINE_OPTIONAL_DIR}/bin")
+
 include(FetchContent)
+# Need to be set after including the FetchContent module
+set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
+
+# Add project_options v0.22.4
 FetchContent_Declare(
   _project_options
   URL https://github.com/aminya/project_options/archive/refs/tags/v0.22.4.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
 
-# CMAKE_HOST_SYSTEM_PROCESSOR work only after setting the project name with
-# project(), but VCPKG_FORCE_SYSTEM_BINARIES needs to be set before project().
-execute_process(
-  COMMAND uname --machine
-  OUTPUT_VARIABLE MACHINE_HARDWARE_NAME
-  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL LAST)
-string(TOLOWER "${MACHINE_HARDWARE_NAME}" MACHINE_HARDWARE_NAME_LOWER)
-
-# vcpkg: Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm,
-# s390x, and ppc64le platforms. See
-# https://github.com/microsoft/vcpkg-tool/blob/2022-06-17/src/vcpkg.cpp#L249-L258
-if((MACHINE_HARDWARE_NAME_LOWER MATCHES "^arm"
-    OR MACHINE_HARDWARE_NAME_LOWER MATCHES "^aarch64"
-    OR MACHINE_HARDWARE_NAME_LOWER MATCHES "^s390x"
-    OR MACHINE_HARDWARE_NAME_LOWER MATCHES "^ppc64"
-   )
-   AND NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows"
-   AND NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-  set(ENV{VCPKG_FORCE_SYSTEM_BINARIES} 1)
-endif()
-
 set(VCPKG_ROOT
-    "${CMAKE_CURRENT_LIST_DIR}/opt/${MACHINE_HARDWARE_NAME_LOWER}/vcpkg"
+    "${MACHINE_OPTIONAL_DIR}/src/vcpkg"
     CACHE PATH "vcpkg installation prefix")
-get_filename_component(_VCPKG_PARENT_DIR "${VCPKG_ROOT}" DIRECTORY)
-file(MAKE_DIRECTORY "${_VCPKG_PARENT_DIR}")
+get_filename_component(_vcpkg_parent_dir "${VCPKG_ROOT}" DIRECTORY)
+file(MAKE_DIRECTORY "${_vcpkg_parent_dir}")
 # Use vcpkg for library management - should be called before defining project():
 # https://github.com/microsoft/vcpkg/tree/2022.06.16.1#vcpkg-as-a-submodule. If
 # updating vcpkg dependencies is required, use "-DENABLE_VCPKG_UPDATE:BOOL=ON"
 run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
           "https://github.com/ljishen/vcpkg.git")
 
-set(ARROW_ROOT
-    ""
-    CACHE PATH "Apache Arrow installation prefix")
-if("${ARROW_ROOT}" STREQUAL "")
-  # Build the Arrow libraries using vcpkg when the installation prefix is not
-  # specified. This is required to be set before project().
-  list(APPEND VCPKG_MANIFEST_FEATURES "vcpkg-arrow")
-else()
-  list(APPEND VCPKG_MANIFEST_FEATURES "system-arrow-deps")
+# Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm, s390x,
+# and ppc64le platforms before running the vcpkg toolchain that is invoked by
+# the project command. See
+# https://github.com/microsoft/vcpkg-tool/blob/2022-06-17/src/vcpkg.cpp#L249-L258
+# The variable CMAKE_HOST_SYSTEM_PROCESSOR cannot be used for checking the host
+# system architecture, because it is set only after the project command.
+if((machine_hardware_name_lower MATCHES "^arm"
+    OR machine_hardware_name_lower MATCHES "^aarch64"
+    OR machine_hardware_name_lower MATCHES "^s390x"
+    OR machine_hardware_name_lower MATCHES "^ppc64"
+   )
+   AND NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows"
+   AND NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+  set(ENV{VCPKG_FORCE_SYSTEM_BINARIES} 1)
 endif()
-
-list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
 
 include(Utilities)
 
-# System default installed DPDK will be at /usr/local
-set(DPDK_ROOT
+# The default system-installed DPDK will be at /usr/local
+set(dpdk_ROOT
     ""
     CACHE PATH "DPDK installation prefix")
-if("${DPDK_ROOT}" STREQUAL "")
+if("${dpdk_ROOT}" STREQUAL "")
   # Build the DPDK libraries using vcpkg when the installation prefix is not
   # specified. This is required to be set before project().
   list(APPEND VCPKG_MANIFEST_FEATURES "dpdk")
 else()
-  # Paths in PKG_CONFIG_PATH precedes the pkg-config default directory for
-  # searching DPDK libraries: https://linux.die.net/man/1/pkg-config
+  # Paths that are prepended to PKG_CONFIG_PATH have higher priority than
+  # pkg-config's default library search paths:
+  # https://linux.die.net/man/1/pkg-config
   prepend_path_to_env(
     PKG_CONFIG_PATH
     # The first path is for Debian-based OS, and the second path is for Red
     # Hat-based OS
-    "${DPDK_ROOT}/lib/${MACHINE_HARDWARE_NAME_LOWER}-linux-gnu/pkgconfig:${DPDK_ROOT}/lib64/pkgconfig"
+    "${dpdk_ROOT}/lib/${machine_hardware_name_lower}-linux-gnu/pkgconfig:${dpdk_ROOT}/lib64/pkgconfig"
   )
 endif()
 
@@ -114,10 +113,17 @@ project(
   HOMEPAGE_URL "https://github.com/ljishen/bitar"
   LANGUAGES CXX C)
 
-include("${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake")
+set(Arrow_ROOT
+    ""
+    CACHE PATH "Apache Arrow installation prefix")
+option(BITAR_BUILD_ARROW
+       "Force to build the Arrow library to be used as the dependency" OFF)
+if(BITAR_BUILD_ARROW)
+  unset(Arrow_ROOT)
+endif()
 
 set(IWYU_ROOT
-    "${CMAKE_CURRENT_LIST_DIR}/opt/include-what-you-use/build-${MACHINE_HARDWARE_NAME_LOWER}"
+    "${MACHINE_OPTIONAL_DIR}"
     CACHE PATH "include-what-you-use installation prefix")
 # Add the search path for finding include-what-you-use. This must be set before
 # calling dynamic_project_options() or project_options()
@@ -134,7 +140,7 @@ set(ENABLE_CLANG_TIDY_DEVELOPER_DEFAULT OFF)
 set(ENABLE_CPPCHECK_DEVELOPER_DEFAULT OFF)
 set(ENABLE_INCLUDE_WHAT_YOU_USE_DEVELOPER_DEFAULT ON)
 
-if(FEATURE_TESTS)
+if(BITAR_BUILD_TESTS)
   set(OPT_ENABLE_CLANG_TIDY "ENABLE_CLANG_TIDY")
   set(OPT_ENABLE_COVERAGE "ENABLE_COVERAGE")
   set(OPT_ENABLE_CPPCHECK "ENABLE_CPPCHECK")
@@ -156,12 +162,13 @@ if(FEATURE_TESTS)
   add_subdirectory(test)
 endif()
 
-if(FEATURE_DOCS)
+if(BITAR_BUILD_DOCS)
   set(OPT_ENABLE_DOXYGEN "ENABLE_DOXYGEN")
 else()
   set(OPT_ENABLE_DOXYGEN OFF)
 endif()
 
+include("${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake")
 # Initialize project_options variable related to this project. This overwrites
 # `project_options` and sets `project_warnings`. This also accepts the same
 # arguments as `project_options`.
@@ -239,6 +246,6 @@ target_compile_options(
 
 add_subdirectory(src)
 
-if(FEATURE_APPS)
+if(BITAR_BUILD_APPS)
   add_subdirectory(apps)
 endif()

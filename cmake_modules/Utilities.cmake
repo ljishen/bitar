@@ -44,7 +44,7 @@ endfunction()
 
 function(print_target_properties target)
   if(NOT TARGET ${target})
-    message(STATUS "There is no target named '${target}'")
+    message(FATAL_ERROR "There is no target named '${target}'")
     return()
   endif()
 

@@ -11,12 +11,22 @@
       "version>=": "3.0.0"
     },
     {
+      "$explanation": ["Dependency for system-installed Apache Arrow library"],
+      "name": "curl",
+      "version>=": "7.83.1#2",
+      "default-features": false
+    },
+    {
       "name": "fmt",
       "version>=": "8.1.1#1"
     },
     {
       "name": "magic-enum",
       "version>=": "0.8.0"
+    },
+    {
+      "$explanation": ["Dependency for system-installed Apache Arrow library"],
+      "name": "openssl"
     }
   ],
   "overrides": [
@@ -26,28 +36,6 @@
     }
   ],
   "features": {
-    "vcpkg-arrow": {
-      "description": "Install Apache Arrow with vcpkg",
-      "dependencies": [
-        {
-          "name": "arrow",
-          "version>=": "8.0.0",
-          "default-features": false,
-          "features": ["parquet"]
-        }
-      ]
-    },
-    "system-arrow-deps": {
-      "description": "Install dependencies for system-installed Apache Arrow",
-      "dependencies": [
-        {
-          "name": "curl",
-          "version>=": "7.83.1#2",
-          "default-features": false
-        },
-        "openssl"
-      ]
-    },
     "dpdk": {
       "description": "Install Data Plane Development Kit (DPDK) with vcpkg",
       "dependencies": [

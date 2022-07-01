@@ -21,13 +21,11 @@
 # SOFTWARE.
 
 # Build the apps (including the demo_app)
-option(FEATURE_APPS "Build the apps" OFF)
+option(BITAR_BUILD_APPS "Build the apps" OFF)
 
-# Build the docs
-option(FEATURE_DOCS "Build the docs" OFF)
+option(BITAR_BUILD_DOCS "Build the docs" OFF)
 
-# Build the tests
-option(FEATURE_TESTS "Build the tests" OFF)
-if(FEATURE_TESTS)
+option(BITAR_BUILD_TESTS "Build the tests" OFF)
+if(BITAR_BUILD_TESTS)
   list(APPEND VCPKG_MANIFEST_FEATURES "tests")
 endif()

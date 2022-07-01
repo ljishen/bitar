@@ -55,6 +55,7 @@ APT_NO_RECOMMENDS="sudo apt -y --no-install-recommends"
 
 cat <<EOF
 
+
 # ---------------------------------------------------
 # ------------- Prerequisite Dependencies -----------
 # ---------------------------------------------------
@@ -85,6 +86,7 @@ sudo apt update &&
 
 cat <<EOF
 
+
 # ---------------------------------------------------
 # ---------- Install/Update CMake Software ----------
 # ---------------------------------------------------
@@ -108,6 +110,7 @@ EOF
 fi
 
 cat <<EOF
+
 
 # ---------------------------------------------------
 # -------- Install/Update GCC Software -------
@@ -134,6 +137,7 @@ sudo update-alternatives \
     --slave /usr/bin/gcov gcov /usr/bin/gcov-$GCC_VERSION
 
 cat <<EOF
+
 
 # ---------------------------------------------------
 # -------- Install/Update LLVM/Clang Software -------
@@ -163,39 +167,51 @@ done
 
 cat <<EOF
 
+
 # ---------------------------------------------------
 # ----------- Install Include-What-You-Use ----------
 # ---------------------------------------------------
 EOF
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-IWYU_HOME="$SCRIPT_DIR"/../opt/include-what-you-use
-IWYU_BUILD_DIRNAME=build-"$(uname -m)"
+IWYU_INSTALL_DIR="$SCRIPT_DIR"/../opt/$(uname -m)
+IWYU_SOURCE_DIR="$IWYU_INSTALL_DIR"/src/include-what-you-use
 
-if [[ -x "$IWYU_HOME"/"$IWYU_BUILD_DIRNAME"/bin/include-what-you-use ]]; then
-    echo "[INFO] include-what-you-use is already installed. Updating..."
-    cd "$IWYU_HOME"
-    OLD_COMMIT_HASH=$(git rev-parse HEAD)
-    git remote set-branches --add origin clang_$LLVM_VERSION &&
-        git fetch origin clang_$LLVM_VERSION &&
-        git reset --hard origin/clang_$LLVM_VERSION
-else
-    if [[ -d "$IWYU_HOME" ]]; then
-        rm --force --recursive "$IWYU_HOME"
-    fi
-    git clone --single-branch --branch clang_$LLVM_VERSION \
-        https://github.com/include-what-you-use/include-what-you-use.git \
-        "$IWYU_HOME" && cd "$IWYU_HOME"
+if [[ -x "$IWYU_INSTALL_DIR"/bin/include-what-you-use ]]; then
+    echo "[INFO] include-what-you-use is already installed. Try updating..."
 fi
 
+if [[ -d "$IWYU_SOURCE_DIR" ]]; then
+    echo "[INFO] Found existing source repository. Try updating..."
+    cd "$IWYU_SOURCE_DIR"
+    OLD_COMMIT_HASH=$(git rev-parse HEAD)
+    (git remote set-branches --add origin clang_$LLVM_VERSION &&
+        git fetch origin clang_$LLVM_VERSION &&
+        git reset --hard origin/clang_$LLVM_VERSION) ||
+        (echo "[INFO] Failed to update the source repository. Removing it before re-cloning..." &&
+            cd .. && rm --force --recursive "$IWYU_SOURCE_DIR")
+fi
+
+if ! [[ -d "$IWYU_SOURCE_DIR" ]]; then
+    git clone --single-branch --branch clang_$LLVM_VERSION \
+        https://github.com/include-what-you-use/include-what-you-use.git \
+        "$IWYU_SOURCE_DIR" && cd "$IWYU_SOURCE_DIR"
+fi
+
+IWYU_BUILD_DIRNAME=build
 CURRENT_COMMIT_HASH=$(git rev-parse HEAD)
-if [[ "${OLD_COMMIT_HASH:-}" != "$CURRENT_COMMIT_HASH" ]]; then
+if ! [[ -x "$IWYU_INSTALL_DIR"/bin/include-what-you-use ]] ||
+    [[ "${OLD_COMMIT_HASH:-}" != "$CURRENT_COMMIT_HASH" ]]; then
     rm --force --recursive "$IWYU_BUILD_DIRNAME" &&
-        mkdir --parents "$IWYU_BUILD_DIRNAME" &&
-        cd "$IWYU_BUILD_DIRNAME"
-    cmake -G "Unix Makefiles" -DCMAKE_PREFIX_PATH="/usr/lib/llvm-$LLVM_VERSION" ..
-    # Generate executable $IWYU_HOME/$IWYU_BUILD_DIRNAME/bin/include-what-you-use
-    make -j
+        mkdir "$IWYU_BUILD_DIRNAME" && cd "$IWYU_BUILD_DIRNAME"
+    cmake -G "Unix Makefiles" \
+        -DCMAKE_PREFIX_PATH="/usr/lib/llvm-$LLVM_VERSION" \
+        -DCMAKE_INSTALL_PREFIX="$IWYU_INSTALL_DIR" ..
+    # Generate executable "$IWYU_INSTALL_DIR"/bin/include-what-you-use
+    cmake --build . -j
+    cmake --install .
+else
+    echo "[INFO] Nothing to update"
 fi
 
 echo

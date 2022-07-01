@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-if("${DPDK_ROOT}" STREQUAL "")
+if("${dpdk_ROOT}" STREQUAL "")
   # This is the case where DPDK is installed with vcpkg.
   find_package(unofficial-dpdk QUIET REQUIRED CONFIG)
   mark_as_advanced(LIBDPDK_STATIC_INCLUDE_DIRS LIBDPDK_STATIC_LIBRARIES
