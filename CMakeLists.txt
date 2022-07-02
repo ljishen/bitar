@@ -42,8 +42,15 @@ file(MAKE_DIRECTORY "${MACHINE_OPTIONAL_DIR}")
 list(APPEND CMAKE_PROGRAM_PATH "${MACHINE_OPTIONAL_DIR}/bin")
 
 include(FetchContent)
-# Need to be set after including the FetchContent module
-set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
+
+# Save the cost of downloading external source for different configurations
+# (e.g., release and debug)
+option(BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION
+       "Overwrite existing populated content with current configuration" ON)
+if(BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION)
+  # Need to be set after including the FetchContent module
+  set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
+endif()
 
 # Add project_options v0.22.4
 FetchContent_Declare(
@@ -191,9 +198,8 @@ dynamic_project_options(
   --suppressions-list=${CMAKE_CURRENT_LIST_DIR}/suppressions.txt)
 
 if(DEFINED CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
-  list(
-    APPEND CMAKE_CXX_INCLUDE_WHAT_YOU_USE
-    "-Xiwyu;--mapping_file=${CMAKE_CURRENT_LIST_DIR}/iwyu.imp;-w")
+  list(APPEND CMAKE_CXX_INCLUDE_WHAT_YOU_USE
+       "-Xiwyu;--mapping_file=${CMAKE_CURRENT_LIST_DIR}/iwyu.imp;-w")
 endif()
 
 # Add warnings used by DPDK
