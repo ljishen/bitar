@@ -30,7 +30,7 @@ endfunction()
 
 # Get all propreties that cmake supports: https://stackoverflow.com/a/34292622
 if(NOT CMAKE_PROPERTY_LIST)
-  execute_process(COMMAND cmake --help-property-list
+  execute_process(COMMAND ${CMAKE_COMMAND} --help-property-list
                   OUTPUT_VARIABLE CMAKE_PROPERTY_LIST)
 
   # Convert command output into a CMake list
@@ -45,7 +45,6 @@ endfunction()
 function(print_target_properties target)
   if(NOT TARGET ${target})
     message(FATAL_ERROR "There is no target named '${target}'")
-    return()
   endif()
 
   foreach(property ${CMAKE_PROPERTY_LIST})
@@ -66,7 +65,7 @@ function(print_target_properties target)
       SET)
     if(was_set)
       get_target_property(value ${target} ${property})
-      message("${target} ${property} = ${value}")
+      message(NOTICE "${target} ${property} = ${value}")
     endif()
   endforeach()
 endfunction()

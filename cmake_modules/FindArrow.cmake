@@ -63,7 +63,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "15810b5bef491a5dec038df25b10f3d37e4e3efd"
+        "755fb9f31a43b26e74ac82622e4667279dc442d6"
         CACHE
           STRING
           "Use the code at the git branch, tag or commit hash of the Arrow repository for building when needed"
@@ -183,11 +183,11 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
   endif()
 
   add_library(Arrow::arrow INTERFACE IMPORTED)
-  target_link_system_libraries(Arrow::arrow INTERFACE ${_arrow_library})
+  target_link_libraries(Arrow::arrow INTERFACE ${_arrow_library})
 
   get_target_property(_arrow_include_dirs ${_arrow_library} INCLUDE_DIRECTORIES)
   # This is the case where Arrow is built from source
-  if(DEFINED _arrow_include_dir)
+  if(_arrow_include_dirs)
     set_target_properties(Arrow::arrow PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
                                                   "${_arrow_include_dirs}")
     unset(_arrow_include_dirs)
