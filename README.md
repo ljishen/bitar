@@ -53,8 +53,9 @@ $ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-
 
 ### Advanced CMake Configuration Options
 
+- `BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION`: set this option to `OFF` to have separate debug and release builds without overwriting each others configurations (default: `ON`)
 - `VCPKG_ROOT`: the prefix to an installed vcpkg instance (install automatically if not specified)
-- `BITAR_BUILD_ARROW`: set this option to `ON` to force building the Arrow dependency from source (default: OFF)
+- `BITAR_BUILD_ARROW`: set this option to `ON` to force building the Arrow dependency from source (default: `OFF`)
 - `BITAR_ARROW_GIT_REPOSITORY`: the git repository to fetch the Arrow source (default: the official repository)
-- `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash of the Arrow repository
-- `BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION`: set this option to `OFF` to have separate debug and release builds without overwriting each others configurations (default: ON)
+- `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash of the Arrow repository for building when needed
+- `BITAR_INSTALL_ARROW`: install the Arrow library as part of the cmake installation process when Arrow is built by this project (default: `OFF`)

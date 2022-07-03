@@ -66,8 +66,12 @@ else()
         "755fb9f31a43b26e74ac82622e4667279dc442d6"
         CACHE
           STRING
-          "Use the code at the git branch, tag or commit hash of the Arrow repository for building when needed"
+          "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
     )
+    option(BITAR_INSTALL_ARROW
+           "Install the Arrow library as part of the cmake installation process"
+           OFF)
+
     if("${BITAR_ARROW_GIT_TAG}" STREQUAL "")
       # Get the list of tags of a remote repository without cloning
       # https://stackoverflow.com/a/12704727
@@ -136,12 +140,28 @@ else()
           "Enable Arrow to support for regular expressions using the re2 library"
     )
 
+    set(_arg_SOURCE_SUBDIR cpp)
     FetchContent_Declare(
       ${CMAKE_FIND_PACKAGE_NAME}
       GIT_REPOSITORY "${BITAR_ARROW_GIT_REPOSITORY}"
       GIT_TAG "${BITAR_ARROW_GIT_TAG}"
-      SOURCE_SUBDIR cpp OVERRIDE_FIND_PACKAGE)
-    FetchContent_MakeAvailable(${CMAKE_FIND_PACKAGE_NAME})
+      SOURCE_SUBDIR "${_arg_SOURCE_SUBDIR}" OVERRIDE_FIND_PACKAGE)
+
+    FetchContent_Populate(${CMAKE_FIND_PACKAGE_NAME})
+    if(EXISTS
+       "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}/CMakeLists.txt"
+    )
+      if(BITAR_INSTALL_ARROW)
+        add_subdirectory(
+          "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}"
+          "${${_find_package_name_lower}_BINARY_DIR}")
+      else()
+        add_subdirectory(
+          "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}"
+          "${${_find_package_name_lower}_BINARY_DIR}" EXCLUDE_FROM_ALL)
+      endif()
+    endif()
+    unset(_arg_SOURCE_SUBDIR)
 
     # Restore our environment settings
     set(CMAKE_CXX_STANDARD ${_backup_CMAKE_CXX_STANDARD})
