@@ -19,7 +19,7 @@
     {
       "name": "linux-clang-x64",
       "cStandard": "c11",
-      "compileCommands": "${workspaceFolder}/build-x86_64/compile_commands.json",
+      "compileCommands": "${workspaceFolder}/build-x64/compile_commands.json",
       "compilerPath": "/usr/bin/clang",
       "configurationProvider": "ms-vscode.cmake-tools",
       "cppStandard": "c++20",
@@ -27,8 +27,8 @@
       "includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/src/include",
-        "${env:HOME}/opt/dpdk-v22.03-aarch64/include",
-        "${workspaceFolder}/build-x86_64/vcpkg_installed/x64-linux/include"
+        "${env:HOME}/opt/dpdk-v22.03-x64/include",
+        "${workspaceFolder}/build-x64/vcpkg_installed/x64-linux/include"
       ],
       "intelliSenseMode": "linux-clang-x64"
     }

@@ -53,6 +53,13 @@ fi
 
 APT_NO_RECOMMENDS="sudo apt -y --no-install-recommends"
 
+# Use `tr`` to convert to lowercase string
+# https://stackoverflow.com/a/2264537/2926646
+MACHINE_HARDWARE_NAME=$(uname -m | tr '[:upper:]' '[:lower:]')
+if [[ "$MACHINE_HARDWARE_NAME" == "x86_64" ]]; then
+    MACHINE_HARDWARE_NAME=x64
+fi
+
 cat <<EOF
 
 
@@ -174,7 +181,7 @@ cat <<EOF
 EOF
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-IWYU_INSTALL_DIR="$SCRIPT_DIR"/../opt/$(uname -m)
+IWYU_INSTALL_DIR="$SCRIPT_DIR"/../opt/$MACHINE_HARDWARE_NAME
 IWYU_SOURCE_DIR="$IWYU_INSTALL_DIR"/src/include-what-you-use
 
 if [[ -x "$IWYU_INSTALL_DIR"/bin/include-what-you-use ]]; then

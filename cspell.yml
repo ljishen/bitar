@@ -68,6 +68,7 @@ words: # list of words to be always considered to be correct
   - Wstrict
   - Wundef
   - Wwrite
+  - Xiwyu
   - aarch
   - bitar
   - compressdev
@@ -101,6 +102,7 @@ words: # list of words to be always considered to be correct
   - stoi
   - struct
   - subspan
+  - suppr
   - vcpkg
   - xform
   - xforms

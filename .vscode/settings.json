@@ -4,16 +4,17 @@
     "-DALLOW_EXPERIMENTAL_API",
     "-std=c++20",
     "-isystem",
-    "/home/coder/opt/dpdk-v22.03-aarch64/include",
+    "/home/coder/opt/dpdk-v22.03-${buildKitTargetArch}/include",
     "-isystem",
-    "/home/coder/projects/bitar/build-aarch64/vcpkg_installed/arm64-linux/include"
+    "/home/coder/projects/bitar/build-${buildKitTargetArch}/vcpkg_installed/arm64-linux/include",
+    "-isystem",
+    "/home/coder/projects/bitar/build-${buildKitTargetArch}/vcpkg_installed/x64-linux/include"
   ],
-  "cmake.buildDirectory": "${workspaceFolder}/build-aarch64",
+  "cmake.buildDirectory": "${workspaceFolder}/build-${buildKitTargetArch}",
   "cmake.configureOnOpen": true,
   "cmake.configureSettings": {
-    "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/aarch64/src/vcpkg/scripts/buildsystems/vcpkg.cmake",
+    "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/${buildKitTargetArch}/src/vcpkg/scripts/buildsystems/vcpkg.cmake",
     "Arrow_ROOT": "/usr",
-    "dpdk_ROOT": "${env:HOME}/opt/dpdk-v22.03-aarch64",
     "BITAR_BUILD_APPS": true,
     "BITAR_BUILD_TESTS": true,
     "BITAR_BUILD_ARROW": false,
@@ -105,5 +106,7 @@
     "typeindex": "cpp",
     "semaphore": "cpp"
   },
-  "sshfs.flags": ["DEBUG_SSH2"]
+  "sshfs.flags": [
+    "DEBUG_SSH2"
+  ]
 }

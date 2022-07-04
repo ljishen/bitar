@@ -35,6 +35,9 @@ execute_process(
   OUTPUT_VARIABLE machine_hardware_name
   OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL LAST)
 string(TOLOWER "${machine_hardware_name}" machine_hardware_name_lower)
+if(machine_hardware_name_lower STREQUAL "x86_64")
+  set(machine_hardware_name_lower "x64")
+endif()
 
 set(MACHINE_OPTIONAL_DIR
     "${CMAKE_CURRENT_LIST_DIR}/opt/${machine_hardware_name_lower}")
