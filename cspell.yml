@@ -28,11 +28,16 @@ enableFiletypes:
   - cmake
 words: # list of words to be always considered to be correct
   - CMAKE
+  - CONCAT
   - Cavium
+  - DBITAR
   - DCHECK
+  - DCMAKE
   - DENABLE
   - DPDK
   - DXBF
+  - Ddpdk
+  - FETCHCONTENT
   - MSVC
   - INTERPROCEDURAL
   - IOVA
@@ -44,11 +49,13 @@ words: # list of words to be always considered to be correct
   - NOLINTBEGIN
   - NOLINTNEXTLINE
   - NOLINTEND
+  - NUMA
   - OCTEON
   - Ostreamable
   - Rtemalloc
   - Rtememzone
   - STREQUAL
+  - SUBDIR
   - TOLOWER
   - VSINSTALLDIR
   - Wcast
@@ -63,11 +70,6 @@ words: # list of words to be always considered to be correct
   - Wwrite
   - aarch
   - bitar
-  - brotli
-  - brotlicommon
-  - brotlidec
-  - brotlienc
-  - chrono
   - compressdev
   - cppcheck
   - cppcoreguidelines
@@ -75,14 +77,16 @@ words: # list of words to be always considered to be correct
   - deps
   - dpdk
   - endforeach
+  - endfunction
   - extbuf
   - hicpp
+  - hugepages
   - istrm
   - lcore
   - lcores
   - libcurl
   - libdpdk
-  - libzstd
+  - memcpy
   - memzones
   - mtod
   - nodiscard
@@ -103,4 +107,3 @@ words: # list of words to be always considered to be correct
   - vcvarsall
   - vformat
   - zmalloc
-  - zstd

@@ -28,7 +28,7 @@ function(prepend_path_to_env env_name env_path)
   endif()
 endfunction()
 
-# Get all propreties that cmake supports: https://stackoverflow.com/a/34292622
+# Get all properties that cmake supports: https://stackoverflow.com/a/34292622
 if(NOT CMAKE_PROPERTY_LIST)
   execute_process(COMMAND ${CMAKE_COMMAND} --help-property-list
                   OUTPUT_VARIABLE CMAKE_PROPERTY_LIST)

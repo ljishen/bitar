@@ -27,7 +27,6 @@
     "bit": "cpp",
     "*.tcc": "cpp",
     "cctype": "cpp",
-    "chrono": "cpp",
     "cinttypes": "cpp",
     "clocale": "cpp",
     "cmath": "cpp",
