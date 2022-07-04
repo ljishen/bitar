@@ -34,6 +34,7 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
       "ld --verbose | grep SEARCH_DIR | sed 's/\\([[:space:]]*SEARCH_DIR(\"=\\|\")\\)//g'"
     OUTPUT_VARIABLE ld_search_dirs
     OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL LAST)
+
   foreach(ld_search_dir ${ld_search_dirs})
     if(${CMAKE_FIND_PACKAGE_NAME}_CONFIG MATCHES "^${ld_search_dir}")
       set(${CMAKE_FIND_PACKAGE_NAME}_IS_SYSTEM_INSTALLED True)
@@ -63,7 +64,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "755fb9f31a43b26e74ac82622e4667279dc442d6"
+        "7124bafbb16ce6ae353b81d6be39c37869ee53ab"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
@@ -148,6 +149,7 @@ else()
       SOURCE_SUBDIR "${_arg_SOURCE_SUBDIR}" OVERRIDE_FIND_PACKAGE)
 
     FetchContent_Populate(${CMAKE_FIND_PACKAGE_NAME})
+
     if(EXISTS
        "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}/CMakeLists.txt"
     )
@@ -161,6 +163,7 @@ else()
           "${${_find_package_name_lower}_BINARY_DIR}" EXCLUDE_FROM_ALL)
       endif()
     endif()
+
     unset(_arg_SOURCE_SUBDIR)
 
     # Restore our environment settings
@@ -206,6 +209,7 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
   target_link_libraries(Arrow::arrow INTERFACE ${_arrow_library})
 
   get_target_property(_arrow_include_dirs ${_arrow_library} INCLUDE_DIRECTORIES)
+
   # This is the case where Arrow is built from source
   if(_arrow_include_dirs)
     set_target_properties(Arrow::arrow PROPERTIES INTERFACE_INCLUDE_DIRECTORIES

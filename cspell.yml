@@ -27,36 +27,93 @@ language: en, en-GB # current active spelling language
 enableFiletypes:
   - cmake
 words: # list of words to be always considered to be correct
-  - CMAKE
-  - CONCAT
+  - aarch
+  - autosort
+  - bitar
+  - byteorder
   - Cavium
+  - CMAKE
+  - cmdline
+  - compressdev
+  - CONCAT
+  - cppcheck
+  - cppcoreguidelines
+  - cxxopts
   - DBITAR
   - DCHECK
   - DCMAKE
+  - Ddpdk
   - DENABLE
+  - deps
+  - dpdk
   - DPDK
   - DXBF
-  - Ddpdk
+  - endforeach
+  - endfunction
+  - extbuf
   - FETCHCONTENT
-  - MSVC
+  - hashruler
+  - hashrulers
+  - hicpp
+  - hugepages
+  - hwrap
   - INTERPROCEDURAL
   - IOVA
+  - istrm
   - IWYU
   - Jemalloc
   - Jianshen
+  - kwarg
+  - kwargs
+  - lcore
+  - lcores
+  - lexicographicall
+  - libcurl
+  - libdpdk
+  - linewidth
+  - listfile
+  - localvars
+  - lstrip
+  - memcpy
   - MEMZONE
+  - memzones
   - Mimalloc
+  - MSVC
+  - mtod
+  - nodiscard
   - NOLINTBEGIN
-  - NOLINTNEXTLINE
   - NOLINTEND
+  - NOLINTNEXTLINE
+  - nonliteral
   - NUMA
   - OCTEON
   - Ostreamable
+  - parens
+  - parg
+  - pargs
+  - pkgconfig
+  - pktmbuf
+  - precompiled
+  - privatedirectory
+  - proptags
+  - rdtsc
+  - rexpr
   - Rtemalloc
   - Rtememzone
+  - scanf
+  - shinfo
+  - stoi
   - STREQUAL
+  - struct
   - SUBDIR
+  - subspan
+  - suppr
+  - tabchars
   - TOLOWER
+  - vartags
+  - vcpkg
+  - vcvarsall
+  - vformat
   - VSINSTALLDIR
   - Wcast
   - Wdeprecated
@@ -68,44 +125,7 @@ words: # list of words to be always considered to be correct
   - Wstrict
   - Wundef
   - Wwrite
-  - Xiwyu
-  - aarch
-  - bitar
-  - compressdev
-  - cppcheck
-  - cppcoreguidelines
-  - cxxopts
-  - deps
-  - dpdk
-  - endforeach
-  - endfunction
-  - extbuf
-  - hicpp
-  - hugepages
-  - istrm
-  - lcore
-  - lcores
-  - libcurl
-  - libdpdk
-  - memcpy
-  - memzones
-  - mtod
-  - nodiscard
-  - nonliteral
-  - pkgconfig
-  - pktmbuf
-  - precompiled
-  - rdtsc
-  - rexpr
-  - scanf
-  - shinfo
-  - stoi
-  - struct
-  - subspan
-  - suppr
-  - vcpkg
   - xform
   - xforms
-  - vcvarsall
-  - vformat
+  - Xiwyu
   - zmalloc
