@@ -86,6 +86,30 @@ inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
   }
 }
 
+bool WaitForAsyncCompletion(
+    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices) {
+  std::uint8_t device_id = 0;
+  std::uint16_t queue_pair_id = 0;
+  bool async_success = true;
+
+  for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
+    const auto& device = devices[device_id];
+
+    int ret = rte_eal_wait_lcore(device->LcoreOf(queue_pair_id));
+    if (ret == 0) {
+      RTE_LOG(ERR, USER1,
+              "Unable to start async operation for queue pair %hu of compress device "
+              "%hhu.\n",
+              queue_pair_id, device_id);
+    }
+    async_success &= ret == bitar::kAsyncReturnOK;
+
+    Advance(device_id, queue_pair_id, device->num_qps());
+  }
+
+  return async_success;
+}
+
 void Recycle(const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
              const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
                  device_to_compressed_buffers_vector) {
@@ -217,24 +241,7 @@ arrow::Status BenchmarkCompressAsync(
     Advance(device_id, queue_pair_id, device->num_qps());
   }
 
-  device_id = 0;
-  queue_pair_id = 0;
-  bool async_success = true;
-
-  for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
-    const auto& device = devices[device_id];
-
-    int ret = rte_eal_wait_lcore(device->LcoreOf(queue_pair_id));
-    if (ret == 0) {
-      RTE_LOG(ERR, USER1,
-              "Unable to start async compression for queue pair %hu of compress device "
-              "%hhu.\n",
-              queue_pair_id, device_id);
-    }
-    async_success &= ret == bitar::kAsyncReturnOK;
-
-    Advance(device_id, queue_pair_id, device->num_qps());
-  }
+  bool async_success = WaitForAsyncCompletion(devices);
 
   // Avoid missing the opportunity to recycle by waiting till results from all worker
   // lcores are known
@@ -243,8 +250,12 @@ arrow::Status BenchmarkCompressAsync(
     return arrow::Status::IOError("Failed to complete async compression");
   }
 
-  PrintPerfNumbers(num_parallel_tests() * input_buffer_vector.front()->size(), start_tsc,
-                   end_tsc);
+  PrintPerfNumbers(std::accumulate(input_buffer_vector.begin(), input_buffer_vector.end(),
+                                   static_cast<std::int64_t>(0),
+                                   [](std::int64_t acc, const auto& buffer) {
+                                     return acc + buffer->size();
+                                   }),
+                   start_tsc, end_tsc);
 
   return arrow::Status::OK();
 }
@@ -296,31 +307,18 @@ arrow::Status BenchmarkDecompressAsync(
     Advance(device_id, queue_pair_id, device->num_qps());
   }
 
-  device_id = 0;
-  queue_pair_id = 0;
-  bool async_success = true;
-
-  for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
-    const auto& device = devices[device_id];
-
-    int ret = rte_eal_wait_lcore(device->LcoreOf(queue_pair_id));
-    if (ret == 0) {
-      RTE_LOG(ERR, USER1,
-              "Unable to start async decompression for queue pair %hu of compress device "
-              "%hhu.\n",
-              queue_pair_id, device_id);
-    }
-    async_success &= ret == bitar::kAsyncReturnOK;
-
-    Advance(device_id, queue_pair_id, device->num_qps());
-  }
+  bool async_success = WaitForAsyncCompletion(devices);
 
   if (!async_success) {
     return arrow::Status::IOError("Failed to complete async decompression");
   }
 
-  PrintPerfNumbers(num_parallel_tests() * decompressed_buffer_vector.front()->size(),
-                   start_tsc, end_tsc);
+  PrintPerfNumbers(
+      std::accumulate(
+          decompressed_buffer_vector.begin(), decompressed_buffer_vector.end(),
+          static_cast<std::int64_t>(0),
+          [](std::int64_t acc, const auto& buffer) { return acc + buffer->size(); }),
+      start_tsc, end_tsc);
 
   return arrow::Status::OK();
 }
@@ -347,12 +345,13 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
           << "Recycled less than expected number of buffers";
       compressed_buffers.clear();
     } else {
-      std::int64_t compressed_data_size = std::accumulate(
-          compressed_buffers.begin(), compressed_buffers.end(), 0,
+      auto compressed_data_size = std::accumulate(
+          compressed_buffers.begin(), compressed_buffers.end(),
+          static_cast<std::int64_t>(0),
           [](std::int64_t size, const std::unique_ptr<arrow::Buffer>& buffer) {
             return size += buffer->size();
           });
-      fmt::print("Compressed data size: {:d} bytes\n", compressed_data_size);
+      fmt::print("Sync compressed data size: {:d} bytes\n", compressed_data_size);
     }
   }
 
@@ -396,8 +395,8 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
 arrow::Status EvaluateAsync(
     const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
     const std::unique_ptr<arrow::Buffer>& input_buffer) {
-  std::uint32_t total_num_qps = std::accumulate(
-      devices.begin(), devices.end(), 0U,
+  auto total_num_qps = std::accumulate(
+      devices.begin(), devices.end(), static_cast<std::uint32_t>(0),
       [](std::uint32_t num, const std::unique_ptr<bitar::MLX5CompressDevice>& device) {
         return num + device->num_qps();
       });
@@ -427,16 +426,23 @@ arrow::Status EvaluateAsync(
 
   bitar::BufferVector input_buffer_vector(num_parallel_tests());
 
-  // Prepare num_parallel_tests() copies of the input_buffer
+  // Split the input_buffer into num_parallel_tests() segments as even as possible
+  auto min_segment_size = input_buffer->size() / num_parallel_tests();
+  auto extra_bytes = input_buffer->size() % num_parallel_tests();
+  auto input_buffer_shared =
+      std::make_shared<arrow::Buffer>(input_buffer->data(), input_buffer->size());
+  std::int64_t input_offset = 0;
   for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
+    auto segment_size = min_segment_size + (idx < extra_bytes ? 1 : 0);
     ARROW_ASSIGN_OR_RAISE(
         input_buffer_vector[idx],
         arrow::AllocateBuffer(
-            input_buffer->size(),
-            bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)));
+            segment_size, bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)));
 
-    rte_memcpy(input_buffer_vector[idx]->mutable_data(), input_buffer->data(),
-               static_cast<std::size_t>(input_buffer->size()));
+    rte_memcpy(input_buffer_vector[idx]->mutable_data(),
+               arrow::SliceBuffer(input_buffer_shared, input_offset)->data(),
+               static_cast<std::size_t>(segment_size));
+    input_offset += segment_size;
   }
 
   std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>
@@ -454,9 +460,23 @@ arrow::Status EvaluateAsync(
     ARROW_RETURN_NOT_OK(BenchmarkCompressAsync(devices, input_buffer_vector,
                                                device_to_compressed_buffers_vector));
 
-    // Keep the last compression results for the async decompression test
     if (idx < kNumTests - 1) {
+      // Keep the last compression results for the async decompression test
       Recycle(devices, device_to_compressed_buffers_vector);
+    } else {
+      std::int64_t compressed_data_size = 0;
+      for (const auto& [_, compressed_buffers_vector] :
+           device_to_compressed_buffers_vector) {
+        for (const auto& compressed_buffers : compressed_buffers_vector) {
+          compressed_data_size += std::accumulate(
+              compressed_buffers.begin(), compressed_buffers.end(),
+              static_cast<std::int64_t>(0), [](std::int64_t size, const auto& buffer) {
+                return size + buffer->size();
+              });
+        }
+      }
+
+      fmt::print("Async compressed data size: {:d} bytes\n", compressed_data_size);
     }
   }
   input_buffer_vector.clear();
@@ -496,22 +516,31 @@ arrow::Status EvaluateAsync(
 
   Recycle(devices, device_to_compressed_buffers_vector);
 
-  for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
-    if (decompressed_buffer_vector[idx]->size() != input_buffer->size()) {
-      return arrow::Status::Invalid(
-          "Decompressed buffer length from test {:d} is not equal to the input buffer "
-          "length",
-          idx);
-    }
-
-    if (std::memcmp(decompressed_buffer_vector[idx]->data(), input_buffer->data(),
-                    static_cast<std::size_t>(input_buffer->size())) != 0) {
-      return arrow::Status::Invalid(
-          "Decompressed buffer from test {:d} is not the same as the input buffer", idx);
-    }
+  auto decompressed_buffer_size = std::accumulate(
+      decompressed_buffer_vector.begin(), decompressed_buffer_vector.end(),
+      static_cast<std::int64_t>(0),
+      [](std::int64_t acc, const auto& buffer) { return acc + buffer->size(); });
+  if (decompressed_buffer_size != input_buffer->size()) {
+    return arrow::Status::Invalid(
+        "Decompressed buffer length is not equal to the input buffer length");
   }
-  fmt::print("All {:d} decompressed buffers {} equivalent to the input buffer\n",
-             num_parallel_tests(), num_parallel_tests() > 1 ? "are" : "is");
+
+  input_offset = 0;
+  for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
+    if (std::memcmp(decompressed_buffer_vector[idx]->data(),
+                    arrow::SliceBuffer(input_buffer_shared, input_offset)->data(),
+                    static_cast<std::size_t>(decompressed_buffer_vector[idx]->size())) !=
+        0) {
+      return arrow::Status::Invalid(
+          "Decompressed segment {:d} is not the same as the input buffer", idx);
+    }
+    input_offset += decompressed_buffer_vector[idx]->size();
+  }
+
+  fmt::print(
+      "The aggregated decompressed data from {:d} segments is equivalent to the input "
+      "buffer\n",
+      num_parallel_tests());
 
   return arrow::Status::OK();
 }

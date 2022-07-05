@@ -557,8 +557,8 @@ void QueuePairMemory<Class, Enable>::Release() {
       auto* next_mbuf = dst_mbuf->next;
       // Only recycle memzones for storing compressed data
       if (dst_mbuf->shinfo == shared_info_compressed_mbuf_.get()) {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         ARROW_UNUSED(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             device_memory_->Put(reinterpret_cast<std::uint8_t*>(dst_mbuf->buf_addr)));
       }
       rte_pktmbuf_free_seg(dst_mbuf);

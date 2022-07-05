@@ -104,8 +104,7 @@ arrow::Result<std::vector<std::unique_ptr<MLX5CompressDevice>>> CreateDevices(
   auto min_num_qps_per_dev =
       static_cast<std::uint16_t>(worker_lcores.size() / device_ids.size());
   auto worker_lcores_iter = worker_lcores.begin();
-  auto remaining_lcores =
-      worker_lcores.size() - (min_num_qps_per_dev * device_ids.size());
+  auto remaining_lcores = worker_lcores.size() % device_ids.size();
 
   std::vector<std::unique_ptr<MLX5CompressDevice>> devices;
   devices.reserve(device_ids.size());
