@@ -37,7 +37,6 @@
 
 #include <array>
 #include <cstdint>
-#include <cstdlib>
 #include <iterator>
 #include <memory>
 #include <span>  // NOLINT
@@ -205,7 +204,7 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
       fmt::format("Failed to assemble compression operations for queue pair {:d} of "
                   "compress device {:d}",
                   queue_pair_id, device_id_),
-      ARROW_UNUSED(ReleaseAll(queue_pair_id, compressed_buffers)));
+      ReleaseAll(queue_pair_id, compressed_buffers));
 
   while (num_ops_assembled > 0) {
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
@@ -214,21 +213,21 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
         fmt::format("Failed to enqueue compression operations to compress device {:d} "
                     "via queue pair {:d}",
                     device_id_, queue_pair_id),
-        ARROW_UNUSED(ReleaseAll(queue_pair_id, compressed_buffers)));
+        ReleaseAll(queue_pair_id, compressed_buffers));
 
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
         DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
         fmt::format("Failed to dequeue compression operations from compress device {:d} "
                     "via queue pair {:d}",
                     device_id_, queue_pair_id),
-        ARROW_UNUSED(ReleaseAll(queue_pair_id, compressed_buffers)));
+        ReleaseAll(queue_pair_id, compressed_buffers));
 
     ARROW_ASSIGN_OR_RAISE_NEGATIVE_ELSE(
         num_ops_assembled, memory->AssembleFrom(decompressed_buffer_span, offset),
         fmt::format("Failed to assemble compression operations for queue pair {:d} of "
                     "compress device {:d}",
                     queue_pair_id, device_id_),
-        ARROW_UNUSED(ReleaseAll(queue_pair_id, compressed_buffers)));
+        ReleaseAll(queue_pair_id, compressed_buffers));
   }
 
   while (memory->has_pending_operations()) {
@@ -238,7 +237,7 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
             "Failed to dequeue pending compression operations from compress device {:d} "
             "via queue pair {:d}",
             device_id_, queue_pair_id),
-        ARROW_UNUSED(ReleaseAll(queue_pair_id, compressed_buffers)));
+        ReleaseAll(queue_pair_id, compressed_buffers));
   }
 
   return compressed_buffers;
@@ -326,11 +325,12 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
 }
 
 template <typename Class, typename Enable>
-arrow::Status CompressDevice<Class, Enable>::Release(const BufferVector& buffers) {
+std::size_t CompressDevice<Class, Enable>::Recycle(const BufferVector& buffers) {
+  std::size_t count = 0;
   for (auto it = std::crbegin(buffers); it != std::crend(buffers); ++it) {
-    ARROW_RETURN_NOT_OK(device_memory_->Put((*it)->data()));
+    count += device_memory_->Put((*it)->data());
   }
-  return arrow::Status::OK();
+  return count;
 }
 
 template <typename Class, typename Enable>
@@ -540,11 +540,10 @@ arrow::StatusCode CompressDevice<Class, Enable>::DequeueBurst(
 }
 
 template <typename Class, typename Enable>
-arrow::Status CompressDevice<Class, Enable>::ReleaseAll(std::uint16_t queue_pair_id,
-                                                        const BufferVector& buffers) {
-  ARROW_RETURN_NOT_OK(Release(buffers));
-  ARROW_RETURN_NOT_OK(qp_memory_[queue_pair_id]->Release());
-  return arrow::Status::OK();
+void CompressDevice<Class, Enable>::ReleaseAll(std::uint16_t queue_pair_id,
+                                               const BufferVector& buffers) {
+  ARROW_UNUSED(Recycle(buffers));
+  qp_memory_[queue_pair_id]->Release();
 }
 
 template class CompressDevice<Class_MLX5_PCI>;

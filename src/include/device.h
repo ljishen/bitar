@@ -27,6 +27,7 @@
 #include <arrow/util/macros.h>
 #include <fmt/core.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <type_traits>
@@ -110,9 +111,11 @@ class CompressDevice {
       std::uint16_t queue_pair_id, const BufferVector& compressed_buffers,
       const std::unique_ptr<arrow::ResizableBuffer>& decompressed_buffer);
 
-  /// \brief Release the underlying memory resources of the buffers returned by
+  /// \brief Recycle the underlying memory resources of the buffers returned by
   /// \ref Compress "Compress()"
-  arrow::Status Release(const BufferVector& buffers);
+  /// \param[in] buffers the buffers that contain compressed data to be recycled
+  /// \return the number of buffers that are recycled
+  std::size_t Recycle(const BufferVector& buffers);
 
   /// \brief Return the lcore ID of the specified queue pair
   [[nodiscard]] auto LcoreOf(std::uint16_t queue_pair_id) const {
@@ -169,7 +172,7 @@ class CompressDevice {
                                  QueuePairMemory<Class>* memory);
 
   /// \brief Release the memory associated with the queue pair and the compressed buffers.
-  arrow::Status ReleaseAll(std::uint16_t queue_pair_id, const BufferVector& buffers);
+  void ReleaseAll(std::uint16_t queue_pair_id, const BufferVector& buffers);
 
   const std::uint8_t device_id_;
   const std::vector<std::uint32_t> worker_lcores_;

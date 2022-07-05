@@ -188,22 +188,23 @@ const rte_memzone* DeviceMemory<Class, Enable>::Take() {
 }
 
 template <typename Class, typename Enable>
-arrow::Status DeviceMemory<Class, Enable>::Put(const std::uint8_t* addr) {
+std::size_t DeviceMemory<Class, Enable>::Put(const std::uint8_t* addr) {
   const auto* memzone = RtememzoneAllocatorTracker::Instance()->Of(addr);
   if (memzone == nullptr) {
-    return arrow::Status::Invalid(
-        "Cannot find an memzone associated with virtual address ", addr);
+    // Ignore if the memzone is not found
+    return 0;
   }
 
   const std::lock_guard<std::mutex> lock(mutex_);
 
   if (ARROW_PREDICT_FALSE(occupied_memzones_.erase(memzone) == 0)) {
-    return arrow::Status::Invalid("Memzone ", memzone,
-                                  " is a foreign memzone or it is not occupied");
+    // Ignore if we don't have a record showing that the memzone has been taken to store
+    // compressed data
+    return 0;
   }
 
   memzone_pool_.push(memzone);
-  return arrow::Status::OK();
+  return 1;
 }
 
 template <typename Class, typename Enable>
@@ -448,8 +449,6 @@ int QueuePairMemory<Class, Enable>::AssembleFrom(
   ARROW_RETURN_NEGATIVE_NOT_STATUS_OK(
       BulkAllocate(next_burst_num_ops, next_burst_num_src_mbufs * 2));
 
-  auto* tracker = RtememzoneAllocatorTracker::Instance();
-
   // Construct all source mbufs for the next burst operations
   std::uint32_t mbuf_id = 0;
   auto num_ops_assembled_with_mbufs = num_ops_assembled_;
@@ -458,19 +457,12 @@ int QueuePairMemory<Class, Enable>::AssembleFrom(
   pending_operations_.push_back(current_op);
   while (mbuf_id < next_burst_num_src_mbufs) {
     const auto& buffer = compressed_buffers[index];
-    const auto* memzone = tracker->Of(buffer->data());
-    if (ARROW_PREDICT_FALSE(memzone == nullptr)) {
-      RTE_LOG(ERR, USER1,
-              "Cannot find an memzone associated with the compressed buffer (%p)\n",
-              static_cast<const void*>(buffer->data()));
-      return -static_cast<std::underlying_type_t<arrow::StatusCode>>(
-          arrow::StatusCode::Invalid);
-    }
+
     ARROW_RETURN_NEGATIVE_NOT_STATUS_OK(AppendData(
         &current_op->m_src, mbufs_[mbuf_id],
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
-        memzone->addr, memzone->iova, static_cast<std::uint16_t>(buffer->size()),
-        shared_info_compressed_mbuf_.get()));
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        const_cast<std::uint8_t*>(buffer->data()), rte_mem_virt2iova(buffer->data()),
+        static_cast<std::uint16_t>(buffer->size()), shared_info_compressed_mbuf_.get()));
 
     ++mbuf_id;
     ++index;
@@ -549,7 +541,7 @@ __rte_always_inline arrow::StatusCode QueuePairMemory<Class, Enable>::RecycleRes
 }
 
 template <typename Class, typename Enable>
-arrow::Status QueuePairMemory<Class, Enable>::Release() {
+void QueuePairMemory<Class, Enable>::Release() {
   while (!pending_operations_.empty()) {
     auto* current_op = pending_operations_.front();
 
@@ -565,8 +557,8 @@ arrow::Status QueuePairMemory<Class, Enable>::Release() {
       auto* next_mbuf = dst_mbuf->next;
       // Only recycle memzones for storing compressed data
       if (dst_mbuf->shinfo == shared_info_compressed_mbuf_.get()) {
-        ARROW_RETURN_NOT_OK(
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        ARROW_UNUSED(
             device_memory_->Put(reinterpret_cast<std::uint8_t*>(dst_mbuf->buf_addr)));
       }
       rte_pktmbuf_free_seg(dst_mbuf);
@@ -577,8 +569,6 @@ arrow::Status QueuePairMemory<Class, Enable>::Release() {
 
     pending_operations_.pop_front();
   }
-
-  return arrow::Status::OK();
 }
 
 template <typename Class, typename Enable>
@@ -599,13 +589,7 @@ rte_comp_op** QueuePairMemory<Class, Enable>::dequeue_ops() {
 
 template <typename Class, typename Enable>
 QueuePairMemory<Class, Enable>::~QueuePairMemory() {
-  auto status = Release();
-  if (!status.ok()) {
-    RTE_LOG(CRIT, USER1,
-            "Failed to release memory resources for queue pair %hu of compress device "
-            "%hhu. [%s]\n",
-            queue_pair_id_, device_id_, status.ToString().c_str());
-  }
+  Release();
 }
 
 template <typename Class, typename Enable>

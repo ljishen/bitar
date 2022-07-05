@@ -27,6 +27,7 @@
 #include <rte_malloc.h>
 #include <rte_mempool.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <memory>
@@ -70,8 +71,11 @@ class DeviceMemory {
 
   /// \brief Put the memzone associated with the virtual address \p addr back to the pool
   /// \param[in] addr the virtual address
-  /// \return Status OK, or Invalid if the memzone is not found or is not from the pool
-  arrow::Status Put(const std::uint8_t* addr);
+  /// \return either 1 if the corresponding memzone is put back to the pool, or 0 if not
+  ///
+  /// When returning 0, this function does nothing either because the corresponding
+  /// memzone is not found or not occupied for storing compressed data.
+  std::size_t Put(const std::uint8_t* addr);
 
   virtual ~DeviceMemory();
 
@@ -132,7 +136,7 @@ class QueuePairMemory {
   arrow::StatusCode RecycleResources(rte_comp_op* operation);
 
   /// \brief Release memory resources associated with pending operations
-  arrow::Status Release();
+  void Release();
 
   /// \brief Check whether there are any pending operations that are assembled but not
   /// released

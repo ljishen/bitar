@@ -31,6 +31,7 @@
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/type_fwd.h>
+#include <arrow/util/logging.h>
 #include <arrow/util/macros.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -85,18 +86,17 @@ inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
   }
 }
 
-arrow::Status Release(
-    const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
-        device_to_compressed_buffers_vector) {
+void Recycle(const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
+             const std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
+                 device_to_compressed_buffers_vector) {
   for (const auto& [device_id, compressed_buffers_vector] :
        device_to_compressed_buffers_vector) {
     for (const auto& compressed_buffers : compressed_buffers_vector) {
-      ARROW_RETURN_NOT_OK(devices[device_id]->Release(compressed_buffers));
+      ARROW_CHECK_EQ(devices[device_id]->Recycle(compressed_buffers),
+                     compressed_buffers.size())
+          << "Recycled less than expected number of buffers";
     }
   }
-
-  return arrow::Status::OK();
 }
 
 }  // namespace
@@ -236,10 +236,10 @@ arrow::Status BenchmarkCompressAsync(
     Advance(device_id, queue_pair_id, device->num_qps());
   }
 
-  // Avoid missing the opportunity to release by waiting till results from all worker
+  // Avoid missing the opportunity to recycle by waiting till results from all worker
   // lcores are known
   if (!async_success) {
-    ARROW_UNUSED(Release(devices, device_to_compressed_buffers_vector));
+    Recycle(devices, device_to_compressed_buffers_vector);
     return arrow::Status::IOError("Failed to complete async compression");
   }
 
@@ -343,7 +343,8 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
 
     if (idx < kNumTests - 1) {
       // Keep the last compression result for the sync decompression test
-      ARROW_RETURN_NOT_OK(device->Release(compressed_buffers));
+      ARROW_CHECK_EQ(device->Recycle(compressed_buffers), compressed_buffers.size())
+          << "Recycled less than expected number of buffers";
       compressed_buffers.clear();
     } else {
       std::int64_t compressed_data_size = std::accumulate(
@@ -366,15 +367,16 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
       arrow::AllocateResizableBuffer(
           static_cast<std::int64_t>(compressed_buffers.size() * kDecompressedSegSize),
           bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)),
-      ARROW_UNUSED(device->Release(compressed_buffers)));
+      ARROW_UNUSED(device->Recycle(compressed_buffers)));
 
   for (int idx = 0; idx < kNumTests; ++idx) {
     RETURN_NOT_OK_ELSE(BenchmarkDecompressSync(device, queue_pair_id, compressed_buffers,
                                                decompressed_buffer),
-                       ARROW_UNUSED(device->Release(compressed_buffers)));
+                       ARROW_UNUSED(device->Recycle(compressed_buffers)));
   }
 
-  ARROW_RETURN_NOT_OK(device->Release(compressed_buffers));
+  ARROW_CHECK_EQ(device->Recycle(compressed_buffers), compressed_buffers.size())
+      << "Recycled less than expected number of buffers";
   compressed_buffers.clear();
 
   if (decompressed_buffer->size() != input_buffer->size()) {
@@ -454,7 +456,7 @@ arrow::Status EvaluateAsync(
 
     // Keep the last compression results for the async decompression test
     if (idx < kNumTests - 1) {
-      ARROW_RETURN_NOT_OK(Release(devices, device_to_compressed_buffers_vector));
+      Recycle(devices, device_to_compressed_buffers_vector);
     }
   }
   input_buffer_vector.clear();
@@ -480,7 +482,7 @@ arrow::Status EvaluateAsync(
                 device_to_compressed_buffers_vector[device_id][queue_pair_id].size() *
                 kDecompressedSegSize),
             bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)),
-        ARROW_UNUSED(Release(devices, device_to_compressed_buffers_vector)));
+        Recycle(devices, device_to_compressed_buffers_vector));
 
     Advance(device_id, queue_pair_id, device->num_qps());
   }
@@ -489,10 +491,10 @@ arrow::Status EvaluateAsync(
     RETURN_NOT_OK_ELSE(
         BenchmarkDecompressAsync(devices, device_to_compressed_buffers_vector,
                                  decompressed_buffer_vector),
-        ARROW_UNUSED(Release(devices, device_to_compressed_buffers_vector)));
+        Recycle(devices, device_to_compressed_buffers_vector));
   }
 
-  ARROW_RETURN_NOT_OK(Release(devices, device_to_compressed_buffers_vector));
+  Recycle(devices, device_to_compressed_buffers_vector);
 
   for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
     if (decompressed_buffer_vector[idx]->size() != input_buffer->size()) {

@@ -104,7 +104,8 @@
     "shared_mutex": "cpp",
     "cfenv": "cpp",
     "typeindex": "cpp",
-    "semaphore": "cpp"
+    "semaphore": "cpp",
+    "valarray": "cpp"
   },
   "sshfs.flags": [
     "DEBUG_SSH2"
