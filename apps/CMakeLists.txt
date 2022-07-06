@@ -23,17 +23,23 @@
 add_executable(demo_app app_common.cc app_common.h demo_app.cc demo_app.h)
 target_link_libraries(demo_app PRIVATE bitar project_options project_warnings)
 
-set(DEPENDENCIES_CONFIGURED cxxopts fmt)
+set(DEPENDENCIES_CONFIGURED cxxopts fmt magic_enum)
 foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
-  find_package(${DEPENDENCY} CONFIG REQUIRED)
+  find_package(${DEPENDENCY} REQUIRED CONFIG)
 endforeach()
-target_link_system_libraries(demo_app PRIVATE cxxopts::cxxopts fmt::fmt)
+target_link_system_libraries(demo_app PRIVATE cxxopts::cxxopts fmt::fmt
+                             magic_enum::magic_enum)
 target_compile_definitions(demo_app PRIVATE FMT_ENFORCE_COMPILE_STRING)
 
 find_package(Arrow "${arrow_minimum_required_version}" REQUIRED)
-target_link_system_libraries(demo_app PRIVATE Arrow::arrow)
+target_link_system_libraries(demo_app PRIVATE Arrow::arrow Arrow::parquet)
 target_compile_definitions(demo_app PRIVATE ARROW_NO_DEPRECATED_API)
+
 if(Arrow_IS_SYSTEM_INSTALLED)
-  find_package(CURL REQUIRED CONFIG)
+  set(DEPENDENCIES_CONFIGURED CURL Thrift)
+  foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
+    find_package(${DEPENDENCY} REQUIRED CONFIG)
+  endforeach()
   target_link_system_libraries(Arrow::arrow INTERFACE CURL::libcurl)
+  target_link_system_libraries(Arrow::parquet INTERFACE thrift::thrift)
 endif()

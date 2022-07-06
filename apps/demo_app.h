@@ -24,7 +24,6 @@
 
 #include <arrow/result.h>
 #include <arrow/status.h>
-#include <arrow/type_fwd.h>
 
 #include <cstdint>
 #include <memory>
@@ -46,10 +45,11 @@ namespace bitar::app {
 
 static inline constexpr auto kNumTests = 3;
 
-arrow::Result<arrow::BufferVector> ReadBuffers(const char* ipc_file_path);
+enum class FileReadMode : std::uint8_t { kRaw, kContent };
 
-arrow::Result<std::unique_ptr<arrow::Buffer>> ReadFileBuffer(
-    const std::string& ipc_file_path, std::int64_t num_bytes);
+arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_path,
+                                                       FileReadMode mode,
+                                                       std::int64_t num_bytes);
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
     const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,

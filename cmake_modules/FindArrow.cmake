@@ -21,13 +21,27 @@
 # SOFTWARE.
 
 if(NOT BITAR_BUILD_ARROW)
-  # Use QUIET to silence the possible dependencies looking for by
-  # ArrowConfig.cmake. This is not a problem because if possible dependencies
-  # are not found, arrow_bundled_dependencies will be used.
-  find_package(${CMAKE_FIND_PACKAGE_NAME} QUIET CONFIG)
+  # Since the Parquet library depends on the Arrow library, finding the Parquet
+  # library will import the Arrow library as well.
+  #
+  # find_package() for system-installed Parquet library should fail because of a
+  # known bug about the misconfigured cmake directory structure:
+  # https://issues.apache.org/jira/browse/ARROW-12175. Currently, to temporarily
+  # work around the issue we can pass a cmake variable `Parquet_ROOT` to
+  # manually specify the directory that containing the `ParquetConfig.cmake`
+  # file.
+  #
+  # Internally, `ParquetConfig.cmake` uses `find_dependency(Arrow)` to load the
+  # Arrow-provided `FindArrow.cmake` file. With the existing of the current file
+  # that has the same name in the CMAKE_MODULE_PATH, the Arrow dependency lookup
+  # will become an infinite recursion. Therefore, we need to temporarily remove
+  # the current file from the module search path.
+  list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+  find_package(Parquet QUIET CONFIG)
+  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 endif()
 
-if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
+if(${CMAKE_FIND_PACKAGE_NAME}_FOUND AND Parquet_FOUND)
   execute_process(
     COMMAND
       sh -c
@@ -44,9 +58,10 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
 
   mark_as_advanced(
     ${CMAKE_FIND_PACKAGE_NAME}_CONFIG ${CMAKE_FIND_PACKAGE_NAME}_DIR
-    ${CMAKE_FIND_PACKAGE_NAME}_VERSION)
+    ${CMAKE_FIND_PACKAGE_NAME}_VERSION Parquet_CONFIG Parquet_DIR
+    Parquet_VERSION)
   list(APPEND required_vars ${${CMAKE_FIND_PACKAGE_NAME}_CONFIG}
-       ${${CMAKE_FIND_PACKAGE_NAME}_DIR})
+       ${${CMAKE_FIND_PACKAGE_NAME}_DIR} ${Parquet_CONFIG} ${Parquet_DIR})
   list(APPEND version_var ${${CMAKE_FIND_PACKAGE_NAME}_VERSION})
 else()
   FetchContent_GetProperties(${CMAKE_FIND_PACKAGE_NAME})
@@ -64,7 +79,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "7124bafbb16ce6ae353b81d6be39c37869ee53ab"
+        "8abb941f57316d77b4a5eb209f5a108c275fe120"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
@@ -90,7 +105,7 @@ else()
 
     message(
       STATUS
-        "Could NOT find ${CMAKE_FIND_PACKAGE_NAME} library. "
+        "Could NOT find ${CMAKE_FIND_PACKAGE_NAME} and/or Parquet library. "
         "Configuring to build from source (version \"${BITAR_ARROW_GIT_TAG}\")..."
     )
 
@@ -125,6 +140,9 @@ else()
     set(ARROW_JEMALLOC
         OFF
         CACHE INTERNAL "Build the Arrow jemalloc-based allocator")
+    set(ARROW_PARQUET
+        ON
+        CACHE INTERNAL "Build the Parquet libraries")
     set(ARROW_DEPENDENCY_USE_SHARED
         OFF
         CACHE INTERNAL "Link to shared libraries")
@@ -205,17 +223,32 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
     set(_arrow_library arrow_shared)
   endif()
 
+  if(TARGET parquet_static)
+    set(_parquet_library parquet_static)
+  elseif(TARGET parquet_shared)
+    set(_parquet_library parquet_shared)
+  endif()
+
   add_library(Arrow::arrow INTERFACE IMPORTED)
+  add_library(Arrow::parquet INTERFACE IMPORTED)
   target_link_libraries(Arrow::arrow INTERFACE ${_arrow_library})
+  target_link_libraries(Arrow::parquet INTERFACE ${_parquet_library})
 
   get_target_property(_arrow_include_dirs ${_arrow_library} INCLUDE_DIRECTORIES)
+  get_target_property(_parquet_include_dirs ${_parquet_library}
+                      INCLUDE_DIRECTORIES)
 
   # This is the case where Arrow is built from source
   if(_arrow_include_dirs)
     set_target_properties(Arrow::arrow PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
                                                   "${_arrow_include_dirs}")
+    set_target_properties(
+      Arrow::parquet PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+                                "${_parquet_include_dirs}")
     unset(_arrow_include_dirs)
+    unset(_parquet_include_dirs)
   endif()
 
   unset(_arrow_library)
+  unset(_parquet_library)
 endif()

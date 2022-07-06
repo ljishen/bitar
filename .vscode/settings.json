@@ -105,7 +105,9 @@
     "cfenv": "cpp",
     "typeindex": "cpp",
     "semaphore": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "chrono": "cpp",
+    "filesystem": "cpp"
   },
   "sshfs.flags": [
     "DEBUG_SSH2"

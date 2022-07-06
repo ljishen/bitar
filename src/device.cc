@@ -160,7 +160,7 @@ arrow::Status CompressDevice<Class, Enable>::Initialize(
 template <typename Class, typename Enable>
 arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
     std::uint16_t queue_pair_id,
-    const std::unique_ptr<arrow::Buffer>& decompressed_buffer) {
+    const std::shared_ptr<arrow::Buffer>& decompressed_buffer) {
   BufferVector compressed_buffers;
   if (ARROW_PREDICT_FALSE(decompressed_buffer == nullptr ||
                           decompressed_buffer->size() == 0)) {

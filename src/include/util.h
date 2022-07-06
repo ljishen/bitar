@@ -59,7 +59,7 @@ struct CompressParam {
   /// brace initialization.
   CompressParam(const std::unique_ptr<bitar::CompressDevice<Class>>& device,
                 std::uint16_t queue_pair_id,
-                const std::unique_ptr<arrow::Buffer>& decompressed_buffer,
+                const std::shared_ptr<arrow::Buffer>& decompressed_buffer,
                 const Callback& result_callback)
       : device_{device},
         queue_pair_id_{queue_pair_id},
@@ -68,7 +68,7 @@ struct CompressParam {
 
   const std::unique_ptr<bitar::CompressDevice<Class>>& device_;
   const std::uint16_t queue_pair_id_{};
-  const std::unique_ptr<arrow::Buffer>& decompressed_buffer_;
+  const std::shared_ptr<arrow::Buffer>& decompressed_buffer_;
   const Callback& result_callback_;
 };
 

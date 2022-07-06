@@ -97,7 +97,7 @@ class CompressDevice {
   /// resources allocated for the \p queue_pair_id are used.
   arrow::Result<BufferVector> Compress(
       std::uint16_t queue_pair_id,
-      const std::unique_ptr<arrow::Buffer>& decompressed_buffer);
+      const std::shared_ptr<arrow::Buffer>& decompressed_buffer);
 
   /// \brief Decompress buffers with the device via the \p queue_pair_id
   /// \param[in] queue_pair_id this value must be within [0, num_qps())

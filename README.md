@@ -23,7 +23,7 @@ Bitar is a C++ library to simplify accessing hardware compression/decompression 
 
 ## Integration
 
-Bitar can be easily installed and integrated via vcpkg
+Bitar can be easily installed and integrated via [vcpkg](https://github.com/microsoft/vcpkg)
 
 ```bash
 vcpkg install bitar
@@ -37,9 +37,13 @@ $ sudo sh -c 'echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-204
 $ # On a NUMA machine, we need
 $ # sudo sh -c 'echo 1024 > /sys/devices/system/node/node1/hugepages/hugepages-2048kB/nr_hugepages'
 
-$ # When DPDK or Arrow library is not found, it will be automatically built from source.
+$ # The DPDK library will be built from source by vcpkg if `dpdk_ROOT` is not specified.
+$ # The Arrow library (with the parquet component) will be built from source if the
+$ # parquet cmake configuration file is not found.
+$ # The Arrow library will be loaded internally by the parquet library. Therefore, it is
+$ # sufficient to only specify the `Parquet_ROOT`.
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
-[-Ddpdk_ROOT:PATH=<dpdk-install-prefix>] [-DArrow_ROOT:PATH=<arrow-install-prefix>] \
+[-Ddpdk_ROOT:PATH=<dpdk-install-prefix>] [-DParquet_ROOT:PATH=<parquet-cmake-config-file-dir>] \
 -DBITAR_BUILD_APPS:BOOL=ON -DBITAR_BUILD_TESTS:BOOL=ON \
 -DENABLE_DEVELOPER_MODE:BOOL=ON -DCMAKE_BUILD_TYPE:BOOL=Debug
 
@@ -49,7 +53,7 @@ $ cmake --install ./build-$(uname -m) --prefix <install-prefix>
 # LD_LIBRARY_PATH can be omitted if DPDK is built from source via vcpkg
 $ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-prefix>/lib64:$LD_LIBRARY_PATH \
 ./build-$(uname -m)/apps/demo_app --in-memory -l 1-3 -a <device-pci-id>,class=compress -- \
---file <file> --bytes <size-to-read-from-file>
+--bytes <size-to-read-from-file> --file <file> [--mode <file-read-mode>] [--help]
 ```
 
 ### Advanced CMake Configuration Options

@@ -124,13 +124,16 @@ project(
   HOMEPAGE_URL "https://github.com/ljishen/bitar"
   LANGUAGES CXX C)
 
-set(Arrow_ROOT
+set(Parquet_ROOT
     ""
-    CACHE PATH "Apache Arrow installation prefix")
+    CACHE
+      PATH
+      "The directory containing the cmake configuration file for the parquet library"
+)
 option(BITAR_BUILD_ARROW
        "Force to build the Arrow library to be used as the dependency" OFF)
 if(BITAR_BUILD_ARROW)
-  unset(Arrow_ROOT)
+  unset(Parquet_ROOT)
 endif()
 set(arrow_minimum_required_version 7.0.0)
 
