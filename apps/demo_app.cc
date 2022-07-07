@@ -30,7 +30,6 @@
 #include <arrow/ipc/options.h>
 #include <arrow/ipc/reader.h>
 #include <arrow/ipc/writer.h>
-#include <arrow/record_batch.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/table.h>
@@ -74,6 +73,10 @@
 #include "memory_pool.h"
 #include "type_fwd.h"
 #include "util.h"
+
+namespace arrow {
+class RecordBatch;
+}
 
 namespace bitar::app {
 
