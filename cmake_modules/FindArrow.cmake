@@ -229,26 +229,26 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
     set(_parquet_library parquet_shared)
   endif()
 
-  add_library(Arrow::arrow INTERFACE IMPORTED)
-  add_library(Arrow::parquet INTERFACE IMPORTED)
-  target_link_libraries(Arrow::arrow INTERFACE ${_arrow_library})
-  target_link_libraries(Arrow::parquet INTERFACE ${_parquet_library})
+  set(_libraries arrow parquet)
+  foreach(_library_name ${_libraries})
+    if(TARGET ${_${_library_name}_library})
+      add_library(Arrow::${_library_name} INTERFACE IMPORTED)
+      target_link_libraries(Arrow::${_library_name}
+                            INTERFACE ${_${_library_name}_library})
+      get_target_property(_${_library_name}_include_dirs
+                          ${_${_library_name}_library} INCLUDE_DIRECTORIES)
 
-  get_target_property(_arrow_include_dirs ${_arrow_library} INCLUDE_DIRECTORIES)
-  get_target_property(_parquet_include_dirs ${_parquet_library}
-                      INCLUDE_DIRECTORIES)
+      # This is the case where Arrow is built from source
+      if(_${_library_name}_include_dirs)
+        set_target_properties(
+          Arrow::${_library_name}
+          PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+                     "${_${_library_name}_include_dirs}")
+        unset(_${_library_name}_include_dirs)
+      endif()
 
-  # This is the case where Arrow is built from source
-  if(_arrow_include_dirs)
-    set_target_properties(Arrow::arrow PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                                  "${_arrow_include_dirs}")
-    set_target_properties(
-      Arrow::parquet PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                "${_parquet_include_dirs}")
-    unset(_arrow_include_dirs)
-    unset(_parquet_include_dirs)
-  endif()
-
-  unset(_arrow_library)
-  unset(_parquet_library)
+      unset(_${_library_name}_library)
+    endif()
+  endforeach()
+  unset(_libraries)
 endif()
