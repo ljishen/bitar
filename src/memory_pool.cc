@@ -126,8 +126,8 @@ class RtememzoneAllocator {
         name.c_str(), static_cast<std::size_t>(size),
         static_cast<std::int32_t>(rte_socket_id()), RTE_MEMZONE_IOVA_CONTIG, kAlignment);
     if (memzone == nullptr) {
-      return arrow::Status::OutOfMemory("Reserving memzone of size ", size,
-                                        " failed. [Error ", rte_errno, ": ",
+      return arrow::Status::OutOfMemory("Reserving memzone of ", size,
+                                        " bytes failed. [Error ", rte_errno, ": ",
                                         rte_strerror(rte_errno), "]");
     }
 

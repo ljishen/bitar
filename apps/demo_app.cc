@@ -74,10 +74,6 @@
 #include "type_fwd.h"
 #include "util.h"
 
-namespace arrow {
-class RecordBatch;
-}
-
 namespace bitar::app {
 
 namespace {
@@ -98,11 +94,9 @@ std::int64_t GetNumBytesToRead(std::int64_t num_bytes_want, std::int64_t max_byt
   return std::min(num_bytes_want, max_bytes);
 }
 
-arrow::Result<std::shared_ptr<arrow::Buffer>> ReadRawData(const std::string& file_path,
-                                                          std::int64_t num_bytes_want) {
-  ARROW_ASSIGN_OR_RAISE(
-      auto file, arrow::io::MemoryMappedFile::Open(file_path, arrow::io::FileMode::READ));
-
+arrow::Result<std::shared_ptr<arrow::Buffer>> ReadRawData(
+    const std::shared_ptr<arrow::io::MemoryMappedFile>& file,
+    std::int64_t num_bytes_want) {
   ARROW_ASSIGN_OR_RAISE(auto file_size, file->GetSize());
   std::int64_t num_bytes_to_read = GetNumBytesToRead(num_bytes_want, file_size);
 
@@ -111,16 +105,20 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadRawData(const std::string& fil
       arrow::AllocateBuffer(num_bytes_to_read,
                             bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)));
 
-  auto start_tsc = rte_rdtsc_precise();
+  std::int64_t num_bytes_read = 0;
+  for (int idx = 0; idx < kNumTests; ++idx) {
+    auto start_tsc = rte_rdtsc_precise();
 
-  ARROW_ASSIGN_OR_RAISE(auto num_bytes_read,
-                        file->Read(num_bytes_to_read, buffer->mutable_data()));
-  if (num_bytes_read != num_bytes_to_read) {
-    return arrow::Status::IOError("Unable to read ", num_bytes_to_read,
-                                  " bytes from file");
+    ARROW_ASSIGN_OR_RAISE(num_bytes_read,
+                          file->ReadAt(0, num_bytes_to_read, buffer->mutable_data()));
+    if (num_bytes_read != num_bytes_to_read) {
+      return arrow::Status::IOError("Unable to read ", num_bytes_to_read,
+                                    " bytes from file");
+    }
+
+    PrintPerfNumbers(buffer->size(), start_tsc);
   }
 
-  PrintPerfNumbers(buffer->size(), start_tsc);
   fmt::print("Read raw file {:d} bytes out of a total {:d} bytes\n", num_bytes_read,
              file_size);
 
@@ -129,35 +127,45 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadRawData(const std::string& fil
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
     const std::shared_ptr<arrow::Table>& table) {
-  arrow::io::MockOutputStream mock_output_stream;
-  ARROW_ASSIGN_OR_RAISE(auto mock_writer, arrow::ipc::MakeStreamWriter(
-                                              &mock_output_stream, table->schema()));
-  ARROW_RETURN_NOT_OK(mock_writer->WriteTable(*table));
-  ARROW_RETURN_NOT_OK(mock_writer->Close());
-  std::int64_t table_size = mock_output_stream.GetExtentBytesWritten();
-
-  ARROW_ASSIGN_OR_RAISE(
-      auto buffer_output_stream,
-      arrow::io::BufferOutputStream::Create(
-          table_size, bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)));
-
   auto write_options = arrow::ipc::IpcWriteOptions::Defaults();
 
   // Use LZ4_FRAME or ZSTD to compress the data.
   // ARROW_ASSIGN_OR_RAISE(write_options.codec,
   //                       arrow::util::Codec::Create(arrow::Compression::LZ4_FRAME));
 
+  arrow::io::MockOutputStream mock_output_stream;
   ARROW_ASSIGN_OR_RAISE(
-      auto writer,
-      arrow::ipc::MakeStreamWriter(buffer_output_stream, table->schema(), write_options));
+      auto mock_writer,
+      arrow::ipc::MakeStreamWriter(&mock_output_stream, table->schema(), write_options));
+  ARROW_RETURN_NOT_OK(mock_writer->WriteTable(*table));
+  ARROW_RETURN_NOT_OK(mock_writer->Close());
+  std::int64_t table_size = mock_output_stream.GetExtentBytesWritten();
 
-  auto start_tsc = rte_rdtsc_precise();
+  std::shared_ptr<arrow::Buffer> serialized_table;
 
-  ARROW_RETURN_NOT_OK(writer->WriteTable(*table));
-  ARROW_RETURN_NOT_OK(writer->Close());
-  ARROW_ASSIGN_OR_RAISE(auto buffer, buffer_output_stream->Finish());
+  for (int idx = 0; idx < kNumTests; ++idx) {
+    ARROW_ASSIGN_OR_RAISE(
+        auto buffer_output_stream,
+        arrow::io::BufferOutputStream::Create(
+            table_size, bitar::GetMemoryPool(bitar::MemoryPoolBackend::Rtememzone)));
+    ARROW_ASSIGN_OR_RAISE(
+        auto writer, arrow::ipc::MakeStreamWriter(buffer_output_stream, table->schema(),
+                                                  write_options));
+    auto start_tsc = rte_rdtsc_precise();
 
-  PrintPerfNumbers(buffer->size(), start_tsc);
+    ARROW_RETURN_NOT_OK(writer->WriteTable(*table));
+    ARROW_RETURN_NOT_OK(writer->Close());
+    ARROW_ASSIGN_OR_RAISE(auto buffer, buffer_output_stream->Finish());
+
+    ARROW_CHECK_EQ(buffer->size(), table_size)
+        << "Serialized table size is not equal to the estimated size";
+
+    PrintPerfNumbers(buffer->size(), start_tsc);
+
+    if (idx == kNumTests - 1) {
+      serialized_table = std::move(buffer);
+    }
+  }
 
   auto compression_type =
       write_options.codec == nullptr
@@ -165,7 +173,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
           : magic_enum::enum_name(write_options.codec->compression_type());
   fmt::print("Compression type for serialization: {}\n", compression_type);
 
-  return buffer;
+  return serialized_table;
 }
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadTableBytes(
@@ -180,10 +188,10 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadTableBytes(
 }
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadFeatherData(
-    const std::string& file_path, std::int64_t num_bytes_want) {
-  ARROW_ASSIGN_OR_RAISE(
-      auto file, arrow::io::MemoryMappedFile::Open(file_path, arrow::io::FileMode::READ));
-  ARROW_ASSIGN_OR_RAISE(auto reader, arrow::ipc::feather::Reader::Open(file));
+    const std::shared_ptr<arrow::io::MemoryMappedFile>& file,
+    std::int64_t num_bytes_want) {
+  ARROW_ASSIGN_OR_RAISE(auto reader, arrow::ipc::feather::Reader::Open(
+                                         file, arrow::ipc::IpcReadOptions::Defaults()));
 
   std::shared_ptr<arrow::Table> table;
   ARROW_RETURN_NOT_OK(reader->Read(&table));
@@ -192,10 +200,8 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadFeatherData(
 }
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadParquetData(
-    const std::string& file_path, std::int64_t num_bytes_want) {
-  ARROW_ASSIGN_OR_RAISE(
-      auto file, arrow::io::MemoryMappedFile::Open(file_path, arrow::io::FileMode::READ));
-
+    const std::shared_ptr<arrow::io::MemoryMappedFile>& file,
+    std::int64_t num_bytes_want) {
   std::unique_ptr<parquet::arrow::FileReader> reader;
   ARROW_RETURN_NOT_OK(
       parquet::arrow::OpenFile(file, arrow::default_memory_pool(), &reader));
@@ -213,21 +219,17 @@ arrow::Status DeserializeTable(const std::shared_ptr<arrow::Buffer>& buffer) {
       "\n=============================================================================\n",
       buffer->size());
 
-  arrow::io::BufferReader buffer_reader(buffer);
-  ARROW_ASSIGN_OR_RAISE(auto batch_reader,
-                        arrow::ipc::RecordBatchStreamReader::Open(&buffer_reader));
+  for (int idx = 0; idx < kNumTests; ++idx) {
+    arrow::io::BufferReader buffer_reader(buffer);
+    ARROW_ASSIGN_OR_RAISE(auto batch_reader,
+                          arrow::ipc::RecordBatchStreamReader::Open(&buffer_reader));
 
-  auto start_tsc = rte_rdtsc_precise();
+    auto start_tsc = rte_rdtsc_precise();
 
-  while (true) {
-    std::shared_ptr<arrow::RecordBatch> batch;
-    ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&batch));
-    if (batch == nullptr) {
-      break;
-    }
+    ARROW_ASSIGN_OR_RAISE(auto table, batch_reader->ToTable());
+
+    PrintPerfNumbers(buffer->size(), start_tsc);
   }
-
-  PrintPerfNumbers(buffer->size(), start_tsc);
 
   return arrow::Status::OK();
 }
@@ -290,18 +292,21 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_p
       num_bytes_want, magic_enum::enum_name(mode),
       std::filesystem::path(file_path).extension().c_str());
 
+  ARROW_ASSIGN_OR_RAISE(
+      auto file, arrow::io::MemoryMappedFile::Open(file_path, arrow::io::FileMode::READ));
+
   if (mode == FileReadMode::kRaw) {
-    return ReadRawData(file_path, num_bytes_want);
+    return ReadRawData(file, num_bytes_want);
   }
 
   std::shared_ptr<arrow::Buffer> buffer;
 
   if (file_path.ends_with(".parquet")) {
-    ARROW_ASSIGN_OR_RAISE(buffer, ReadParquetData(file_path, num_bytes_want));
+    ARROW_ASSIGN_OR_RAISE(buffer, ReadParquetData(file, num_bytes_want));
   }
 
   if (file_path.ends_with(".feather")) {
-    ARROW_ASSIGN_OR_RAISE(buffer, ReadFeatherData(file_path, num_bytes_want));
+    ARROW_ASSIGN_OR_RAISE(buffer, ReadFeatherData(file, num_bytes_want));
   }
 
   if (buffer) {
@@ -309,7 +314,9 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_p
     return buffer;
   }
 
-  return arrow::Status::Invalid("Unsupported file type");
+  return arrow::Status::Invalid(
+      "Unsupported file type: ", magic_enum::enum_name(mode),
+      " mode only supports '.parquet' or '.feather' file as input");
 }
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
@@ -675,8 +682,8 @@ arrow::Status EvaluateAsync(
                     arrow::SliceBuffer(input_buffer_shared, input_offset)->data(),
                     static_cast<std::size_t>(decompressed_buffer_vector[idx]->size())) !=
         0) {
-      return arrow::Status::Invalid(
-          "Decompressed segment {:d} is not the same as the input buffer", idx);
+      return arrow::Status::Invalid("Decompressed segment ", idx,
+                                    " is not the same as the input buffer");
     }
     input_offset += decompressed_buffer_vector[idx]->size();
   }
@@ -743,9 +750,6 @@ int main(int argc, char* argv[]) {
     }
     file_path = parse_result["file"].as<std::string>();
 
-    if (parse_result.count("bytes") == 0) {
-      bitar::CleanupAndExit(EXIT_FAILURE, "Missing argument for '--bytes'\n");
-    }
     num_bytes_want = parse_result["bytes"].as<std::int64_t>();
 
     auto file_read_mode_opt = magic_enum::enum_cast<bitar::app::FileReadMode>(

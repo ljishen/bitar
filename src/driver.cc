@@ -196,7 +196,7 @@ CompressDriver<Class_MLX5_PCI>::GetDevices(const std::vector<std::uint8_t>& devi
   auto num_worker_lcores = rte_lcore_count() - 1;
   if (num_worker_lcores == 0) {
     return arrow::Status::Invalid(
-        "No enough worker lcores for setting up queue pairs for devices.");
+        "Not enough worker lcores for setting up queue pairs for devices.");
   }
 
   if (device_ids.size() > num_worker_lcores) {

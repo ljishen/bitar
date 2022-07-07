@@ -412,8 +412,10 @@ arrow::Status CompressDevice<Class, Enable>::ValidateConfiguration() {
 
   if (configuration_->max_preallocate_memzones() < kMinPreallocateMemzones ||
       configuration_->max_preallocate_memzones() > RTE_MAX_MEMZONE) {
-    return arrow::Status::Invalid("max_preallocate_memzones is not in the range of [",
-                                  kMinPreallocateMemzones, ", ", RTE_MAX_MEMZONE, "]");
+    return arrow::Status::Invalid("max_preallocate_memzones (",
+                                  configuration_->max_preallocate_memzones(),
+                                  ") is not in the range of [", kMinPreallocateMemzones,
+                                  ", ", RTE_MAX_MEMZONE, "]");
   }
 
   return arrow::Status::OK();
