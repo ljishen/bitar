@@ -90,7 +90,7 @@ GetBlueFieldCompressDevices(std::uint64_t max_buffer_size) {
 
     auto max_preallocate_memzones_total =
         (max_buffer_size + bluefield_config->decompressed_seg_size() - 1) /
-        bluefield_config->decompressed_seg_size() * num_parallel_tests();
+        bluefield_config->decompressed_seg_size();
     auto max_preallocate_memzones = static_cast<std::uint16_t>(
         (max_preallocate_memzones_total + devices.size() - 1) / devices.size());
     bluefield_config->set_max_preallocate_memzones(max_preallocate_memzones);
