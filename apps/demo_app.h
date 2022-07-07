@@ -49,7 +49,7 @@ enum class FileReadMode : std::uint8_t { kRaw, kContent };
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_path,
                                                        FileReadMode mode,
-                                                       std::int64_t num_bytes);
+                                                       std::int64_t num_bytes_want);
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
     const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,

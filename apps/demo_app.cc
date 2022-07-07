@@ -28,7 +28,9 @@
 #include <arrow/io/type_fwd.h>
 #include <arrow/ipc/feather.h>
 #include <arrow/ipc/options.h>
+#include <arrow/ipc/reader.h>
 #include <arrow/ipc/writer.h>
+#include <arrow/record_batch.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/table.h>
@@ -86,18 +88,20 @@ void PrintPerfNumbers(std::int64_t total_bytes, std::uint64_t start_tsc,
              static_cast<double>(total_bytes) * kBitsPerByte / kGigabit / duration);
 }
 
+std::int64_t GetNumBytesToRead(std::int64_t num_bytes_want, std::int64_t max_bytes) {
+  if (num_bytes_want <= 0) {
+    return max_bytes;
+  }
+  return std::min(num_bytes_want, max_bytes);
+}
+
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadRawData(const std::string& file_path,
-                                                          std::int64_t num_bytes) {
+                                                          std::int64_t num_bytes_want) {
   ARROW_ASSIGN_OR_RAISE(
       auto file, arrow::io::MemoryMappedFile::Open(file_path, arrow::io::FileMode::READ));
 
   ARROW_ASSIGN_OR_RAISE(auto file_size, file->GetSize());
-  std::int64_t num_bytes_to_read = 0;
-  if (num_bytes <= 0) {
-    num_bytes_to_read = file_size;
-  } else {
-    num_bytes_to_read = std::min(num_bytes, file_size);
-  }
+  std::int64_t num_bytes_to_read = GetNumBytesToRead(num_bytes_want, file_size);
 
   ARROW_ASSIGN_OR_RAISE(
       auto buffer,
@@ -162,22 +166,18 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
 }
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadTableBytes(
-    const std::shared_ptr<arrow::Table>& table, std::int64_t num_bytes) {
+    const std::shared_ptr<arrow::Table>& table, std::int64_t num_bytes_want) {
   ARROW_ASSIGN_OR_RAISE(auto buffer, SerializeTable(table));
 
-  std::int64_t num_bytes_to_read = 0;
-  if (num_bytes <= 0) {
-    num_bytes_to_read = buffer->size();
-  } else {
-    num_bytes_to_read = std::min(num_bytes, buffer->size());
-  }
-  fmt::print("Read table {:d} bytes out of a total {:d} bytes\n", num_bytes_to_read,
-             buffer->size());
+  std::int64_t num_bytes_to_read = GetNumBytesToRead(num_bytes_want, buffer->size());
+
+  fmt::print("Read serialized table {:d} bytes out of a total {:d} bytes\n",
+             num_bytes_to_read, buffer->size());
   return arrow::SliceBuffer(buffer, 0, num_bytes_to_read);
 }
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadFeatherData(
-    const std::string& file_path, std::int64_t num_bytes) {
+    const std::string& file_path, std::int64_t num_bytes_want) {
   ARROW_ASSIGN_OR_RAISE(
       auto file, arrow::io::MemoryMappedFile::Open(file_path, arrow::io::FileMode::READ));
   ARROW_ASSIGN_OR_RAISE(auto reader, arrow::ipc::feather::Reader::Open(file));
@@ -185,11 +185,11 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadFeatherData(
   std::shared_ptr<arrow::Table> table;
   ARROW_RETURN_NOT_OK(reader->Read(&table));
 
-  return ReadTableBytes(table, num_bytes);
+  return ReadTableBytes(table, num_bytes_want);
 }
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadParquetData(
-    const std::string& file_path, std::int64_t num_bytes) {
+    const std::string& file_path, std::int64_t num_bytes_want) {
   ARROW_ASSIGN_OR_RAISE(
       auto file, arrow::io::MemoryMappedFile::Open(file_path, arrow::io::FileMode::READ));
 
@@ -200,7 +200,33 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadParquetData(
   std::shared_ptr<arrow::Table> table;
   ARROW_RETURN_NOT_OK(reader->ReadTable(&table));
 
-  return ReadTableBytes(table, num_bytes);
+  return ReadTableBytes(table, num_bytes_want);
+}
+
+arrow::Status DeserializeTable(const std::shared_ptr<arrow::Buffer>& buffer) {
+  fmt::print(
+      "\n=============================================================================\n"
+      "Deserialize Table (buffer_size: {:d})"
+      "\n=============================================================================\n",
+      buffer->size());
+
+  arrow::io::BufferReader buffer_reader(buffer);
+  ARROW_ASSIGN_OR_RAISE(auto batch_reader,
+                        arrow::ipc::RecordBatchStreamReader::Open(&buffer_reader));
+
+  auto start_tsc = rte_rdtsc_precise();
+
+  while (true) {
+    std::shared_ptr<arrow::RecordBatch> batch;
+    ARROW_RETURN_NOT_OK(batch_reader->ReadNext(&batch));
+    if (batch == nullptr) {
+      break;
+    }
+  }
+
+  PrintPerfNumbers(buffer->size(), start_tsc);
+
+  return arrow::Status::OK();
 }
 
 inline void Advance(std::uint8_t& device_id, std::uint16_t& queue_pair_id,
@@ -253,24 +279,31 @@ void Recycle(const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devi
 
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_path,
                                                        FileReadMode mode,
-                                                       std::int64_t num_bytes) {
+                                                       std::int64_t num_bytes_want) {
   fmt::print(
-      "\n======================================================================\n"
-      "Read Data (num_bytes: {:d}, mode: {}, file_type: '{}')"
-      "\n======================================================================\n",
-      num_bytes, magic_enum::enum_name(mode),
+      "\n=============================================================================\n"
+      "Serialize Data (num_bytes_want: {:d}, mode: {}, file_type: '{}')"
+      "\n=============================================================================\n",
+      num_bytes_want, magic_enum::enum_name(mode),
       std::filesystem::path(file_path).extension().c_str());
 
   if (mode == FileReadMode::kRaw) {
-    return ReadRawData(file_path, num_bytes);
+    return ReadRawData(file_path, num_bytes_want);
   }
 
+  std::shared_ptr<arrow::Buffer> buffer;
+
   if (file_path.ends_with(".parquet")) {
-    return ReadParquetData(file_path, num_bytes);
+    ARROW_ASSIGN_OR_RAISE(buffer, ReadParquetData(file_path, num_bytes_want));
   }
 
   if (file_path.ends_with(".feather")) {
-    return ReadFeatherData(file_path, num_bytes);
+    ARROW_ASSIGN_OR_RAISE(buffer, ReadFeatherData(file_path, num_bytes_want));
+  }
+
+  if (buffer) {
+    ARROW_RETURN_NOT_OK(DeserializeTable(buffer->parent()));
+    return buffer;
   }
 
   return arrow::Status::Invalid("Unsupported file type");
@@ -436,9 +469,9 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
   const std::uint16_t queue_pair_id = 0;
 
   fmt::print(
-      "\n======================================================================\n"
+      "\n=============================================================================\n"
       "Sync Compress (on queue_pair_id: {:d})"
-      "\n======================================================================\n",
+      "\n=============================================================================\n",
       queue_pair_id);
 
   bitar::BufferVector compressed_buffers;
@@ -464,9 +497,9 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
   }
 
   fmt::print(
-      "\n======================================================================\n"
+      "\n=============================================================================\n"
       "Sync Decompress (on queue_pair_id: {:d})"
-      "\n======================================================================\n",
+      "\n=============================================================================\n",
       queue_pair_id);
 
   ARROW_ASSIGN_OR_RAISE_ELSE(
@@ -527,9 +560,9 @@ arrow::Status EvaluateAsync(
   }
 
   fmt::print(
-      "\n======================================================================\n"
+      "\n=============================================================================\n"
       "Async Compress (on [device_id -> queue_pair_id]: {})"
-      "\n======================================================================\n",
+      "\n=============================================================================\n",
       fmt::join(device_to_qp, ", "));
 
   arrow::BufferVector input_buffer_vector(num_parallel_tests());
@@ -590,9 +623,9 @@ arrow::Status EvaluateAsync(
   input_buffer_vector.clear();
 
   fmt::print(
-      "\n======================================================================\n"
+      "\n=============================================================================\n"
       "Async Decompress (on [device_id -> queue_pair_id]: {})"
-      "\n======================================================================\n",
+      "\n=============================================================================\n",
       fmt::join(device_to_qp, ", "));
 
   std::vector<std::unique_ptr<arrow::ResizableBuffer>> decompressed_buffer_vector(
@@ -686,7 +719,7 @@ int main(int argc, char* argv[]) {
 
   std::string file_path;
   bitar::app::FileReadMode file_read_mode = bitar::app::FileReadMode::kRaw;
-  std::int64_t num_bytes_to_read = 0;
+  std::int64_t num_bytes_want = 0;
   try {
     cxxopts::Options options(std::move(program),
                              "\ndemo_app - Demonstrating (de)compression with SmartNICs");
@@ -710,7 +743,7 @@ int main(int argc, char* argv[]) {
     if (parse_result.count("bytes") == 0) {
       bitar::CleanupAndExit(EXIT_FAILURE, "Missing argument for '--bytes'\n");
     }
-    num_bytes_to_read = parse_result["bytes"].as<std::int64_t>();
+    num_bytes_want = parse_result["bytes"].as<std::int64_t>();
 
     auto file_read_mode_opt = magic_enum::enum_cast<bitar::app::FileReadMode>(
         parse_result["mode"].as<std::uint8_t>());
@@ -720,7 +753,7 @@ int main(int argc, char* argv[]) {
   }
 
   auto read_buffer_result =
-      bitar::app::ReadData(file_path, file_read_mode, num_bytes_to_read);
+      bitar::app::ReadData(file_path, file_read_mode, num_bytes_want);
   if (!read_buffer_result.ok()) {
     bitar::CleanupAndExit(EXIT_FAILURE, "Unable to read buffer from file. [{}]\n",
                           read_buffer_result.status().ToString());
