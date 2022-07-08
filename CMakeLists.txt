@@ -132,9 +132,6 @@ set(Parquet_ROOT
 )
 option(BITAR_BUILD_ARROW
        "Force to build the Arrow library to be used as the dependency" OFF)
-if(BITAR_BUILD_ARROW)
-  unset(Parquet_ROOT)
-endif()
 set(arrow_minimum_required_version 7.0.0)
 
 set(IWYU_ROOT

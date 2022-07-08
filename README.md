@@ -31,19 +31,23 @@ vcpkg install bitar
 
 ## Development
 
+- The DPDK library will be built from source by vcpkg if `dpdk_ROOT` is not specified.
+- The Arrow parquet library is required if `BITAR_BUILD_APPS` is `ON`. Otherwise, having the Arrow library is sufficient.
+- Loading the Arrow parquet library will create a CMake target for the arrow and parquet library, respectively.
+- Use `Parquet_ROOT` to specify the directory that contains the file `ParquetConfig.cmake`.
+- Use `Arrow_ROOT` to specify the installation prefix of the Arrow library if it is not installed at the default location. By default, the system-installed Arrow library will be at `/usr`.
+- If the Arrow library is not found, or it is found but the parquet library is not found when needed, the Arrow library will be built from source.
+
 ```bash
 $ # Reserve hugepages
 $ sudo sh -c 'echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages'
 $ # On a NUMA machine, we need
 $ # sudo sh -c 'echo 1024 > /sys/devices/system/node/node1/hugepages/hugepages-2048kB/nr_hugepages'
 
-$ # The DPDK library will be built from source by vcpkg if `dpdk_ROOT` is not specified.
-$ # The Arrow library (with the parquet component) will be built from source if the
-$ # parquet cmake configuration file is not found.
-$ # The Arrow library will be loaded internally by the parquet library. Therefore, it is
-$ # sufficient to only specify the `Parquet_ROOT`.
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
-[-Ddpdk_ROOT:PATH=<dpdk-install-prefix>] [-DParquet_ROOT:PATH=<parquet-cmake-config-file-dir>] \
+[-Ddpdk_ROOT:PATH=<dpdk-install-prefix>] \
+[-DParquet_ROOT:PATH=<parquet-cmake-config-file-dir>] \
+[-DArrow_ROOT:PATH=<arrow-install-prefix>] \
 -DBITAR_BUILD_APPS:BOOL=ON -DBITAR_BUILD_TESTS:BOOL=ON \
 -DENABLE_DEVELOPER_MODE:BOOL=ON -DCMAKE_BUILD_TYPE:BOOL=Debug
 
@@ -53,7 +57,7 @@ $ cmake --install ./build-$(uname -m) --prefix <install-prefix>
 # LD_LIBRARY_PATH can be omitted if DPDK is built from source via vcpkg
 $ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-prefix>/lib64:$LD_LIBRARY_PATH \
 ./build-$(uname -m)/apps/demo_app --in-memory -l 1-3 -a <device-pci-id>,class=compress -- \
---bytes <size-to-read-from-file> --file <file> [--mode <file-read-mode>] [--help]
+[--bytes <size-to-read-from-file>] --file <file> [--mode <file-read-mode>] [--help]
 ```
 
 ### Advanced CMake Configuration Options
@@ -63,4 +67,5 @@ $ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-
 - `BITAR_BUILD_ARROW`: set this option to `ON` to force building the Arrow dependency from source (default: `OFF`)
 - `BITAR_ARROW_GIT_REPOSITORY`: the git repository to fetch the Arrow source (default: the official repository)
 - `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash of the Arrow repository for building when needed
-- `BITAR_INSTALL_ARROW`: install the Arrow library as part of the cmake installation process when Arrow is built by this project (default: `OFF`)
+- `BITAR_INSTALL_ARROW`: install the Arrow library as part of the cmake installation process if Arrow is built by this project (default: `OFF`)
+- Any [Arrow supported CMake options](https://github.com/apache/arrow/blob/apache-arrow-8.0.0/cpp/cmake_modules/DefineOptions.cmake), e.g., `ARROW_WITH_LZ4`, `ARROW_WITH_ZSTD`, and `ARROW_WITH_SNAPPY`.

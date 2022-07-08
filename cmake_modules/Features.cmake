@@ -22,6 +22,11 @@
 
 # Build the apps (including the demo_app)
 option(BITAR_BUILD_APPS "Build the apps" OFF)
+if(BITAR_BUILD_APPS)
+  set(ARROW_PARQUET
+      ON
+      CACHE INTERNAL "Build the Parquet libraries")
+endif()
 
 option(BITAR_BUILD_DOCS "Build the docs" OFF)
 

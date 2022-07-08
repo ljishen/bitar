@@ -21,27 +21,39 @@
 # SOFTWARE.
 
 if(NOT BITAR_BUILD_ARROW)
-  # Since the Parquet library depends on the Arrow library, finding the Parquet
-  # library will import the Arrow library as well.
-  #
-  # find_package() for system-installed Parquet library should fail because of a
-  # known bug about the misconfigured cmake directory structure:
-  # https://issues.apache.org/jira/browse/ARROW-12175. Currently, to temporarily
-  # work around the issue we can pass a cmake variable `Parquet_ROOT` to
-  # manually specify the directory that containing the `ParquetConfig.cmake`
-  # file.
-  #
-  # Internally, `ParquetConfig.cmake` uses `find_dependency(Arrow)` to load the
-  # Arrow-provided `FindArrow.cmake` file. With the existing of the current file
-  # that has the same name in the CMAKE_MODULE_PATH, the Arrow dependency lookup
-  # will become an infinite recursion. Therefore, we need to temporarily remove
-  # the current file from the module search path.
-  list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
-  find_package(Parquet QUIET CONFIG)
-  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+  if(ARROW_PARQUET)
+    # Since the Parquet library depends on the Arrow library, finding the
+    # Parquet library will import the Arrow library as well.
+    #
+    # find_package() for system-installed Parquet library should fail because of
+    # a known bug about the misconfigured cmake directory structure:
+    # https://issues.apache.org/jira/browse/ARROW-12175. Currently, to
+    # temporarily work around the issue we can pass a cmake variable
+    # `Parquet_ROOT` to manually specify the directory that containing the
+    # `ParquetConfig.cmake` file.
+    #
+    # Internally, `ParquetConfig.cmake` uses `find_dependency(Arrow)` to load
+    # the Arrow-provided `FindArrow.cmake` file. With the existing of the
+    # current file that has the same name in the CMAKE_MODULE_PATH, the Arrow
+    # dependency lookup will become an infinite recursion. Therefore, we need to
+    # temporarily remove the current file from the module search path.
+    list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+    find_package(Parquet QUIET CONFIG)
+    list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+  else()
+    # Use QUIET to silence the checking of possible dependencies by
+    # ArrowConfig.cmake. This is not a problem because if possible dependencies
+    # are not found, the installed arrow_bundled_dependencies.a will be used.
+    find_package(${CMAKE_FIND_PACKAGE_NAME} QUIET CONFIG)
+
+    # Loading the `ArrowConfig.cmake` file will automatically set this to `ON`
+    # even though the system may not have the parquet library installed. To be
+    # consistent with our configuration, we need to keep this to be `OFF` here.
+    set(ARROW_PARQUET OFF)
+  endif()
 endif()
 
-if(${CMAKE_FIND_PACKAGE_NAME}_FOUND AND Parquet_FOUND)
+if(${CMAKE_FIND_PACKAGE_NAME}_FOUND AND (NOT ARROW_PARQUET OR Parquet_FOUND))
   execute_process(
     COMMAND
       sh -c
@@ -58,10 +70,15 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND AND Parquet_FOUND)
 
   mark_as_advanced(
     ${CMAKE_FIND_PACKAGE_NAME}_CONFIG ${CMAKE_FIND_PACKAGE_NAME}_DIR
-    ${CMAKE_FIND_PACKAGE_NAME}_VERSION Parquet_CONFIG Parquet_DIR
-    Parquet_VERSION)
+    ${CMAKE_FIND_PACKAGE_NAME}_VERSION)
   list(APPEND required_vars ${${CMAKE_FIND_PACKAGE_NAME}_CONFIG}
-       ${${CMAKE_FIND_PACKAGE_NAME}_DIR} ${Parquet_CONFIG} ${Parquet_DIR})
+       ${${CMAKE_FIND_PACKAGE_NAME}_DIR})
+
+  if(Parquet_FOUND)
+    mark_as_advanced(Parquet_CONFIG Parquet_DIR Parquet_VERSION)
+    list(APPEND required_vars ${Parquet_CONFIG} ${Parquet_DIR})
+  endif()
+
   list(APPEND version_var ${${CMAKE_FIND_PACKAGE_NAME}_VERSION})
 else()
   FetchContent_GetProperties(${CMAKE_FIND_PACKAGE_NAME})
@@ -140,9 +157,6 @@ else()
     set(ARROW_JEMALLOC
         OFF
         CACHE INTERNAL "Build the Arrow jemalloc-based allocator")
-    set(ARROW_PARQUET
-        ON
-        CACHE INTERNAL "Build the Parquet libraries")
     set(ARROW_DEPENDENCY_USE_SHARED
         OFF
         CACHE INTERNAL "Link to shared libraries")
