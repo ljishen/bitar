@@ -20,6 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# This config sets the following target in your project::
+#   Arrow::arrow - for linked as static or shared library
+#
+# and, if parquet is built, the following target is also set:
+#   Arrow::parquet - for linked as static or shared library
+
 if(NOT BITAR_BUILD_ARROW)
   if(ARROW_PARQUET)
     # Since the Parquet library depends on the Arrow library, finding the
@@ -81,6 +87,8 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND AND (NOT ARROW_PARQUET OR Parquet_FOUND))
 
   list(APPEND version_var ${${CMAKE_FIND_PACKAGE_NAME}_VERSION})
 else()
+  set(_arg_SOURCE_SUBDIR cpp)
+
   FetchContent_GetProperties(${CMAKE_FIND_PACKAGE_NAME})
   string(TOLOWER ${CMAKE_FIND_PACKAGE_NAME} _find_package_name_lower)
 
@@ -88,6 +96,9 @@ else()
     # ${${_find_package_name_lower}_POPULATED} becomes 1 instead of True when it
     # is populated from FetchContent_GetProperties()
     set(${_find_package_name_lower}_POPULATED True)
+
+    set(_arg_SOURCE_SUBDIR_ABS
+        "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}")
   else()
     set(BITAR_ARROW_GIT_REPOSITORY
         "https://github.com/apache/arrow.git"
@@ -96,7 +107,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "9c93f82a06ecae4d0e51f64b25fc63d32701d734"
+        "a2114c0605be66bb16d16ee0b25c9d81ab68f5ce"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
@@ -173,7 +184,6 @@ else()
           "Enable Arrow to support for regular expressions using the re2 library"
     )
 
-    set(_arg_SOURCE_SUBDIR cpp)
     FetchContent_Declare(
       ${CMAKE_FIND_PACKAGE_NAME}
       GIT_REPOSITORY "${BITAR_ARROW_GIT_REPOSITORY}"
@@ -182,21 +192,23 @@ else()
 
     FetchContent_Populate(${CMAKE_FIND_PACKAGE_NAME})
 
-    if(EXISTS
-       "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}/CMakeLists.txt"
-    )
+    set(_arg_SOURCE_SUBDIR_ABS
+        "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}")
+
+    if(EXISTS "${_arg_SOURCE_SUBDIR_ABS}/CMakeLists.txt")
       if(BITAR_INSTALL_ARROW)
-        add_subdirectory(
-          "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}"
-          "${${_find_package_name_lower}_BINARY_DIR}")
+        add_subdirectory("${_arg_SOURCE_SUBDIR_ABS}"
+                         "${${_find_package_name_lower}_BINARY_DIR}")
       else()
         add_subdirectory(
-          "${${_find_package_name_lower}_SOURCE_DIR}/${_arg_SOURCE_SUBDIR}"
+          "${_arg_SOURCE_SUBDIR_ABS}"
           "${${_find_package_name_lower}_BINARY_DIR}" EXCLUDE_FROM_ALL)
       endif()
+    else()
+      message(
+        FATAL_ERROR "Could not find CMakeLists.txt in ${_arg_SOURCE_SUBDIR_ABS}"
+      )
     endif()
-
-    unset(_arg_SOURCE_SUBDIR)
 
     # Restore our environment settings
     set(CMAKE_CXX_STANDARD ${_backup_CMAKE_CXX_STANDARD})
@@ -217,9 +229,20 @@ else()
   endif()
 
   set(required_vars ${${_find_package_name_lower}_POPULATED})
-  set(version_var ${BITAR_ARROW_GIT_TAG})
+
+  file(STRINGS "${_arg_SOURCE_SUBDIR_ABS}/CMakeLists.txt" _arrow_version_line
+       REGEX "^set\\(ARROW_VERSION \"[0-9.]+-SNAPSHOT\"\\)")
+  if(_arrow_version_line MATCHES
+     "^set\\(ARROW_VERSION \"([0-9.]+-SNAPSHOT)\"\\)")
+    set(version_var "${CMAKE_MATCH_1} (${BITAR_ARROW_GIT_TAG})")
+  else()
+    set(version_var "${BITAR_ARROW_GIT_TAG}")
+  endif()
+  unset(_arrow_version_line)
+
   unset(${_find_package_name_lower}_POPULATED)
   unset(_find_package_name_lower)
+  unset(_arg_SOURCE_SUBDIR)
 endif()
 
 find_package_handle_standard_args(
