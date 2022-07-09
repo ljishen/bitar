@@ -20,11 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# ~~~
 # This config sets the following target in your project::
 #   Arrow::arrow - for linked as static or shared library
 #
 # and, if parquet is built, the following target is also set:
 #   Arrow::parquet - for linked as static or shared library
+# ~~~
 
 if(NOT BITAR_BUILD_ARROW)
   if(ARROW_PARQUET)
@@ -231,9 +233,8 @@ else()
   set(required_vars ${${_find_package_name_lower}_POPULATED})
 
   file(STRINGS "${_arg_SOURCE_SUBDIR_ABS}/CMakeLists.txt" _arrow_version_line
-       REGEX "^set\\(ARROW_VERSION \"[0-9.]+-SNAPSHOT\"\\)")
-  if(_arrow_version_line MATCHES
-     "^set\\(ARROW_VERSION \"([0-9.]+-SNAPSHOT)\"\\)")
+       REGEX "^set\\(ARROW_VERSION \"[0-9.]+.*\"\\)")
+  if(_arrow_version_line MATCHES "^set\\(ARROW_VERSION \"([0-9.]+.*)\"\\)")
     set(version_var "${CMAKE_MATCH_1} (${BITAR_ARROW_GIT_TAG})")
   else()
     set(version_var "${BITAR_ARROW_GIT_TAG}")
