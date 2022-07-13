@@ -2,6 +2,7 @@
 
 [![GitHub Super-Linter](https://github.com/ljishen/bitar/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/490108576.svg)](https://zenodo.org/badge/latestdoi/490108576)
 
 <!-- markdownlint-disable-next-line no-inline-html -->
 <img src="assets/logo.png" width="25%">

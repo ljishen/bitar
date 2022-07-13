@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Liu"
+  given-names: "Jianshen"
+  orcid: "https://orcid.org/0000-0002-1173-3002"
+title: "Simplify accessing hardware compression/decompression accelerators"
+version: 0.0.2
+doi: 10.5281/zenodo.6825119
+date-released: 2022-07-12
+url: "https://github.com/ljishen/bitar"
