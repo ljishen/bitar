@@ -41,11 +41,11 @@ target_sources(
 
 target_link_libraries(${PROJECT_NAME} PRIVATE project_options project_warnings)
 
-set(PRIVATE_DEPENDENCIES_CONFIGURED fmt magic_enum)
+set(PRIVATE_DEPENDENCIES_CONFIGURED absl fmt magic_enum)
 foreach(DEPENDENCY ${PRIVATE_DEPENDENCIES_CONFIGURED})
   find_package(${DEPENDENCY} REQUIRED CONFIG)
 endforeach()
-target_link_system_libraries(${PROJECT_NAME} PRIVATE fmt::fmt
+target_link_system_libraries(${PROJECT_NAME} PRIVATE absl::span fmt::fmt
                              magic_enum::magic_enum)
 # Force the use of compile-time format string checks:
 # https://fmt.dev/latest/api.html#compile-time-format-string-checks

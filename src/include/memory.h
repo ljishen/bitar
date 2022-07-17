@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <absl/types/span.h>
 #include <arrow/status.h>
 #include <rte_compressdev.h>
 #include <rte_malloc.h>
@@ -32,7 +33,6 @@
 #include <deque>
 #include <memory>
 #include <mutex>
-#include <span>  // NOLINT
 #include <stack>
 #include <type_traits>
 #include <unordered_set>
@@ -111,7 +111,7 @@ class QueuePairMemory {
   /// \param[in] decompressed_buffer the input buffer containing the data for compression
   /// \param[in,out] offset the position in the buffer to start assembling from
   /// \return the number of operations assembled, or a negative arrow::StatusCode on error
-  int AssembleFrom(const std::span<const std::uint8_t>& decompressed_buffer,
+  int AssembleFrom(absl::Span<const std::uint8_t> decompressed_buffer,
                    std::uint64_t& offset);
 
   /// \brief Assemble decompression operations
@@ -121,7 +121,7 @@ class QueuePairMemory {
   /// \param[in,out] offset the position in the decompressed_buffer to start writing to
   /// \return the number of operations assembled, or a negative arrow::StatusCode on error
   int AssembleFrom(const BufferVector& compressed_buffers, std::uint64_t& index,
-                   const std::span<const std::uint8_t>& decompressed_buffer,
+                   absl::Span<const std::uint8_t> decompressed_buffer,
                    std::uint64_t& offset);
 
   /// \brief Accumulate the unused operations to be used in the next enqueue request

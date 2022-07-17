@@ -39,7 +39,6 @@
 #include <iterator>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -64,8 +63,9 @@ arrow::Status HasDeviceIds(const std::vector<std::uint8_t>& avail_dev_ids,
   }
 
   if (!not_avail_dev_ids.empty()) {
-    return arrow::Status::Invalid("Not available device ids: ",
-                                  fmt::format("{}", fmt::join(not_avail_dev_ids, ", ")));
+    return arrow::Status::Invalid(
+        "Not available device ids: ",
+        fmt::format(FMT_STRING("{}"), fmt::join(not_avail_dev_ids, ", ")));
   }
 
   return arrow::Status::OK();
@@ -82,9 +82,10 @@ arrow::Result<T> GetPCIId(const char* device_name) {
     return arrow::Status::Invalid("Invalid Enum type for getting the PCI id");
   }
 
-  ARROW_ASSIGN_OR_RAISE(auto pci_id_str, internal::ReadFileContent(fmt::format(
-                                             "/sys/class/infiniband/{}/device/{}",
-                                             device_name, type_name)));
+  ARROW_ASSIGN_OR_RAISE(
+      auto pci_id_str,
+      internal::ReadFileContent(fmt::format(
+          FMT_STRING("/sys/class/infiniband/{}/device/{}"), device_name, type_name)));
 
   try {
     auto pci_id_opt = magic_enum::enum_cast<T>(
@@ -127,12 +128,14 @@ arrow::Result<std::vector<std::unique_ptr<MLX5CompressDevice>>> CreateDevices(
 
     ARROW_RETURN_NOT_OK(magic_enum::enum_switch<arrow::Status>(
         [&](auto pci_vendor_id_val) {
+          using PCIVendorIdType =
+              std::integral_constant<internal::PCIVendorId, pci_vendor_id_val>;
+
           return magic_enum::enum_switch<arrow::Status>(
               [&](auto pci_device_id_val) {
-                using PCIVendorIdType =
-                    std::integral_constant<internal::PCIVendorId, pci_vendor_id_val>;
                 using PCIDeviceIdType =
                     std::integral_constant<internal::PCIDeviceId, pci_device_id_val>;
+
                 ARROW_ASSIGN_OR_RAISE(
                     auto* device,
                     (manager->Create<PCIVendorIdType, PCIDeviceIdType, Class_MLX5_PCI>(

@@ -19,6 +19,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+# ~~~
+# This config sets the following target in your project::
+#   DPDK::dpdk - for linked as static or shared library
+# ~~~
 
 if("${dpdk_ROOT}" STREQUAL "")
   # This is the case where DPDK is installed with vcpkg.
@@ -29,8 +34,8 @@ if("${dpdk_ROOT}" STREQUAL "")
   add_library(DPDK::dpdk ALIAS unofficial::dpdk::dpdk)
   unset(unofficial-dpdk_FOUND)
 
-  # Since the vcpkg triplet always use static linkage for the dpdk port, we can
-  # safely only report the static include_dirs.
+  # Since vcpkg always uses static linkage for the dpdk port, we can safely only
+  # report the static include_dirs.
   find_package_handle_standard_args(
     dpdk
     REQUIRED_VARS LIBDPDK_STATIC_INCLUDE_DIRS LIBDPDK_STATIC_LIBRARIES

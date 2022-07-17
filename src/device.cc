@@ -22,6 +22,7 @@
 
 #include "include/device.h"
 
+#include <absl/types/span.h>
 #include <arrow/buffer.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
@@ -39,7 +40,6 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
-#include <span>  // NOLINT
 #include <string>
 #include <string_view>
 #include <utility>
@@ -72,7 +72,7 @@ arrow::Status ValidateWindowSize(std::uint8_t window_size,
 
   // Check if value is one of the supported sizes
   for (std::uint8_t next_size = range.min; next_size <= range.max;
-       next_size += range.increment) {
+       next_size = static_cast<std::uint8_t>(next_size + range.increment)) {
     if (window_size == next_size) {
       return arrow::Status::OK();
     }
@@ -120,11 +120,7 @@ arrow::Status CompressDevice<Class, Enable>::Initialize(
 
   auto socket_id = rte_compressdev_socket_id(device_id_);
 
-  rte_compressdev_config compressdev_config{.socket_id = socket_id,
-                                            .nb_queue_pairs = num_qps(),
-                                            .max_nb_priv_xforms = kNumMaxXforms,
-                                            .max_nb_streams = 0};
-
+  rte_compressdev_config compressdev_config{socket_id, num_qps(), kNumMaxXforms, 0};
   if (rte_compressdev_configure(device_id_, &compressdev_config) < 0) {
     return arrow::Status::Invalid("Device configuration failed");
   }
@@ -138,14 +134,14 @@ arrow::Status CompressDevice<Class, Enable>::Initialize(
       return arrow::Status::Invalid("Failed to setup queue pair ", qp_id, " for device ",
                                     device_id_, ". [Error code: ", ret, "]");
     }
-    qp_to_lcore.emplace_back(fmt::format("[{:d}->{:d}]", qp_id, LcoreOf(qp_id)));
+    qp_to_lcore.emplace_back(
+        fmt::format(FMT_STRING("[{:d}->{:d}]"), qp_id, LcoreOf(qp_id)));
   }
-  RTE_LOG(
-      INFO, USER1, "%s\n",
-      fmt::format(
-          "Compress device {:d} has set up the following [queue_pair_id -> lcore_id]: {}",
-          device_id_, fmt::join(qp_to_lcore, ", "))
-          .c_str());
+  RTE_LOG(INFO, USER1, "%s\n",
+          fmt::format(FMT_STRING("Compress device {:d} has set up the following "
+                                 "[queue_pair_id -> lcore_id]: {}"),
+                      device_id_, fmt::join(qp_to_lcore, ", "))
+              .c_str());
 
   ret = rte_compressdev_start(device_id_);
   if (ret < 0) {
@@ -181,9 +177,8 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
   auto** enqueue_ops = memory->enqueue_ops();
   auto** dequeue_ops = memory->dequeue_ops();
 
-  std::span<const std::uint8_t> decompressed_buffer_span{
-      decompressed_buffer->data(),
-      static_cast<std::uint64_t>(decompressed_buffer->size())};
+  auto decompressed_buffer_span = absl::MakeConstSpan(
+      decompressed_buffer->data(), static_cast<std::size_t>(decompressed_buffer->size()));
 
   auto dequeue_callback = [&compressed_buffers](rte_comp_op* current_op) {
     auto* dst_mbuf = current_op->m_dst;
@@ -201,8 +196,8 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
 
   ARROW_ASSIGN_OR_RAISE_NEGATIVE_ELSE(
       num_ops_assembled, memory->AssembleFrom(decompressed_buffer_span, offset),
-      fmt::format("Failed to assemble compression operations for queue pair {:d} of "
-                  "compress device {:d}",
+      fmt::format(FMT_STRING("Failed to assemble compression operations for queue pair "
+                             "{:d} of compress device {:d}"),
                   queue_pair_id, device_id_),
       ReleaseAll(queue_pair_id, compressed_buffers));
 
@@ -210,22 +205,22 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
         EnqueueBurst(queue_pair_id, enqueue_ops,
                      static_cast<std::uint16_t>(num_ops_assembled), memory),
-        fmt::format("Failed to enqueue compression operations to compress device {:d} "
-                    "via queue pair {:d}",
+        fmt::format(FMT_STRING("Failed to enqueue compression operations to compress "
+                               "device {:d} via queue pair {:d}"),
                     device_id_, queue_pair_id),
         ReleaseAll(queue_pair_id, compressed_buffers));
 
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
         DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
-        fmt::format("Failed to dequeue compression operations from compress device {:d} "
-                    "via queue pair {:d}",
+        fmt::format(FMT_STRING("Failed to dequeue compression operations from compress "
+                               "device {:d} via queue pair {:d}"),
                     device_id_, queue_pair_id),
         ReleaseAll(queue_pair_id, compressed_buffers));
 
     ARROW_ASSIGN_OR_RAISE_NEGATIVE_ELSE(
         num_ops_assembled, memory->AssembleFrom(decompressed_buffer_span, offset),
-        fmt::format("Failed to assemble compression operations for queue pair {:d} of "
-                    "compress device {:d}",
+        fmt::format(FMT_STRING("Failed to assemble compression operations for queue pair "
+                               "{:d} of compress device {:d}"),
                     queue_pair_id, device_id_),
         ReleaseAll(queue_pair_id, compressed_buffers));
   }
@@ -233,10 +228,9 @@ arrow::Result<BufferVector> CompressDevice<Class, Enable>::Compress(
   while (memory->has_pending_operations()) {
     ARROW_RETURN_NOT_STATUS_OK_ELSE(
         DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
-        fmt::format(
-            "Failed to dequeue pending compression operations from compress device {:d} "
-            "via queue pair {:d}",
-            device_id_, queue_pair_id),
+        fmt::format(FMT_STRING("Failed to dequeue pending compression operations from "
+                               "compress device {:d} via queue pair {:d}"),
+                    device_id_, queue_pair_id),
         ReleaseAll(queue_pair_id, compressed_buffers));
   }
 
@@ -270,9 +264,9 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
   auto** enqueue_ops = memory->enqueue_ops();
   auto** dequeue_ops = memory->dequeue_ops();
 
-  std::span<const std::uint8_t> decompressed_buffer_span{
-      decompressed_buffer->data(),
-      static_cast<std::uint64_t>(decompressed_buffer->capacity())};
+  auto decompressed_buffer_span =
+      absl::MakeConstSpan(decompressed_buffer->data(),
+                          static_cast<std::size_t>(decompressed_buffer->capacity()));
 
   auto dequeue_callback = [&decompressed_buffer_size](rte_comp_op* current_op) {
     decompressed_buffer_size += current_op->produced;
@@ -281,38 +275,37 @@ arrow::Status CompressDevice<Class, Enable>::Decompress(
   ARROW_ASSIGN_OR_RAISE_NEGATIVE(
       num_ops_assembled,
       memory->AssembleFrom(compressed_buffers, index, decompressed_buffer_span, offset),
-      fmt::format("Failed to assemble decompression operations for queue pair {:d} of "
-                  "compress device {:d}",
+      fmt::format(FMT_STRING("Failed to assemble decompression operations for queue pair "
+                             "{:d} of compress device {:d}"),
                   queue_pair_id, device_id_));
 
   while (num_ops_assembled > 0) {
     ARROW_RETURN_NOT_STATUS_OK(
         EnqueueBurst(queue_pair_id, enqueue_ops,
                      static_cast<std::uint16_t>(num_ops_assembled), memory),
-        fmt::format("Failed to enqueue decompression operations to compress device {:d} "
-                    "via queue pair {:d}",
+        fmt::format(FMT_STRING("Failed to enqueue decompression operations to compress "
+                               "device {:d} via queue pair {:d}"),
                     device_id_, queue_pair_id));
 
     ARROW_RETURN_NOT_STATUS_OK(
         DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
-        fmt::format(
-            "Failed to dequeue decompression operations from compress device {:d} "
-            "via queue pair {:d}",
-            device_id_, queue_pair_id));
+        fmt::format(FMT_STRING("Failed to dequeue decompression operations from compress "
+                               "device {:d} via queue pair {:d}"),
+                    device_id_, queue_pair_id));
 
     ARROW_ASSIGN_OR_RAISE_NEGATIVE(
         num_ops_assembled,
         memory->AssembleFrom(compressed_buffers, index, decompressed_buffer_span, offset),
-        fmt::format("Failed to assemble decompression operations for queue pair {:d} of "
-                    "compress device {:d}",
+        fmt::format(FMT_STRING("Failed to assemble decompression operations for queue "
+                               "pair {:d} of compress device {:d}"),
                     queue_pair_id, device_id_));
   }
 
   while (memory->has_pending_operations()) {
     ARROW_RETURN_NOT_STATUS_OK(
         DequeueBurst(queue_pair_id, dequeue_ops, dequeue_callback, memory),
-        fmt::format("Failed to dequeue pending decompression operations from compress "
-                    "device {:d} via queue pair {:d}",
+        fmt::format(FMT_STRING("Failed to dequeue pending decompression operations from "
+                               "compress device {:d} via queue pair {:d}"),
                     device_id_, queue_pair_id));
   }
 
@@ -484,7 +477,7 @@ arrow::StatusCode CompressDevice<Class, Enable>::EnqueueBurst(
     return arrow::StatusCode::IOError;
   }
 
-  std::uint16_t num_unused_ops = num_ops_assembled - num_enqueued;
+  auto num_unused_ops = static_cast<std::uint16_t>(num_ops_assembled - num_enqueued);
   auto status_code = memory->AccumulateUnused(num_unused_ops);
   if (ARROW_PREDICT_FALSE(status_code != arrow::StatusCode::OK)) {
     RTE_LOG(ERR, USER1, "Less than %hu operations was assembled\n", num_unused_ops);

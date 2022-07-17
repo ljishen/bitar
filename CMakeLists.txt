@@ -25,7 +25,7 @@ cmake_minimum_required(VERSION 3.19)
 # set a default CXX and C standard for the tools and targets that do not specify
 # them. If commented, the latest supported standard for your compiler is
 # automatically set.
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
@@ -55,10 +55,10 @@ if(BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION)
   set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
 endif()
 
-# Add project_options v0.23.0
+# Add project_options v0.24.0
 FetchContent_Declare(
   _project_options
-  URL https://github.com/aminya/project_options/archive/refs/tags/v0.23.0.zip)
+  URL https://github.com/aminya/project_options/archive/refs/tags/v0.24.0.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
 

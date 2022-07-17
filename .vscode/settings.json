@@ -107,7 +107,8 @@
     "semaphore": "cpp",
     "valarray": "cpp",
     "chrono": "cpp",
-    "filesystem": "cpp"
+    "filesystem": "cpp",
+    "*.ipp": "cpp"
   },
   "sshfs.flags": [
     "DEBUG_SSH2"

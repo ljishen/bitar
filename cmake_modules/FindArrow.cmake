@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+#
 # ~~~
 # This config sets the following target in your project::
 #   Arrow::arrow - for linked as static or shared library
@@ -57,7 +57,9 @@ if(NOT BITAR_BUILD_ARROW)
     # Loading the `ArrowConfig.cmake` file will automatically set this to `ON`
     # even though the system may not have the parquet library installed. To be
     # consistent with our configuration, we need to keep this to be `OFF` here.
-    set(ARROW_PARQUET OFF)
+    set(ARROW_PARQUET
+        OFF
+        CACHE INTERNAL "Build the Parquet libraries")
   endif()
 endif()
 
@@ -109,7 +111,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "a2114c0605be66bb16d16ee0b25c9d81ab68f5ce"
+        "d81d8451a0ff1c5108bc04e727ae053365950551"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"

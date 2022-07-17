@@ -22,12 +22,14 @@
 
 #include "include/memory.h"
 
+#include <absl/types/span.h>
 #include <arrow/buffer.h>
 #include <arrow/memory_pool.h>
 #include <arrow/result.h>
 #include <arrow/status.h>
 #include <arrow/util/macros.h>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <rte_common.h>
 #include <rte_comp.h>
 #include <rte_compressdev.h>
@@ -45,7 +47,6 @@
 #include <cstring>
 #include <memory>
 #include <mutex>
-#include <span>  // NOLINT
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -241,8 +242,8 @@ arrow::Status QueuePairMemory<Class, Enable>::Preallocate() {
   }
 
   // A burst contains src mbufs and dst mbufs
-  std::uint32_t num_mbufs_in_burst =
-      configuration_->burst_size() * configuration_->max_sgl_segs() * 2U;
+  auto num_mbufs_in_burst = static_cast<std::uint32_t>(
+      configuration_->burst_size() * configuration_->max_sgl_segs() * 2);
   std::uint32_t mbuf_pool_cache_size =
       RTE_MIN(num_mbufs_in_burst * kCacheSizeAmplifier,
               static_cast<std::uint32_t>(RTE_MEMPOOL_CACHE_MAX_SIZE));
@@ -252,7 +253,7 @@ arrow::Status QueuePairMemory<Class, Enable>::Preallocate() {
       num_inflight_mbufs + mbuf_pool_cache_size + num_mbufs_in_burst;
 
   auto mbuf_pool_name =
-      fmt::format("mbuf_pool_dev_{:d}_qp_{:d}", device_id_, queue_pair_id_);
+      fmt::format(FMT_STRING("mbuf_pool_dev_{:d}_qp_{:d}"), device_id_, queue_pair_id_);
   mbuf_pool_.reset(rte_pktmbuf_pool_create(mbuf_pool_name.c_str(), num_mbufs_in_pool,
                                            mbuf_pool_cache_size, 0, 0, device_socket_id));
   if (mbuf_pool_ == nullptr) {
@@ -269,7 +270,7 @@ arrow::Status QueuePairMemory<Class, Enable>::Preallocate() {
       configuration_->max_sgl_segs();
 
   auto operation_pool_name =
-      fmt::format("op_pool_dev_{:d}_qp_{:d}", device_id_, queue_pair_id_);
+      fmt::format(FMT_STRING("op_pool_dev_{:d}_qp_{:d}"), device_id_, queue_pair_id_);
   // For enqueue operations
   operation_pool_.reset(
       rte_comp_op_pool_create(operation_pool_name.c_str(), num_ops_in_pool,
@@ -348,7 +349,7 @@ arrow::Status QueuePairMemory<Class, Enable>::Preallocate() {
 
 template <typename Class, typename Enable>
 int QueuePairMemory<Class, Enable>::AssembleFrom(
-    const std::span<const std::uint8_t>& decompressed_buffer, std::uint64_t& offset) {
+    absl::Span<const std::uint8_t> decompressed_buffer, std::uint64_t& offset) {
   auto remaining_bytes = static_cast<std::int64_t>(decompressed_buffer.size() - offset);
   auto burst_size = configuration_->burst_size();
   if (remaining_bytes <= 0 || num_ops_assembled_ >= burst_size) {
@@ -431,7 +432,7 @@ int QueuePairMemory<Class, Enable>::AssembleFrom(
 template <typename Class, typename Enable>
 int QueuePairMemory<Class, Enable>::AssembleFrom(
     const BufferVector& compressed_buffers, std::uint64_t& index,
-    const std::span<const std::uint8_t>& decompressed_buffer, std::uint64_t& offset) {
+    absl::Span<const std::uint8_t> decompressed_buffer, std::uint64_t& offset) {
   auto remaining_mbufs = static_cast<std::int64_t>(compressed_buffers.size() - index);
   if (remaining_mbufs <= 0 || num_ops_assembled_ >= configuration_->burst_size()) {
     return num_ops_assembled_;
@@ -513,8 +514,10 @@ arrow::StatusCode QueuePairMemory<Class, Enable>::AccumulateUnused(
   if (num_unused_ops > 0 && num_unused_ops != num_ops_assembled_) {
     // Move the unused operations from the previous enqueue_burst call to the front to
     // maintain order
-    std::memmove(operations_.get(), &operations_[num_ops_assembled_ - num_unused_ops],
-                 num_unused_ops * sizeof(void*));
+    std::memmove(
+        operations_.get(),
+        &operations_[static_cast<std::size_t>(num_ops_assembled_ - num_unused_ops)],
+        num_unused_ops * sizeof(void*));
   }
 
   num_ops_assembled_ = num_unused_ops;

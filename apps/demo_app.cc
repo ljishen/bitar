@@ -58,6 +58,7 @@
 #include <numeric>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -82,9 +83,24 @@ void PrintPerfNumbers(std::int64_t total_bytes, std::uint64_t start_tsc,
                       std::uint64_t end_tsc = rte_rdtsc_precise()) {
   auto duration =
       static_cast<double>(end_tsc - start_tsc) / static_cast<double>(rte_get_tsc_hz());
-  fmt::print("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n",
+  fmt::print(FMT_STRING("-> Duration: {:.2f} microseconds\t\tThroughput: {:.2f} Gbps\n"),
              duration * kMicroseconds,
              static_cast<double>(total_bytes) * kBitsPerByte / kGigabit / duration);
+}
+
+bool EndsWith(std::string_view str, std::string_view suffix) {
+  return str.size() >= suffix.size() &&
+         0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
+}
+
+template <typename... T>
+void PrintHeader(fmt::format_string<T...> fmt, T&&... args) {
+  fmt::print(FMT_STRING("\n=============================================================="
+                        "==================\n"
+                        "{}"
+                        "\n=============================================================="
+                        "==================\n"),
+             fmt::vformat(fmt, fmt::make_format_args(args...)));
 }
 
 std::int64_t GetNumBytesToRead(std::int64_t num_bytes_want, std::int64_t max_bytes) {
@@ -119,8 +135,8 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadRawData(
     PrintPerfNumbers(buffer->size(), start_tsc);
   }
 
-  fmt::print("Read raw file {:d} bytes out of a total {:d} bytes\n", num_bytes_read,
-             file_size);
+  fmt::print(FMT_STRING("Read raw file {:d} bytes out of a total {:d} bytes\n"),
+             num_bytes_read, file_size);
 
   return buffer;
 }
@@ -171,7 +187,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
       write_options.codec == nullptr
           ? magic_enum::enum_name(arrow::Compression::UNCOMPRESSED)
           : magic_enum::enum_name(write_options.codec->compression_type());
-  fmt::print("Compression type for serialization: {}\n", compression_type);
+  fmt::print(FMT_STRING("Compression type for serialization: {}\n"), compression_type);
 
   return serialized_table;
 }
@@ -182,7 +198,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadTableBytes(
 
   std::int64_t num_bytes_to_read = GetNumBytesToRead(num_bytes_want, buffer->size());
 
-  fmt::print("Read serialized table {:d} bytes out of a total {:d} bytes\n",
+  fmt::print(FMT_STRING("Read serialized table {:d} bytes out of a total {:d} bytes\n"),
              num_bytes_to_read, buffer->size());
   return arrow::SliceBuffer(buffer, 0, num_bytes_to_read);
 }
@@ -213,11 +229,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadParquetData(
 }
 
 arrow::Status DeserializeTable(const std::shared_ptr<arrow::Buffer>& buffer) {
-  fmt::print(
-      "\n=============================================================================\n"
-      "Deserialize Table (buffer_size: {:d})"
-      "\n=============================================================================\n",
-      buffer->size());
+  PrintHeader(FMT_STRING("Deserialize Table (buffer_size: {:d})"), buffer->size());
 
   for (int idx = 0; idx < kNumTests; ++idx) {
     arrow::io::BufferReader buffer_reader(buffer);
@@ -285,10 +297,8 @@ void Recycle(const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devi
 arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_path,
                                                        FileReadMode mode,
                                                        std::int64_t num_bytes_want) {
-  fmt::print(
-      "\n=============================================================================\n"
-      "Serialize Data (num_bytes_want: {:d}, mode: {}, file_type: '{}')"
-      "\n=============================================================================\n",
+  PrintHeader(
+      FMT_STRING("Serialize Data (num_bytes_want: {:d}, mode: {}, file_type: '{}')"),
       num_bytes_want, magic_enum::enum_name(mode),
       std::filesystem::path(file_path).extension().c_str());
 
@@ -301,11 +311,11 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_p
 
   std::shared_ptr<arrow::Buffer> buffer;
 
-  if (file_path.ends_with(".parquet")) {
+  if (EndsWith(file_path, ".parquet")) {
     ARROW_ASSIGN_OR_RAISE(buffer, ReadParquetData(file, num_bytes_want));
   }
 
-  if (file_path.ends_with(".feather")) {
+  if (EndsWith(file_path, ".feather")) {
     ARROW_ASSIGN_OR_RAISE(buffer, ReadFeatherData(file, num_bytes_want));
   }
 
@@ -478,14 +488,9 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
                            const std::shared_ptr<arrow::Buffer>& input_buffer) {
   const std::uint16_t queue_pair_id = 0;
 
-  fmt::print(
-      "\n=============================================================================\n"
-      "Sync Compress (on queue_pair_id: {:d})"
-      "\n=============================================================================\n",
-      queue_pair_id);
+  PrintHeader(FMT_STRING("Sync Compress (on queue_pair_id: {:d})"), queue_pair_id);
 
   bitar::BufferVector compressed_buffers;
-
   for (int idx = 0; idx < kNumTests; ++idx) {
     ARROW_ASSIGN_OR_RAISE(compressed_buffers,
                           BenchmarkCompressSync(device, queue_pair_id, input_buffer));
@@ -502,15 +507,12 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
           [](std::int64_t size, const std::unique_ptr<arrow::Buffer>& buffer) {
             return size += buffer->size();
           });
-      fmt::print("Sync compressed data size: {:d} bytes\n", compressed_data_size);
+      fmt::print(FMT_STRING("Sync compressed data size: {:d} bytes\n"),
+                 compressed_data_size);
     }
   }
 
-  fmt::print(
-      "\n=============================================================================\n"
-      "Sync Decompress (on queue_pair_id: {:d})"
-      "\n=============================================================================\n",
-      queue_pair_id);
+  PrintHeader(FMT_STRING("Sync Decompress (on queue_pair_id: {:d})"), queue_pair_id);
 
   ARROW_ASSIGN_OR_RAISE_ELSE(
       auto decompressed_buffer,
@@ -538,7 +540,7 @@ arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& dev
     return arrow::Status::Invalid(
         "Decompressed buffer is not the same as the input buffer");
   }
-  fmt::print("The decompressed buffer is equivalent to the input buffer\n");
+  fmt::print(FMT_STRING("The decompressed buffer is equivalent to the input buffer\n"));
 
   return arrow::Status::OK();
 }
@@ -564,16 +566,13 @@ arrow::Status EvaluateAsync(
   for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
     const auto& device = devices[device_id];
     device_to_qp.emplace_back(
-        fmt::format("[{:d}->{:d}]", device->device_id(), queue_pair_id));
+        fmt::format(FMT_STRING("[{:d}->{:d}]"), device->device_id(), queue_pair_id));
 
     Advance(device_id, queue_pair_id, device->num_qps());
   }
 
-  fmt::print(
-      "\n=============================================================================\n"
-      "Async Compress (on [device_id -> queue_pair_id]: {})"
-      "\n=============================================================================\n",
-      fmt::join(device_to_qp, ", "));
+  PrintHeader(FMT_STRING("Async Compress (on [device_id -> queue_pair_id]: {})"),
+              fmt::join(device_to_qp, ", "));
 
   arrow::BufferVector input_buffer_vector(num_parallel_tests());
 
@@ -627,16 +626,14 @@ arrow::Status EvaluateAsync(
         }
       }
 
-      fmt::print("Async compressed data size: {:d} bytes\n", compressed_data_size);
+      fmt::print(FMT_STRING("Async compressed data size: {:d} bytes\n"),
+                 compressed_data_size);
     }
   }
   input_buffer_vector.clear();
 
-  fmt::print(
-      "\n=============================================================================\n"
-      "Async Decompress (on [device_id -> queue_pair_id]: {})"
-      "\n=============================================================================\n",
-      fmt::join(device_to_qp, ", "));
+  PrintHeader(FMT_STRING("Async Decompress (on [device_id -> queue_pair_id]: {})"),
+              fmt::join(device_to_qp, ", "));
 
   std::vector<std::unique_ptr<arrow::ResizableBuffer>> decompressed_buffer_vector(
       num_parallel_tests());
@@ -688,10 +685,9 @@ arrow::Status EvaluateAsync(
     input_offset += decompressed_buffer_vector[idx]->size();
   }
 
-  fmt::print(
-      "The aggregated decompressed data from {:d} segments is equivalent to the input "
-      "buffer\n",
-      num_parallel_tests());
+  fmt::print(FMT_STRING("The aggregated decompressed data from {:d} segments is "
+                        "equivalent to the input buffer\n"),
+             num_parallel_tests());
 
   return arrow::Status::OK();
 }
@@ -721,7 +717,8 @@ int main(int argc, char* argv[]) {
 
   auto ret = rte_eal_init(argc, argv);
   if (ret < 0) {
-    bitar::CleanupAndExit(EXIT_FAILURE, "Invalid EAL arguments with error {}\n",
+    bitar::CleanupAndExit(EXIT_FAILURE,
+                          FMT_STRING("Invalid EAL arguments with error {}\n"),
                           rte_strerror(rte_errno));
   }
   argc -= ret;
@@ -746,7 +743,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (parse_result.count("file") == 0) {
-      bitar::CleanupAndExit(EXIT_FAILURE, "Missing argument for '--file'\n");
+      bitar::CleanupAndExit(EXIT_FAILURE, FMT_STRING("Missing argument for '--file'\n"));
     }
     file_path = parse_result["file"].as<std::string>();
 
@@ -762,15 +759,17 @@ int main(int argc, char* argv[]) {
   auto read_buffer_result =
       bitar::app::ReadData(file_path, file_read_mode, num_bytes_want);
   if (!read_buffer_result.ok()) {
-    bitar::CleanupAndExit(EXIT_FAILURE, "Unable to read buffer from file. [{}]\n",
+    bitar::CleanupAndExit(EXIT_FAILURE,
+                          FMT_STRING("Unable to read buffer from file. [{}]\n"),
                           read_buffer_result.status().ToString());
   }
   auto input_buffer = std::move(read_buffer_result).ValueOrDie();
 
   auto status = bitar::app::Evaluate(input_buffer);
   if (!status.ok()) {
-    bitar::CleanupAndExit(EXIT_FAILURE, "Failed to evaluate. [{}]\n", status.ToString());
+    bitar::CleanupAndExit(EXIT_FAILURE, FMT_STRING("Failed to evaluate. [{}]\n"),
+                          status.ToString());
   }
 
-  bitar::CleanupAndExit(EXIT_SUCCESS, "\nEverything is OK!\n");
+  bitar::CleanupAndExit(EXIT_SUCCESS, FMT_STRING("\nEverything is OK!\n"));
 }

@@ -35,7 +35,7 @@ vcpkg install bitar
 - The DPDK library will be built from source by vcpkg if `dpdk_ROOT` is not specified.
 - The Arrow parquet library is required if `BITAR_BUILD_APPS` is `ON`. Otherwise, having the Arrow library is sufficient.
 - Loading the Arrow parquet library will create a CMake target for the arrow and parquet library, respectively.
-- Use `Parquet_ROOT` to specify the directory that contains the file `ParquetConfig.cmake`.
+- Use `Parquet_ROOT` to specify the directory path that contains the file `ParquetConfig.cmake`. For system-installed Arrow library on Ubuntu, the typical directory path would be `/usr/lib/$(uname -m)-linux-gnu/cmake/arrow`.
 - Use `Arrow_ROOT` to specify the installation prefix of the Arrow library if it is not installed at the default location. By default, the system-installed Arrow library will be at `/usr`.
 - If the Arrow library is not found, or it is found but the parquet library is not found when needed, the Arrow library will be built from source.
 

@@ -24,6 +24,7 @@
 
 #include <arrow/result.h>
 #include <arrow/status.h>
+#include <arrow/type_fwd.h>
 
 #include <cstdint>
 #include <memory>
@@ -36,10 +37,8 @@
 
 namespace arrow {
 class Buffer;
-}
-namespace arrow {
 class ResizableBuffer;
-}
+}  // namespace arrow
 
 namespace bitar::app {
 
@@ -53,7 +52,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadData(const std::string& file_p
 
 arrow::Result<bitar::BufferVector> BenchmarkCompressSync(
     const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
-    const std::unique_ptr<arrow::Buffer>& decompressed_buffer);
+    const std::shared_ptr<arrow::Buffer>& decompressed_buffer);
 
 arrow::Status BenchmarkDecompressSync(
     const std::unique_ptr<bitar::MLX5CompressDevice>& device, std::uint16_t queue_pair_id,
@@ -62,7 +61,7 @@ arrow::Status BenchmarkDecompressSync(
 
 arrow::Status BenchmarkCompressAsync(
     const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const bitar::BufferVector& input_buffer_vector,
+    const arrow::BufferVector& input_buffer_vector,
     std::unordered_map<std::uint8_t, std::vector<bitar::BufferVector>>&
         device_to_compressed_buffers_vector);
 
@@ -74,12 +73,12 @@ arrow::Status BenchmarkDecompressAsync(
         decompressed_buffer_vector);
 
 arrow::Status EvaluateSync(const std::unique_ptr<bitar::MLX5CompressDevice>& device,
-                           const std::unique_ptr<arrow::Buffer>& input_buffer);
+                           const std::shared_ptr<arrow::Buffer>& input_buffer);
 
 arrow::Status EvaluateAsync(
     const std::vector<std::unique_ptr<bitar::MLX5CompressDevice>>& devices,
-    const std::unique_ptr<arrow::Buffer>& input_buffer);
+    const std::shared_ptr<arrow::Buffer>& input_buffer);
 
-arrow::Status Evaluate(const std::unique_ptr<arrow::Buffer>& input_buffer);
+arrow::Status Evaluate(const std::shared_ptr<arrow::Buffer>& input_buffer);
 
 }  // namespace bitar::app

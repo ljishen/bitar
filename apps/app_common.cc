@@ -44,8 +44,9 @@ namespace bitar::app {
 namespace {
 
 void SignalHandler(int signal) {
-  // NOLINTNEXTLINE(concurrency-mt-unsafe)
-  bitar::CleanupAndExit(EXIT_FAILURE, "Exit by signal {}\n", strsignal(signal));
+  bitar::CleanupAndExit(EXIT_FAILURE, FMT_STRING("Exit by signal {}\n"),
+                        // NOLINTNEXTLINE(concurrency-mt-unsafe)
+                        strsignal(signal));
 }
 
 }  // namespace
@@ -73,7 +74,7 @@ GetBlueFieldCompressDevices(std::uint64_t max_buffer_size) {
   ARROW_ASSIGN_OR_RAISE(auto device_ids, driver->ListAvailableDeviceIds());
 
   RTE_LOG(INFO, USER1, "Found devices with MLX5 driver: [%s]\n",
-          fmt::format("{}", fmt::join(device_ids, ", ")).c_str());
+          fmt::format(FMT_STRING("{}"), fmt::join(device_ids, ", ")).c_str());
 
   ARROW_ASSIGN_OR_RAISE(auto devices, driver->GetDevices(device_ids));
 

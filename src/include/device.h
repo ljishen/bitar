@@ -27,6 +27,7 @@
 #include <arrow/util/macros.h>
 #include <fmt/core.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>

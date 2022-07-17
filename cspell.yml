@@ -28,6 +28,7 @@ enableFiletypes:
   - cmake
 words: # list of words to be always considered to be correct
   - aarch
+  - absl
   - autosort
   - bitar
   - byteorder
