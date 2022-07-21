@@ -13,12 +13,41 @@
   "cmake.buildDirectory": "${workspaceFolder}/build-${buildKitTargetArch}",
   "cmake.configureOnOpen": true,
   "cmake.configureSettings": {
+    "CMAKE_BUILD_TYPE": "RelWithDebInfo",
     "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/${buildKitTargetArch}/src/vcpkg/scripts/buildsystems/vcpkg.cmake",
     "Arrow_ROOT": "/usr",
     "BITAR_BUILD_APPS": true,
     "BITAR_BUILD_TESTS": true,
     "BITAR_BUILD_ARROW": false,
     "ENABLE_DEVELOPER_MODE": true
+  },
+  "cmake.defaultVariants": {
+    "buildType": {
+      "default": "reldeb",
+      "description": "The build type.",
+      "choices": {
+        "debug": {
+          "short": "Debug",
+          "long": "Disable optimizations - include debug information.",
+          "buildType": "Debug"
+        },
+        "release": {
+          "short": "Release",
+          "long": "Optimize for speed - exclude debug information.",
+          "buildType": "Release"
+        },
+        "minsize": {
+          "short": "MinSizeRel",
+          "long": "Optimize for smallest binary size - exclude debug information.",
+          "buildType": "MinSizeRel"
+        },
+        "reldeb": {
+          "short": "RelWithDebInfo",
+          "long": "Optimize for speed - include debug information.",
+          "buildType": "RelWithDebInfo"
+        }
+      }
+    }
   },
   "cmake.generator": "Ninja",
   "files.associations": {
@@ -110,7 +139,5 @@
     "filesystem": "cpp",
     "*.ipp": "cpp"
   },
-  "sshfs.flags": [
-    "DEBUG_SSH2"
-  ]
+  "sshfs.flags": ["DEBUG_SSH2"]
 }

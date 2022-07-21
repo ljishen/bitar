@@ -58,6 +58,7 @@ words: # list of words to be always considered to be correct
   - hicpp
   - hugepages
   - hwrap
+  - INCLUDEDIR
   - INTERPROCEDURAL
   - IOVA
   - istrm
