@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # MIT License
 #
-# Copyright (c) 2022 Jianshen Liu
+# Copyright (c) 2022 University of California
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
