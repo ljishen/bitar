@@ -42,7 +42,7 @@ vcpkg install bitar
 ```bash
 $ # Reserve hugepages
 $ sudo sh -c 'echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages'
-$ # On a NUMA machine, we need
+$ # On NUMA machines, we may need
 $ # sudo sh -c 'echo 1024 > /sys/devices/system/node/node1/hugepages/hugepages-2048kB/nr_hugepages'
 
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
@@ -69,4 +69,15 @@ $ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-
 - `BITAR_ARROW_GIT_REPOSITORY`: the git repository to fetch the Arrow source (default: the official repository)
 - `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash of the Arrow repository for building when needed
 - `BITAR_INSTALL_ARROW`: install the Arrow library as part of the cmake installation process if Arrow is built by this project (default: `OFF`)
-- Any [Arrow supported CMake options](https://github.com/apache/arrow/blob/apache-arrow-8.0.0/cpp/cmake_modules/DefineOptions.cmake), e.g., `ARROW_WITH_LZ4`, `ARROW_WITH_ZSTD`, and `ARROW_WITH_SNAPPY`.
+- Any [Arrow supported CMake options](https://github.com/apache/arrow/blob/apache-arrow-8.0.1/cpp/cmake_modules/DefineOptions.cmake), e.g., `ARROW_WITH_LZ4`, `ARROW_WITH_ZSTD`, and `ARROW_WITH_SNAPPY`.
+
+## Known Issues
+
+- (July 23, 2022) DPDK mistakenly assumes the support of `aes`, `pmull`, `sha1`, and `sha2` CPU flags on crypto-disabled BlueField-2 DPUs (e.g., `MBF2H516A-CENO_Ax`, the one on the CloudLab r7525 machine) with **LLVM Clang**, resulting in the following error when executing a program compiled with bitar ([relevant code](https://github.com/DPDK/dpdk/blob/v22.07/config/arm/meson.build#L652-L655)):
+
+  ```bash
+  ERROR: This system does not support "AES".
+  Please check that RTE_MACHINE is set correctly.
+  ```
+
+  There is no such problem when DPDK is compiled with GCC. Note that bitar can still be compiled with Clang and linked with DPDK that is compiled with GCC.

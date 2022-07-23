@@ -88,6 +88,7 @@ words: # list of words to be always considered to be correct
   - NOLINTNEXTLINE
   - nonliteral
   - NUMA
+  - objlib
   - OCTEON
   - Ostreamable
   - parens
