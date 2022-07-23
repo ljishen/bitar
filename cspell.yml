@@ -131,3 +131,4 @@ words: # list of words to be always considered to be correct
   - xforms
   - Xiwyu
   - zmalloc
+  - ZSTD
