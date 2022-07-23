@@ -47,6 +47,10 @@
 #include "include/device.h"
 #include "include/util.h"
 
+#ifdef __aarch64__
+#include <string_view>
+#endif
+
 namespace bitar {
 
 namespace {
