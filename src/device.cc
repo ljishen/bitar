@@ -559,6 +559,10 @@ arrow::Status BlueFieldCompressDevice::ValidateConfiguration() {
   const auto* bluefield_configuration =
       dynamic_cast<BlueFieldConfiguration*>(configuration().get());
 
+  if (ARROW_PREDICT_FALSE(bluefield_configuration == nullptr)) {
+    return arrow::Status::Invalid("Invalid configuration for BlueFieldCompressDevice");
+  }
+
   /// BlueField device only supports RTE_COMP_HUFFMAN_FIXED and
   /// RTE_COMP_HUFFMAN_DYNAMIC
   if (bluefield_configuration->huffman_enc() != RTE_COMP_HUFFMAN_FIXED &&

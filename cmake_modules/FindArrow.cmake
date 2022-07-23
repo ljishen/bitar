@@ -111,7 +111,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "9442e1ce8d976cdec771c2dbb15704e0cb2018ff"
+        "ee2e9448c8565820ba38a2df9e44ab6055e5df1d"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
@@ -151,6 +151,8 @@ else()
     set(_backup_CMAKE_C_CLANG_TIDY "${CMAKE_C_CLANG_TIDY}")
     set(_backup_CMAKE_CXX_INCLUDE_WHAT_YOU_USE
         "${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
+    set(_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION
+        ${CMAKE_INTERPROCEDURAL_OPTIMIZATION})
     unset(CMAKE_CXX_STANDARD)
     unset(CMAKE_C_STANDARD)
     unset(CMAKE_CXX_CPPCHECK)
@@ -158,6 +160,7 @@ else()
     unset(CMAKE_CXX_CLANG_TIDY)
     unset(CMAKE_C_CLANG_TIDY)
     unset(CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
+    unset(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
 
     # Define Arrow minimal build options
     set(ARROW_DEFINE_OPTIONS
@@ -223,6 +226,8 @@ else()
     set(CMAKE_C_CLANG_TIDY "${_backup_CMAKE_C_CLANG_TIDY}")
     set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE
         "${_backup_CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION
+        ${_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION})
     unset(_backup_CMAKE_CXX_STANDARD)
     unset(_backup_CMAKE_C_STANDARD)
     unset(_backup_CMAKE_CXX_CPPCHECK)
@@ -230,6 +235,7 @@ else()
     unset(_backup_CMAKE_CXX_CLANG_TIDY)
     unset(_backup_CMAKE_C_CLANG_TIDY)
     unset(_backup_CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
+    unset(_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION)
   endif()
 
   set(required_vars ${${_find_package_name_lower}_POPULATED})
