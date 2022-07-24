@@ -1,5 +1,6 @@
 # bitar
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3f22cce4889a4261997ae300e8f4e595)](https://app.codacy.com/gh/ljishen/bitar?utm_source=github.com&utm_medium=referral&utm_content=ljishen/bitar&utm_campaign=Badge_Grade_Settings)
 [![GitHub Super-Linter](https://github.com/ljishen/bitar/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![DOI](https://zenodo.org/badge/490108576.svg)](https://zenodo.org/badge/latestdoi/490108576)
