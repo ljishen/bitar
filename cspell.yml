@@ -35,6 +35,7 @@ words: # list of words to be always considered to be correct
   - Cavium
   - CMAKE
   - cmdline
+  - Codacy
   - compressdev
   - CONCAT
   - cppcheck
@@ -90,6 +91,7 @@ words: # list of words to be always considered to be correct
   - NUMA
   - objlib
   - OCTEON
+  - orcid
   - Ostreamable
   - parens
   - parg
@@ -131,5 +133,6 @@ words: # list of words to be always considered to be correct
   - xform
   - xforms
   - Xiwyu
+  - zenodo
   - zmalloc
   - ZSTD
