@@ -111,7 +111,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "70904dffef25a8c883a1a829c66a1d30a7d9c249"
+        "bbf249e056315af0a18d5c0834de9adef117a25f"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
