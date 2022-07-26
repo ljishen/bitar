@@ -9,18 +9,20 @@
 <img src="assets/logo.png" width="25%">
 Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators.
 
----
+## Features
+
+- Zero-copy of data input and output
+- Synchronous and asynchronous operations
+- Execution in both the host and the embedded environment
+- Multi-core and multi-device support
+- No sudo permission requirement
 
 ## Prerequisites
 
 - Linux (with kernel >= 4.4) or FreeBSD
-
 - For Linux, glibc >= 2.7 (reported by `ldd --version`)
-
 - GCC >= 9 (C++17 compliant compiler)
-
 - [DPDK](https://github.com/DPDK/dpdk) >= v21.11 (can be installed via vcpkg)
-
 - [Apache Arrow](https://github.com/apache/arrow) >= 7.0.0 (build automatically
   if not found)
 

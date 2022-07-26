@@ -7,5 +7,5 @@ authors:
 title: "Simplify accessing hardware compression/decompression accelerators"
 version: 0.0.3
 doi: 10.5281/zenodo.6825119
-date-released: 2022-07-24
+date-released: 2022-07-26
 url: "https://github.com/ljishen/bitar"
