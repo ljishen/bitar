@@ -67,6 +67,9 @@ $ sudo sh -c 'echo 1024 > /sys/devices/system/node/node0/hugepages/hugepages-204
 $ # On NUMA machines, we may need
 $ # sudo sh -c 'echo 1024 > /sys/devices/system/node/node1/hugepages/hugepages-2048kB/nr_hugepages'
 
+$ # Install prerequisites for development
+$ scripts/install-deps.sh
+
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
 [-Ddpdk_ROOT:PATH=<dpdk-install-prefix>] \
 [-DParquet_ROOT:PATH=<parquet-cmake-config-file-dir>] \

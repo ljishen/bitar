@@ -33,6 +33,7 @@ words: # list of words to be always considered to be correct
   - bitar
   - byteorder
   - Cavium
+  - CENO
   - CMAKE
   - cmdline
   - Codacy
@@ -98,6 +99,7 @@ words: # list of words to be always considered to be correct
   - pargs
   - pkgconfig
   - pktmbuf
+  - pmull
   - precompiled
   - privatedirectory
   - proptags
