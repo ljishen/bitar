@@ -58,6 +58,7 @@ endif()
 # Add project_options v0.24.0
 FetchContent_Declare(
   _project_options
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   URL https://github.com/aminya/project_options/archive/refs/tags/v0.24.0.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
