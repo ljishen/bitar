@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
   "name": "bitar",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "homepage": "https://github.com/ljishen/bitar",
   "description": "Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators.",
   "builtin-baseline": "d8dcdbb87eed1e642a67dbc94d4314b1f6d9df5e",
