@@ -45,6 +45,7 @@ if(NOT BITAR_BUILD_ARROW)
     # current file that has the same name in the CMAKE_MODULE_PATH, the Arrow
     # dependency lookup will become an infinite recursion. Therefore, we need to
     # temporarily remove the current file from the module search path.
+    # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/src/parquet/ParquetConfig.cmake.in
     list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
     find_package(Parquet QUIET CONFIG)
     list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
@@ -57,6 +58,7 @@ if(NOT BITAR_BUILD_ARROW)
     # Loading the `ArrowConfig.cmake` file will automatically set this to `ON`
     # even though the system may not have the parquet library installed. To be
     # consistent with our configuration, we need to keep this to be `OFF` here.
+    # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/src/arrow/ArrowConfig.cmake.in
     set(ARROW_PARQUET
         OFF
         CACHE INTERNAL "Build the Parquet libraries")

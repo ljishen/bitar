@@ -99,8 +99,8 @@ set(dpdk_ROOT
     ""
     CACHE PATH "DPDK installation prefix")
 if("${dpdk_ROOT}" STREQUAL "")
-  # Build the DPDK libraries using vcpkg when the installation prefix is not
-  # specified. This is required to be set before project().
+  # Build DPDK using vcpkg when the installation prefix is not specified. This
+  # is required to be set before project().
   list(APPEND VCPKG_MANIFEST_FEATURES "dpdk")
 else()
   # Paths that are prepended to PKG_CONFIG_PATH have higher priority than
