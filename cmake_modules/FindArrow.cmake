@@ -111,7 +111,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "48e27804296233a9ab90b6096e291046ff2db6f3"
+        "apache-arrow-9.0.0"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
@@ -251,6 +251,7 @@ else()
 
   unset(${_find_package_name_lower}_POPULATED)
   unset(_find_package_name_lower)
+  unset(_arg_SOURCE_SUBDIR_ABS)
   unset(_arg_SOURCE_SUBDIR)
 endif()
 
@@ -295,7 +296,7 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
         # Inhibit all warning from the library's headers and sources
         #
         # Apply the compile option to the internal library if it exists. See
-        # https://github.com/apache/arrow/blob/apache-arrow-8.0.1/cpp/cmake_modules/BuildUtils.cmake#L287
+        # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/cmake_modules/BuildUtils.cmake#L224
         if(TARGET ${_library_name}_objlib)
           target_compile_options(${_library_name}_objlib PRIVATE -w)
         else()
