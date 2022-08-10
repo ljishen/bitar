@@ -131,8 +131,15 @@ else()
           " | tail --lines=1")
       execute_process(
         COMMAND sh -c "${extract_arrow_latest_release_tag}"
-        OUTPUT_VARIABLE BITAR_ARROW_GIT_TAG
+        OUTPUT_VARIABLE _arrow_git_tag
         OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL LAST)
+      set(BITAR_ARROW_GIT_TAG
+          "${_arrow_git_tag}"
+          CACHE
+            STRING
+            "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
+            FORCE)
+      unset(_arrow_git_tag)
     endif()
 
     message(
@@ -245,7 +252,10 @@ else()
   if(_arrow_version_line MATCHES "^set\\(ARROW_VERSION \"([0-9.]+.*)\"\\)")
     set(version_var "${CMAKE_MATCH_1} (${BITAR_ARROW_GIT_TAG})")
   else()
-    set(version_var "${BITAR_ARROW_GIT_TAG}")
+    message(
+      FATAL_ERROR
+        "Could not find ARROW_VERSION in ${_arg_SOURCE_SUBDIR_ABS}/CMakeLists.txt"
+    )
   endif()
   unset(_arrow_version_line)
 
