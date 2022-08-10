@@ -58,6 +58,8 @@ endif()
 # Add project_options v0.24.0
 FetchContent_Declare(
   _project_options
+  # Ensure anything that depends on the extracted contents will be rebuilt
+  # whenever the URL changes
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   URL https://github.com/aminya/project_options/archive/refs/tags/v0.24.0.zip)
 FetchContent_MakeAvailable(_project_options)
