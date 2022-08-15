@@ -101,14 +101,15 @@ $ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-
 - `BITAR_ARROW_GIT_REPOSITORY`: the git repository to fetch the Arrow source
   (default: the official repository)
 
-- `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash of
-  the Arrow repository for building when needed
+- `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash
+  from the Arrow repository for building when needed (default
+  `apache-arrow-9.0.0`)
 
 - `BITAR_INSTALL_ARROW`: install the Arrow library as part of the cmake
   installation process if Arrow is built by this project (default: `OFF`)
 
 - Any
-  [Arrow supported CMake options](https://github.com/apache/arrow/blob/apache-arrow-8.0.1/cpp/cmake_modules/DefineOptions.cmake),
+  [Arrow supported CMake options](https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/cmake_modules/DefineOptions.cmake),
   e.g., `ARROW_WITH_LZ4`, `ARROW_WITH_ZSTD`, and `ARROW_WITH_SNAPPY`.
 
 ## Known Issues

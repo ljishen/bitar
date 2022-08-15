@@ -1,10 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
   "name": "bitar",
-  "version": "0.0.3",
   "homepage": "https://github.com/ljishen/bitar",
   "description": "Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators.",
-  "builtin-baseline": "d8dcdbb87eed1e642a67dbc94d4314b1f6d9df5e",
+  "builtin-baseline": "bb1ad0b0151e89cb08fb40087b43411c141661e9",
   "dependencies": [
     {
       "name": "abseil",
@@ -18,16 +17,16 @@
     {
       "$explanation": ["Dependency for system-installed Apache Arrow library"],
       "name": "curl",
-      "version>=": "7.84.0",
+      "version>=": "7.84.0#1",
       "default-features": false
     },
     {
       "name": "fmt",
-      "version>=": "8.1.1#2"
+      "version>=": "9.0.0"
     },
     {
       "name": "magic-enum",
-      "version>=": "0.8.0"
+      "version>=": "0.8.1"
     },
     {
       "$explanation": ["Dependency for system-installed Apache Arrow library"],

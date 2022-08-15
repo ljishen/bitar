@@ -55,6 +55,7 @@ words: # list of words to be always considered to be correct
   - endfunction
   - extbuf
   - FETCHCONTENT
+  - Finddpdk
   - hashruler
   - hashrulers
   - hicpp
@@ -73,6 +74,7 @@ words: # list of words to be always considered to be correct
   - lcores
   - lexicographicall
   - libcurl
+  - LIBDIR
   - libdpdk
   - linewidth
   - listfile

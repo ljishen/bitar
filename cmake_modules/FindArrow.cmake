@@ -116,7 +116,7 @@ else()
         "apache-arrow-9.0.0"
         CACHE
           STRING
-          "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
+          "Use the source at the git branch, tag or commit hash from the Arrow repository for building when needed"
     )
     option(BITAR_INSTALL_ARROW
            "Install the Arrow library as part of the cmake installation process"
@@ -139,7 +139,7 @@ else()
           "${_arrow_git_tag}"
           CACHE
             STRING
-            "Use the source at the git branch, tag or commit hash of the Arrow repository for building when needed"
+            "Use the source at the git branch, tag or commit hash from the Arrow repository for building when needed"
             FORCE)
       unset(_arrow_git_tag)
     endif()

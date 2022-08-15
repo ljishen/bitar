@@ -82,8 +82,8 @@ get_target_property(public_headers ${PROJECT_NAME} SOURCES)
 list(FILTER public_headers INCLUDE REGEX "${PUBLIC_INCLUDES}/.+\.h$")
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER
                                                  "${public_headers}")
-install(TARGETS ${PROJECT_NAME}
-        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}")
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../cmake_modules/Finddpdk.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
 package_project(
   TARGETS

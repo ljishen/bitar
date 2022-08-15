@@ -25,32 +25,14 @@
 #   DPDK::dpdk - for linked as static or shared library
 # ~~~
 
-if("${dpdk_ROOT}" STREQUAL "")
-  # This is the case where DPDK is installed with vcpkg.
-  find_package(unofficial-dpdk QUIET REQUIRED CONFIG)
-  mark_as_advanced(LIBDPDK_STATIC_INCLUDE_DIRS LIBDPDK_STATIC_LIBRARIES
-                   LIBDPDK_VERSION)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
+mark_as_advanced(DPDK_INCLUDE_DIRS DPDK_LIBRARIES DPDK_VERSION)
 
-  add_library(DPDK::dpdk ALIAS unofficial::dpdk::dpdk)
-  unset(unofficial-dpdk_FOUND)
+add_library(DPDK::dpdk ALIAS PkgConfig::DPDK)
+unset(DPDK_FOUND)
 
-  # Since vcpkg always uses static linkage for the dpdk port, we can safely only
-  # report the static include_dirs.
-  find_package_handle_standard_args(
-    dpdk
-    REQUIRED_VARS LIBDPDK_STATIC_INCLUDE_DIRS LIBDPDK_STATIC_LIBRARIES
-    VERSION_VAR LIBDPDK_VERSION)
-else()
-  # This is the case where the installation prefix of DPDK is specified by user.
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(LIBDPDK REQUIRED IMPORTED_TARGET libdpdk)
-  mark_as_advanced(LIBDPDK_INCLUDE_DIRS LIBDPDK_LIBRARIES LIBDPDK_VERSION)
-
-  add_library(DPDK::dpdk ALIAS PkgConfig::LIBDPDK)
-  unset(LIBDPDK_FOUND)
-
-  find_package_handle_standard_args(
-    dpdk
-    REQUIRED_VARS LIBDPDK_INCLUDE_DIRS LIBDPDK_LIBRARIES
-    VERSION_VAR LIBDPDK_VERSION)
-endif()
+find_package_handle_standard_args(
+  dpdk
+  REQUIRED_VARS DPDK_INCLUDE_DIRS DPDK_LIBRARIES
+  VERSION_VAR DPDK_VERSION)
