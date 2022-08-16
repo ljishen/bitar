@@ -131,6 +131,18 @@ project(
   HOMEPAGE_URL "https://github.com/ljishen/bitar"
   LANGUAGES CXX C)
 
+# Ensure that the PC files installed by vcpkg has the highest priority
+if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE MATCHES
+                                   "^[Dd][Ee][Bb][Uu][Gg]$")
+  prepend_path_to_env(
+    PKG_CONFIG_PATH
+    "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib/pkgconfig")
+else()
+  prepend_path_to_env(
+    PKG_CONFIG_PATH
+    "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig")
+endif()
+
 set(Parquet_ROOT
     ""
     CACHE

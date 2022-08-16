@@ -34,6 +34,7 @@ words: # list of words to be always considered to be correct
   - byteorder
   - Cavium
   - CENO
+  - CFLAGS
   - CMAKE
   - cmdline
   - Codacy
@@ -72,6 +73,7 @@ words: # list of words to be always considered to be correct
   - kwargs
   - lcore
   - lcores
+  - LDFLAGS
   - lexicographicall
   - libcurl
   - LIBDIR
