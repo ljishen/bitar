@@ -45,6 +45,10 @@ file(MAKE_DIRECTORY "${MACHINE_OPTIONAL_DIR}")
 list(APPEND CMAKE_PROGRAM_PATH "${MACHINE_OPTIONAL_DIR}/bin")
 
 include(FetchContent)
+# Globally suppress the warning for not giving DOWNLOAD_EXTRACT_TIMESTAMP to the
+# FetchContent_Declare() or ExternalProject_Add() command.
+# https://cmake.org/cmake/help/v3.24/policy/CMP0135.html
+set(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
 
 # Save the cost of downloading external source for different configurations
 # (e.g., release and debug)
