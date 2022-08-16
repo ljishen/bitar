@@ -730,9 +730,10 @@ int main(int argc, char* argv[]) {
   try {
     cxxopts::Options options(std::move(program),
                              "\ndemo_app - Demonstrating (de)compression with SmartNICs");
-    options.add_options()("b,bytes", "The number of bytes to read from file",
-                          cxxopts::value<std::int64_t>()->default_value("0"))(
-        "f,file", "The file to read from as the input", cxxopts::value<std::string>())(
+    options.add_options()("f,file", "The file to read from as the input",
+                          cxxopts::value<std::string>())(
+        "b,bytes", "The number of bytes to read from file",
+        cxxopts::value<std::int64_t>()->default_value("0"))(
         "m,mode", "File read mode (0 = raw, 1 = content)",
         cxxopts::value<std::uint8_t>()->default_value("0"))("h,help", "Print help");
 

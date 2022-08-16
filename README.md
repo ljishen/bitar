@@ -45,7 +45,7 @@ vcpkg install bitar
   specified.
 
 - The Arrow parquet library is required if `BITAR_BUILD_APPS` is `ON`.
-  Otherwise, having the Arrow library is sufficient.
+  Otherwise, just having the Arrow library is sufficient.
 
 - Loading the Arrow parquet library will create a CMake target for the arrow and
   parquet library, respectively.
@@ -80,10 +80,9 @@ $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
 $ cmake --build ./build-$(uname -m)
 $ cmake --install ./build-$(uname -m) --prefix <install-prefix>
 
-# LD_LIBRARY_PATH can be omitted if DPDK is built from source via vcpkg
-$ LD_LIBRARY_PATH=<dpdk-install-prefix>/lib/$(uname -m)-linux-gnu:<dpdk-install-prefix>/lib64:$LD_LIBRARY_PATH \
-./build-$(uname -m)/apps/demo_app --in-memory -l 1-3 -a <device-pci-id>,class=compress -- \
-[--bytes <size-to-read-from-file>] --file <file> [--mode <file-read-mode>] [--help]
+$ ./build-$(uname -m)/apps/demo_app --in-memory --lcores 5@(0-7),6-7 \
+-a <device-pci-id>,class=compress -- --file <file> \
+[--bytes <size-to-read-from-file>] [--mode <file-read-mode>] [--help]
 ```
 
 ### Advanced CMake Configuration Options
