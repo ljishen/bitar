@@ -66,20 +66,6 @@ if(NOT BITAR_BUILD_ARROW)
 endif()
 
 if(${CMAKE_FIND_PACKAGE_NAME}_FOUND AND (NOT ARROW_PARQUET OR Parquet_FOUND))
-  execute_process(
-    COMMAND
-      sh -c
-      "ld --verbose | grep SEARCH_DIR | sed 's/\\([[:space:]]*SEARCH_DIR(\"=\\|\")\\)//g'"
-    OUTPUT_VARIABLE ld_search_dirs
-    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL LAST)
-
-  foreach(ld_search_dir ${ld_search_dirs})
-    if(${CMAKE_FIND_PACKAGE_NAME}_CONFIG MATCHES "^${ld_search_dir}")
-      set(${CMAKE_FIND_PACKAGE_NAME}_IS_SYSTEM_INSTALLED True)
-      break()
-    endif()
-  endforeach()
-
   mark_as_advanced(
     ${CMAKE_FIND_PACKAGE_NAME}_CONFIG ${CMAKE_FIND_PACKAGE_NAME}_DIR
     ${CMAKE_FIND_PACKAGE_NAME}_VERSION)
@@ -246,6 +232,8 @@ else()
     unset(_backup_CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
     unset(_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION)
   endif()
+
+  set(Arrow_IS_BUILT True) # Arrow is built by this project
 
   set(required_vars ${${_find_package_name_lower}_POPULATED})
 

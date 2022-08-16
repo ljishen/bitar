@@ -35,7 +35,7 @@ find_package(Arrow "${arrow_minimum_required_version}" REQUIRED)
 target_link_system_libraries(demo_app PRIVATE Arrow::arrow Arrow::parquet)
 target_compile_definitions(demo_app PRIVATE ARROW_NO_DEPRECATED_API)
 
-if(Arrow_IS_SYSTEM_INSTALLED)
+if(NOT Arrow_IS_BUILT)
   set(DEPENDENCIES_CONFIGURED CURL Thrift)
   foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
     find_package(${DEPENDENCY} REQUIRED CONFIG)

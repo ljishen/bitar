@@ -29,7 +29,7 @@
       "version>=": "0.8.1"
     },
     {
-      "$explanation": ["Dependency for system-installed Apache Arrow library"],
+      "$explanation": ["Dependency for system-installed Apache Arrow library and DPDK"],
       "name": "openssl"
     },
     {

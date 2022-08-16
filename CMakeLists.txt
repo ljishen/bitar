@@ -64,7 +64,7 @@ FetchContent_Declare(
   _project_options
   # Ensure anything that depends on the extracted contents will be rebuilt
   # whenever the URL changes
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  DOWNLOAD_EXTRACT_TIMESTAMP True
   URL https://github.com/aminya/project_options/archive/refs/tags/v0.24.1.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
@@ -151,7 +151,7 @@ set(Parquet_ROOT
 )
 option(BITAR_BUILD_ARROW
        "Force to build the Arrow library to be used as the dependency" OFF)
-set(arrow_minimum_required_version 7.0.0)
+set(arrow_minimum_required_version 8.0.1)
 
 set(IWYU_ROOT
     "${MACHINE_OPTIONAL_DIR}"
