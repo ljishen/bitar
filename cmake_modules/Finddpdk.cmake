@@ -22,17 +22,32 @@
 #
 # ~~~
 # This config sets the following target in your project::
-#   DPDK::dpdk - for linked as static or shared library
+#   DPDK::dpdk - for linked as static library
 # ~~~
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(DPDK REQUIRED IMPORTED_TARGET libdpdk)
-mark_as_advanced(DPDK_INCLUDE_DIRS DPDK_LIBRARIES DPDK_VERSION)
+if(${PKG_CONFIG_VERSION_STRING} VERSION_LESS "0.28")
+  message(
+    FATAL_ERROR
+      "  pkg-config version 0.28 or greater is required for DPDK.\n"
+      "  Upgrade pkg-config or use the PKG_CONFIG environment variable to set the path to a newer version of pkg-config. See\n"
+      "    https://doc.dpdk.org/guides/linux_gsg/sys_reqs.html#compilation-of-the-dpdk"
+  )
+endif()
+pkg_check_modules(DPDK REQUIRED libdpdk)
+mark_as_advanced(DPDK_STATIC_INCLUDE_DIRS DPDK_STATIC_CFLAGS
+                 DPDK_STATIC_LDFLAGS DPDK_VERSION)
 
-add_library(DPDK::dpdk ALIAS PkgConfig::DPDK)
+add_library(DPDK::dpdk INTERFACE IMPORTED)
 unset(DPDK_FOUND)
+
+# https://bechsoftware.com/2021/12/05/configuring-dpdk-projects-with-cmake/
+set_target_properties(DPDK::dpdk PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+                                            "${DPDK_STATIC_INCLUDE_DIRS}")
+target_compile_options(DPDK::dpdk INTERFACE ${DPDK_STATIC_CFLAGS})
+target_link_libraries(DPDK::dpdk INTERFACE ${DPDK_STATIC_LDFLAGS})
 
 find_package_handle_standard_args(
   dpdk
-  REQUIRED_VARS DPDK_INCLUDE_DIRS DPDK_LIBRARIES
+  REQUIRED_VARS DPDK_STATIC_INCLUDE_DIRS DPDK_STATIC_CFLAGS DPDK_STATIC_LDFLAGS
   VERSION_VAR DPDK_VERSION)
