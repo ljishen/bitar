@@ -29,6 +29,13 @@
 # ~~~
 
 if(NOT BITAR_BUILD_ARROW)
+  # Temporarily remove the path to the .pc files installed by vcpkg to allow
+  # looking for system-installed libraries only when we do not intend to build
+  # Arrow.
+  set(_backup_PKG_CONFIG_PATH "$ENV{PKG_CONFIG_PATH}")
+  set(ENV{PKG_CONFIG_PATH} "${old_PKG_CONFIG_PATH}")
+  set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH FALSE)
+
   if(ARROW_PARQUET)
     # Since the Parquet library depends on the Arrow library, finding the
     # Parquet library will import the Arrow library as well.
@@ -63,6 +70,10 @@ if(NOT BITAR_BUILD_ARROW)
         OFF
         CACHE INTERNAL "Build the Parquet libraries")
   endif()
+
+  set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH TRUE)
+  set(ENV{PKG_CONFIG_PATH} "${_backup_PKG_CONFIG_PATH}")
+  unset(_backup_PKG_CONFIG_PATH)
 endif()
 
 if(${CMAKE_FIND_PACKAGE_NAME}_FOUND AND (NOT ARROW_PARQUET OR Parquet_FOUND))
@@ -233,7 +244,7 @@ else()
     unset(_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION)
   endif()
 
-  set(Arrow_IS_BUILT True) # Arrow is built by this project
+  set(Arrow_IS_BUILT TRUE) # Arrow is built by this project
 
   set(required_vars ${${_find_package_name_lower}_POPULATED})
 

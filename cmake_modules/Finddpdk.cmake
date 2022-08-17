@@ -47,7 +47,7 @@ set_target_properties(DPDK::dpdk PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
 target_compile_options(DPDK::dpdk INTERFACE ${DPDK_STATIC_CFLAGS})
 target_link_libraries(DPDK::dpdk INTERFACE ${DPDK_STATIC_LDFLAGS})
 
-set(dpdk_IS_BUILT True) # dpdk is built by this project via vcpkg
+set(dpdk_IS_BUILT TRUE) # dpdk is built by this project via vcpkg
 if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
   file(REAL_PATH "${DPDK_PREFIX}" dpdk_prefix_abs)
   file(REAL_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}"
@@ -56,7 +56,7 @@ if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
   unset(vcpkg_triplet_dir_abs)
   unset(dpdk_prefix_abs)
 else()
-  set(dpdk_IS_BUILT False)
+  set(dpdk_IS_BUILT FALSE)
 endif()
 
 # Add the OpenSSL dependency for dpdk openssl driver

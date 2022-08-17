@@ -64,7 +64,7 @@ FetchContent_Declare(
   _project_options
   # Ensure anything that depends on the extracted contents will be rebuilt
   # whenever the URL changes
-  DOWNLOAD_EXTRACT_TIMESTAMP True
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   URL https://github.com/aminya/project_options/archive/refs/tags/v0.24.1.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
@@ -131,7 +131,8 @@ project(
   HOMEPAGE_URL "https://github.com/ljishen/bitar"
   LANGUAGES CXX C)
 
-# Ensure that the PC files installed by vcpkg has the highest priority
+set(old_PKG_CONFIG_PATH "$ENV{PKG_CONFIG_PATH}")
+# Ensure that the .pc files installed by vcpkg has the highest priority
 if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE MATCHES
                                    "^[Dd][Ee][Bb][Uu][Gg]$")
   prepend_path_to_env(
