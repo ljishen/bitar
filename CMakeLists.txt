@@ -114,7 +114,7 @@ else()
     PKG_CONFIG_PATH
     # The first path is for Debian-based OS, and the second path is for Red
     # Hat-based OS
-    "${dpdk_ROOT}/lib/${machine_hardware_name_lower}-linux-gnu/pkgconfig:${dpdk_ROOT}/lib64/pkgconfig"
+    "${dpdk_ROOT}/lib/${machine_hardware_name}-linux-gnu/pkgconfig:${dpdk_ROOT}/lib64/pkgconfig"
   )
 endif()
 set(dpdk_minimum_required_version 21.11.0)
