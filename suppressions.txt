@@ -24,3 +24,6 @@
 *:*/vcpkg/packages/*-linux/include/*
 *:*/vcpkg_installed/*-linux/include/*
 *:*/include/bsd/*
+
+# Suppress the warning from DPDK v22.07
+preprocessorErrorDirective:*/rte_byteorder.h

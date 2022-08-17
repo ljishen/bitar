@@ -35,29 +35,26 @@ if(${PKG_CONFIG_VERSION_STRING} VERSION_LESS "0.28")
   )
 endif()
 pkg_check_modules(DPDK REQUIRED libdpdk)
-mark_as_advanced(DPDK_STATIC_INCLUDE_DIRS DPDK_STATIC_CFLAGS
-                 DPDK_STATIC_LDFLAGS DPDK_VERSION)
+mark_as_advanced(DPDK_INCLUDEDIR DPDK_STATIC_CFLAGS PDK_STATIC_LDFLAGS
+                 DPDK_PREFIX DPDK_VERSION)
 
 add_library(DPDK::dpdk INTERFACE IMPORTED)
 unset(DPDK_FOUND)
 
 # https://bechsoftware.com/2021/12/05/configuring-dpdk-projects-with-cmake/
 set_target_properties(DPDK::dpdk PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                            "${DPDK_STATIC_INCLUDE_DIRS}")
+                                            "${DPDK_INCLUDEDIR}")
 target_compile_options(DPDK::dpdk INTERFACE ${DPDK_STATIC_CFLAGS})
 target_link_libraries(DPDK::dpdk INTERFACE ${DPDK_STATIC_LDFLAGS})
 
 set(dpdk_IS_BUILT True) # dpdk is built by this project via vcpkg
 if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
-  list(GET DPDK_STATIC_INCLUDE_DIRS 0 first_dpdk_include_dir)
-  file(REAL_PATH "${first_dpdk_include_dir}" first_dpdk_include_dir_abs)
+  file(REAL_PATH "${DPDK_PREFIX}" dpdk_prefix_abs)
   file(REAL_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}"
        vcpkg_triplet_dir_abs)
-  cmake_path(IS_PREFIX vcpkg_triplet_dir_abs "${first_dpdk_include_dir_abs}"
-             dpdk_IS_BUILT)
+  cmake_path(IS_PREFIX vcpkg_triplet_dir_abs "${dpdk_prefix_abs}" dpdk_IS_BUILT)
   unset(vcpkg_triplet_dir_abs)
-  unset(first_dpdk_include_dir_abs)
-  unset(first_dpdk_include_dir)
+  unset(dpdk_prefix_abs)
 else()
   set(dpdk_IS_BUILT False)
 endif()
@@ -72,5 +69,5 @@ unset(dpdk_IS_BUILT)
 
 find_package_handle_standard_args(
   dpdk
-  REQUIRED_VARS DPDK_STATIC_INCLUDE_DIRS DPDK_STATIC_CFLAGS DPDK_STATIC_LDFLAGS
+  REQUIRED_VARS DPDK_PREFIX DPDK_STATIC_CFLAGS DPDK_STATIC_LDFLAGS
   VERSION_VAR DPDK_VERSION)
