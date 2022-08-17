@@ -31,13 +31,6 @@
     {
       "$explanation": ["Dependency for system-installed Apache Arrow library and DPDK"],
       "name": "openssl"
-    },
-    {
-      "$explanation": [
-        "Dependency for system-installed Apache Arrow Parquet library"
-      ],
-      "name": "thrift",
-      "version>=": "0.16.0"
     }
   ],
   "overrides": [

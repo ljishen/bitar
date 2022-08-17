@@ -302,6 +302,14 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
         else()
           target_compile_options(${_${_library_name}_library} PRIVATE -w)
         endif()
+      else()
+        if(${_library_name} STREQUAL parquet)
+          # The Arrow-provided `ParquetConfig.cmake` will create the
+          # thrift::thrift target via `FindThrift.cmake`
+          # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/cmake_modules/FindThrift.cmake#L28
+          target_link_libraries(Arrow::${_library_name}
+                                INTERFACE thrift::thrift)
+        endif()
       endif()
 
       unset(_${_library_name}_library)
