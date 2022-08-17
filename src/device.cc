@@ -41,7 +41,6 @@
 #include <iterator>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <utility>
 
 #include <magic_enum.hpp>
@@ -49,6 +48,10 @@
 #include "include/config.h"
 #include "include/memory.h"
 #include "include/util.h"
+
+#ifndef __aarch64__
+#include <string_view>
+#endif
 
 namespace bitar {
 

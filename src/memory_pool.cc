@@ -40,11 +40,14 @@
 #include <limits>
 #include <mutex>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 #include <utility>
 
 #include <magic_enum.hpp>
+
+#ifndef __aarch64__
+#include <string_view>
+#endif
 
 namespace bitar {
 
