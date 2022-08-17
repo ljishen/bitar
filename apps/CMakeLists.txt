@@ -37,5 +37,7 @@ target_compile_definitions(demo_app PRIVATE ARROW_NO_DEPRECATED_API)
 
 if(NOT Arrow_IS_BUILT)
   find_package(CURL REQUIRED CONFIG)
+  # The Linux package of Arrow are missing dependencies (will be fixed in Arrow
+  # 10.0.0): https://issues.apache.org/jira/browse/ARROW-17422
   target_link_system_libraries(Arrow::arrow INTERFACE CURL::libcurl)
 endif()

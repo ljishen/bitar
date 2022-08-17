@@ -13,9 +13,11 @@ Bitar is a C++ library to simplify accessing hardware compression/decompression 
 
 - Zero-copy of data input and output
 - Synchronous and asynchronous operations
-- Execution in both the host and the embedded environment
 - Multi-core and multi-device support
 - No sudo permission requirement
+
+Bitar can run either on the host machine or on the NVIDIA BlueField DPU target
+in either DPU mode or separated host mode.
 
 ## Prerequisites
 
@@ -23,7 +25,7 @@ Bitar is a C++ library to simplify accessing hardware compression/decompression 
 - For Linux, glibc >= 2.7 (reported by `ldd --version`)
 - GCC >= 9 (C++17 compliant compiler)
 - [DPDK](https://github.com/DPDK/dpdk) >= v21.11 (can be installed via vcpkg)
-- [Apache Arrow](https://github.com/apache/arrow) >= 7.0.0 (build automatically
+- [Apache Arrow](https://github.com/apache/arrow) >= 8.0.1 (build automatically
   if not found)
 
 ## Supported Hardware
@@ -127,3 +129,17 @@ $ ./build-$(uname -m)/apps/demo_app --in-memory --lcores 5@(0-7),6-7 \
 
   There is no such problem when DPDK is compiled with GCC. Note that bitar can
   still be compiled with Clang and linked with DPDK that is compiled with GCC.
+
+- ```bash
+  [Out of memory: Reserving memzone of XXXXXX bytes failed. [Error 12: Cannot allocate memory]]
+  ```
+
+  (Aug 18, 2022) If you see this error, check whether DPDK is running in the
+  Virtual Addresses mode (VA). Normally, you should see
+  `EAL: Selected IOVA mode 'VA'` during the program initialization. But if you
+  see `EAL: Selected IOVA mode 'PA'`, it's probably that the IOMMU is disable
+  either in the BIOS or in the kernel. If IOMMU is enabled,
+  `/sys/kernel/iommu_groups` path will contain kernel IOMMU groups and thus is
+  not be empty. To enable IOMMU in the kernel, you can add
+  `intel_iommu=on iommu=pt` in GRUB command-line on x86_64 systems, or add
+  `iommu.passthrough=1` on aarch64 systems.
