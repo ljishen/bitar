@@ -75,10 +75,10 @@ set(VCPKG_ROOT
 get_filename_component(_vcpkg_parent_dir "${VCPKG_ROOT}" DIRECTORY)
 file(MAKE_DIRECTORY "${_vcpkg_parent_dir}")
 # Use vcpkg for library management - should be called before defining project():
-# https://github.com/microsoft/vcpkg/tree/2022.07.25#vcpkg-as-a-submodule. If
+# https://github.com/microsoft/vcpkg/tree/2022.08.15#vcpkg-as-a-submodule. If
 # updating vcpkg dependencies is required, use "-DENABLE_VCPKG_UPDATE:BOOL=ON"
 run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
-          "https://github.com/ljishen/vcpkg.git")
+          "https://github.com/ljishen/vcpkg.git" ENABLE_VCPKG_UPDATE)
 
 # Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm, s390x,
 # and ppc64le platforms before running the vcpkg toolchain that is invoked by
