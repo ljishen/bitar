@@ -98,7 +98,7 @@ rte_comp_xform BlueFieldConfiguration::decompress_xform() const noexcept {
 
   // Bug in DPDK that mistakenly checks the hash_algo from the rte_comp_compress_xform
   // instead of from the rte_comp_decompress_xform. See
-  // https://github.com/DPDK/dpdk/blob/v22.03/drivers/compress/mlx5/mlx5_compress.c#L318
+  // https://github.com/DPDK/dpdk/blob/v22.07/drivers/compress/mlx5/mlx5_compress.c#L318
   xform.compress.hash_algo = RTE_COMP_HASH_ALGO_NONE;
   // NOLINTEND(cppcoreguidelines-pro-type-union-access)
   return xform;

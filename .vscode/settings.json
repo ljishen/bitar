@@ -2,9 +2,9 @@
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
   "clang-tidy.compilerArgs": [
     "-DALLOW_EXPERIMENTAL_API",
-    "-std=c++20",
+    "-std=c++17",
     "-isystem",
-    "/home/coder/opt/dpdk-v22.03-${buildKitTargetArch}/include",
+    "/home/coder/opt/dpdk-v22.07-${buildKitTargetArch}/include",
     "-isystem",
     "/home/coder/projects/bitar/build-${buildKitTargetArch}/vcpkg_installed/arm64-linux/include",
     "-isystem",
