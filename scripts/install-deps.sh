@@ -72,7 +72,6 @@ EOF
 # build-essential is required by building include-what-you-use.
 # ninja-build is required by building vcpkg-tool.
 # curl, zip, unzip, tar are required by bootstraping vcpkg.
-# flex, bison are required by building Arrow libraries.
 sudo apt update &&
     $APT_NO_RECOMMENDS install \
         lsb-release \
@@ -85,8 +84,6 @@ sudo apt update &&
         zip \
         unzip \
         tar \
-        flex \
-        bison \
         pkg-config \
         ccache \
         cppcheck
