@@ -21,7 +21,8 @@
 # SOFTWARE.
 
 add_executable(demo_app app_common.cc app_common.h demo_app.cc demo_app.h)
-target_link_libraries(demo_app PRIVATE bitar project_options project_warnings)
+target_link_libraries(demo_app PRIVATE ${PROJECT_NAME} project_options
+                                       project_warnings)
 
 set(DEPENDENCIES_CONFIGURED cxxopts fmt magic_enum)
 foreach(DEPENDENCY ${DEPENDENCIES_CONFIGURED})
