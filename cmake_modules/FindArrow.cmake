@@ -31,27 +31,36 @@
 if(NOT BITAR_BUILD_ARROW)
   # Temporarily remove the path to the .pc files installed by vcpkg to allow
   # looking for system-installed libraries only when we do not intend to build
-  # Arrow.
+  # Arrow. Arrow internally uses the cmake pkg-config module for finding its
+  # dependencies, e.g., in `FindThrift.cmake`.
   set(_backup_PKG_CONFIG_PATH "$ENV{PKG_CONFIG_PATH}")
   set(ENV{PKG_CONFIG_PATH} "${old_PKG_CONFIG_PATH}")
   set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH FALSE)
 
+  if(NOT Arrow_ROOT)
+    # The default system-installed Arrow library is installed at /usr
+    set(Arrow_ROOT "/usr")
+  endif()
+
   if(ARROW_PARQUET)
-    # Since the Parquet library depends on the Arrow library, finding the
-    # Parquet library will import the Arrow library as well.
-    #
     # find_package() for system-installed Parquet library should fail because of
     # a known bug about the misconfigured cmake directory structure:
     # https://issues.apache.org/jira/browse/ARROW-12175. Currently, to
-    # temporarily work around the issue we can pass a cmake variable
-    # `Parquet_ROOT` to manually specify the directory that containing the
+    # temporarily work around this issue we need to set the variable
+    # `Parquet_ROOT` to manually specify the directory list that may contain the
     # `ParquetConfig.cmake` file.
+    set(Parquet_ROOT
+        "${Arrow_ROOT}/lib/${CMAKE_HOST_SYSTEM_PROCESSOR}-linux-gnu/cmake/arrow;${Arrow_ROOT}/lib64/cmake/arrow"
+    )
+
+    # Since the Parquet library depends on the Arrow library, finding the
+    # Parquet library will import the Arrow library as well.
     #
     # Internally, `ParquetConfig.cmake` uses `find_dependency(Arrow)` to load
     # the Arrow-provided `FindArrow.cmake` file. With the existing of the
-    # current file that has the same name in the CMAKE_MODULE_PATH, the Arrow
-    # dependency lookup will become an infinite recursion. Therefore, we need to
-    # temporarily remove the current file from the module search path.
+    # current file that has the same name in the CMAKE_MODULE_PATH, the lookup
+    # of the Arrow dependency becomes an infinite recursion. Therefore, we need
+    # to temporarily remove the current file from the module search path.
     # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/src/parquet/ParquetConfig.cmake.in
     list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
     find_package(Parquet QUIET CONFIG)
@@ -110,7 +119,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "9d1bbaff55e9a25ab8d04f0b70cd4c820a01bea8"
+        "94fc25757864977ddfd3e47b1ef63c020df343ec"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash from the Arrow repository for building when needed"

@@ -144,14 +144,13 @@ else()
     "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig")
 endif()
 
-set(Parquet_ROOT
-    ""
-    CACHE
-      PATH
-      "The directory containing the cmake configuration file for the parquet library"
-)
 option(BITAR_BUILD_ARROW
        "Force to build the Arrow library to be used as the dependency" OFF)
+if(NOT BITAR_BUILD_ARROW)
+  set(Arrow_ROOT
+      ""
+      CACHE PATH "Arrow library installation prefix")
+endif()
 set(arrow_minimum_required_version 8.0.1)
 
 set(IWYU_ROOT

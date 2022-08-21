@@ -50,11 +50,7 @@ vcpkg install bitar
   Otherwise, just having the Arrow library is sufficient.
 
 - Loading the Arrow parquet library will create a CMake target for the arrow and
-  parquet library, respectively.
-
-- Use `Parquet_ROOT` to specify the directory path that contains the file
-  `ParquetConfig.cmake`. For system-installed Arrow library on Ubuntu, the
-  typical directory path would be `/usr/lib/$(uname -m)-linux-gnu/cmake/arrow`.
+  the parquet library, respectively.
 
 - Use `Arrow_ROOT` to specify the installation prefix of the Arrow library if it
   is not installed at the default location. By default, the system-installed
@@ -74,7 +70,6 @@ $ scripts/install-deps.sh
 
 $ CC=clang CXX=clang++ cmake -S . -B ./build-$(uname -m) -G Ninja \
 [-Ddpdk_ROOT:PATH=<dpdk-install-prefix>] \
-[-DParquet_ROOT:PATH=<parquet-cmake-config-file-dir>] \
 [-DArrow_ROOT:PATH=<arrow-install-prefix>] \
 -DBITAR_BUILD_APPS:BOOL=ON -DBITAR_BUILD_TESTS:BOOL=ON \
 -DENABLE_DEVELOPER_MODE:BOOL=ON -DCMAKE_BUILD_TYPE:BOOL=Debug

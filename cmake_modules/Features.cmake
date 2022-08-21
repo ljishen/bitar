@@ -25,7 +25,7 @@ option(BITAR_BUILD_APPS "Build the apps" OFF)
 if(BITAR_BUILD_APPS)
   set(ARROW_PARQUET
       ON
-      CACHE INTERNAL "Build the Parquet libraries")
+      CACHE INTERNAL "Require the Parquet library")
 endif()
 
 option(BITAR_BUILD_DOCS "Build the docs" OFF)
