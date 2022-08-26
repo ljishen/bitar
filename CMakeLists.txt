@@ -78,7 +78,7 @@ file(MAKE_DIRECTORY "${_vcpkg_parent_dir}")
 # https://github.com/microsoft/vcpkg/tree/2022.08.15#vcpkg-as-a-submodule. If
 # updating vcpkg dependencies is required, use "-DENABLE_VCPKG_UPDATE:BOOL=ON"
 run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
-          "https://github.com/ljishen/vcpkg.git" ENABLE_VCPKG_UPDATE)
+          "https://github.com/microsoft/vcpkg.git" ENABLE_VCPKG_UPDATE)
 
 # Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm, s390x,
 # and ppc64le platforms before running the vcpkg toolchain that is invoked by
