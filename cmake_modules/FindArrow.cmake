@@ -169,6 +169,7 @@ else()
         "${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
     set(_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION
         ${CMAKE_INTERPROCEDURAL_OPTIMIZATION})
+    set(_backup_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     unset(CMAKE_CXX_STANDARD)
     unset(CMAKE_C_STANDARD)
     unset(CMAKE_CXX_CPPCHECK)
@@ -177,6 +178,8 @@ else()
     unset(CMAKE_C_CLANG_TIDY)
     unset(CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
     unset(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+    # Inhibit all warning from the library's headers and sources
+    list(APPEND CMAKE_CXX_FLAGS -w)
 
     # Define Arrow minimal build options
     set(ARROW_DEFINE_OPTIONS
@@ -244,6 +247,7 @@ else()
         "${_backup_CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION
         ${_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION})
+    set(CMAKE_CXX_FLAGS "${_backup_CMAKE_CXX_FLAGS}")
     unset(_backup_CMAKE_CXX_STANDARD)
     unset(_backup_CMAKE_C_STANDARD)
     unset(_backup_CMAKE_CXX_CPPCHECK)
@@ -252,6 +256,7 @@ else()
     unset(_backup_CMAKE_C_CLANG_TIDY)
     unset(_backup_CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
     unset(_backup_CMAKE_INTERPROCEDURAL_OPTIMIZATION)
+    unset(_backup_CMAKE_CXX_FLAGS)
   endif()
 
   set(Arrow_IS_BUILT TRUE) # Arrow is built by this project
@@ -313,16 +318,6 @@ if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
           PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
                      "${_${_library_name}_include_dirs}")
         unset(_${_library_name}_include_dirs)
-
-        # Inhibit all warning from the library's headers and sources
-        #
-        # Apply the compile option to the internal library if it exists. See
-        # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/cmake_modules/BuildUtils.cmake#L224
-        if(TARGET ${_library_name}_objlib)
-          target_compile_options(${_library_name}_objlib PRIVATE -w)
-        else()
-          target_compile_options(${_${_library_name}_library} PRIVATE -w)
-        endif()
       else()
         if(${_library_name} STREQUAL parquet)
           # The Arrow-provided `ParquetConfig.cmake` will create the
