@@ -15,11 +15,11 @@
   "cmake.configureOnEdit": false,
   "cmake.configureOnOpen": true,
   "cmake.configureSettings": {
+    "BITAR_BUILD_APPS": true,
+    "BITAR_BUILD_ARROW": false,
+    "BITAR_BUILD_TESTS": true,
     "CMAKE_BUILD_TYPE": "RelWithDebInfo",
     "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/${buildKitTargetArch}/src/vcpkg/scripts/buildsystems/vcpkg.cmake",
-    "BITAR_BUILD_APPS": true,
-    "BITAR_BUILD_TESTS": true,
-    "BITAR_BUILD_ARROW": false,
     "ENABLE_DEVELOPER_MODE": true
   },
   "cmake.defaultVariants": {

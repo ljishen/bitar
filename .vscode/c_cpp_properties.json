@@ -11,8 +11,9 @@
       "includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/src/include",
-        "${env:HOME}/opt/dpdk-v22.07-aarch64/include",
-        "${workspaceFolder}/build-aarch64/vcpkg_installed/arm64-linux/include"
+        "${workspaceFolder}/build-aarch64/vcpkg_installed/arm64-linux/include",
+        "${workspaceFolder}/opt/aarch64/_deps/arrow-src/cpp/src",
+        "${env:HOME}/opt/dpdk-v22.07-aarch64/include"
       ],
       "intelliSenseMode": "linux-clang-arm64"
     },
@@ -27,8 +28,9 @@
       "includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/src/include",
-        "${env:HOME}/opt/dpdk-v22.07-x64/include",
-        "${workspaceFolder}/build-x64/vcpkg_installed/x64-linux/include"
+        "${workspaceFolder}/build-x64/vcpkg_installed/x64-linux/include",
+        "${workspaceFolder}/opt/x64/_deps/arrow-src/cpp/src",
+        "${env:HOME}/opt/dpdk-v22.07-x64/include"
       ],
       "intelliSenseMode": "linux-clang-x64"
     }

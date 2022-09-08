@@ -27,3 +27,5 @@
 
 # Suppress the warning from DPDK v22.07
 preprocessorErrorDirective:*/rte_byteorder.h
+
+preprocessorErrorDirective:*/bits/endian.h
