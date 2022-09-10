@@ -75,7 +75,7 @@ if(NOT BITAR_BUILD_ARROW)
     # Loading the `ArrowConfig.cmake` file will automatically set this to `ON`
     # even though the system may not have the parquet library installed. To be
     # consistent with our configuration, we need to keep this to be `OFF` here.
-    # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/src/arrow/ArrowConfig.cmake.in
+    # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/src/arrow/ArrowConfig.cmake.in#L43
     set(ARROW_PARQUET
         OFF
         CACHE INTERNAL "Build the Parquet libraries")
@@ -120,7 +120,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "99b57e84277f24e8ec1ddadbb11ef8b4f43c8c89"
+        "e63a13aacbf67897202c8a56fccb3a86f624a96e"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash from the Arrow repository for building when needed"

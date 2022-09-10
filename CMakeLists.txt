@@ -59,13 +59,13 @@ if(BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION)
   set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
 endif()
 
-# Add project_options v0.25.0
+# Add project_options v0.25.1
 FetchContent_Declare(
   _project_options
   # Ensure anything that depends on the extracted contents will be rebuilt
   # whenever the URL changes
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-  URL https://github.com/aminya/project_options/archive/refs/tags/v0.25.0.zip)
+  URL https://github.com/aminya/project_options/archive/refs/tags/v0.25.1.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
 
@@ -83,7 +83,7 @@ run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
 # Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm, s390x,
 # and ppc64le platforms before running the vcpkg toolchain that is invoked by
 # the project command. See
-# https://github.com/microsoft/vcpkg-tool/blob/2022-07-21/src/vcpkg.cpp#L230-L239
+# https://github.com/microsoft/vcpkg-tool/blob/2022-09-12/src/vcpkg.cpp#L231-L240
 # The variable CMAKE_HOST_SYSTEM_PROCESSOR cannot be used for checking the host
 # system architecture, because it is set only after the project command.
 if((machine_hardware_name_lower MATCHES "^arm"
