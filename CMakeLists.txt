@@ -59,13 +59,13 @@ if(BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION)
   set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
 endif()
 
-# Add project_options v0.25.1
+# Add project_options v0.25.2
 FetchContent_Declare(
   _project_options
   # Ensure anything that depends on the extracted contents will be rebuilt
   # whenever the URL changes
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-  URL https://github.com/aminya/project_options/archive/refs/tags/v0.25.1.zip)
+  URL https://github.com/aminya/project_options/archive/refs/tags/v0.25.2.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
 
