@@ -83,7 +83,7 @@ run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
 # Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm, s390x,
 # and ppc64le platforms before running the vcpkg toolchain that is invoked by
 # the project command. See
-# https://github.com/microsoft/vcpkg-tool/blob/2022-09-12/src/vcpkg.cpp#L231-L240
+# https://github.com/microsoft/vcpkg-tool/blob/2022-09-20/src/vcpkg.cpp#L231-L240
 # The variable CMAKE_HOST_SYSTEM_PROCESSOR cannot be used for checking the host
 # system architecture, because it is set only after the project command.
 if((machine_hardware_name_lower MATCHES "^arm"
