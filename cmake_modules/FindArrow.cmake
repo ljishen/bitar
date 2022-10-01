@@ -179,7 +179,7 @@ else()
     unset(CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
     unset(CMAKE_INTERPROCEDURAL_OPTIMIZATION)
     # Inhibit all warning from the library's headers and sources
-    list(APPEND CMAKE_CXX_FLAGS -w)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 
     # Define Arrow minimal build options
     set(ARROW_DEFINE_OPTIONS
