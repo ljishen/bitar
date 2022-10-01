@@ -120,7 +120,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "d60d8c6dd497a7a648ede550f1c7fb9ec63b3d42"
+        "89c0214fa43f8d1bf2e19e3bae0fc3009df51e15"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash from the Arrow repository for building when needed"
@@ -289,47 +289,43 @@ find_package_handle_standard_args(
 unset(required_vars)
 unset(version_var)
 
-if(${CMAKE_FIND_PACKAGE_NAME}_FOUND)
-  if(TARGET arrow_static)
-    set(_arrow_library arrow_static)
-  elseif(TARGET arrow_shared)
-    set(_arrow_library arrow_shared)
-  endif()
-
-  if(TARGET parquet_static)
-    set(_parquet_library parquet_static)
-  elseif(TARGET parquet_shared)
-    set(_parquet_library parquet_shared)
-  endif()
-
-  set(_libraries arrow parquet)
-  foreach(_library_name ${_libraries})
-    if(TARGET ${_${_library_name}_library})
-      add_library(Arrow::${_library_name} INTERFACE IMPORTED)
-      target_link_libraries(Arrow::${_library_name}
-                            INTERFACE ${_${_library_name}_library})
-      get_target_property(_${_library_name}_include_dirs
-                          ${_${_library_name}_library} INCLUDE_DIRECTORIES)
-
-      # This is the case where Arrow is built from source
-      if(_${_library_name}_include_dirs)
-        set_target_properties(
-          Arrow::${_library_name}
-          PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                     "${_${_library_name}_include_dirs}")
-        unset(_${_library_name}_include_dirs)
-      else()
-        if(${_library_name} STREQUAL parquet)
-          # The Arrow-provided `ParquetConfig.cmake` will create the
-          # thrift::thrift target via `FindThrift.cmake`
-          # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/cmake_modules/FindThrift.cmake#L28
-          target_link_libraries(Arrow::${_library_name}
-                                INTERFACE thrift::thrift)
-        endif()
-      endif()
-
-      unset(_${_library_name}_library)
-    endif()
-  endforeach()
-  unset(_libraries)
+if(TARGET arrow_static)
+  set(_arrow_library arrow_static)
+elseif(TARGET arrow_shared)
+  set(_arrow_library arrow_shared)
 endif()
+
+if(TARGET parquet_static)
+  set(_parquet_library parquet_static)
+elseif(TARGET parquet_shared)
+  set(_parquet_library parquet_shared)
+endif()
+
+set(_libraries arrow parquet)
+foreach(_library_name ${_libraries})
+  if(TARGET ${_${_library_name}_library})
+    add_library(Arrow::${_library_name} INTERFACE IMPORTED)
+    target_link_libraries(Arrow::${_library_name}
+                          INTERFACE ${_${_library_name}_library})
+    get_target_property(_${_library_name}_include_dirs
+                        ${_${_library_name}_library} INCLUDE_DIRECTORIES)
+
+    # This is the case where Arrow is built from source
+    if(_${_library_name}_include_dirs)
+      set_target_properties(
+        Arrow::${_library_name} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+                                           "${_${_library_name}_include_dirs}")
+      unset(_${_library_name}_include_dirs)
+    else()
+      if(${_library_name} STREQUAL parquet)
+        # The Arrow-provided `ParquetConfig.cmake` will create the
+        # thrift::thrift target via `FindThrift.cmake`
+        # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/cmake_modules/FindThrift.cmake#L28
+        target_link_libraries(Arrow::${_library_name} INTERFACE thrift::thrift)
+      endif()
+    endif()
+
+    unset(_${_library_name}_library)
+  endif()
+endforeach()
+unset(_libraries)
