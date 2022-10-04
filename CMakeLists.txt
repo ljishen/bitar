@@ -75,7 +75,7 @@ set(VCPKG_ROOT
 get_filename_component(_vcpkg_parent_dir "${VCPKG_ROOT}" DIRECTORY)
 file(MAKE_DIRECTORY "${_vcpkg_parent_dir}")
 # Use vcpkg for library management - should be called before defining project():
-# https://github.com/microsoft/vcpkg/tree/2022.08.15#vcpkg-as-a-submodule. If
+# https://github.com/microsoft/vcpkg/tree/2022.09.27#vcpkg-as-a-submodule. If
 # updating vcpkg dependencies is required, use "-DENABLE_VCPKG_UPDATE:BOOL=ON"
 run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
           "https://github.com/microsoft/vcpkg.git" ENABLE_VCPKG_UPDATE)
@@ -83,7 +83,7 @@ run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
 # Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm, s390x,
 # and ppc64le platforms before running the vcpkg toolchain that is invoked by
 # the project command. See
-# https://github.com/microsoft/vcpkg-tool/blob/2022-09-20/src/vcpkg.cpp#L231-L240
+# https://github.com/microsoft/vcpkg-tool/blob/2022-10-17/src/vcpkg.cpp#L281-L290
 # The variable CMAKE_HOST_SYSTEM_PROCESSOR cannot be used for checking the host
 # system architecture, because it is set only after the project command.
 if((machine_hardware_name_lower MATCHES "^arm"
