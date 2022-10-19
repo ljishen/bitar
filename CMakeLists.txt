@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.20)
 
 # set a default CXX and C standard for the tools and targets that do not specify
 # them. If commented, the latest supported standard for your compiler is
@@ -59,13 +59,13 @@ if(BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION)
   set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
 endif()
 
-# Add project_options v0.25.2
+# Add project_options v0.26.1
 FetchContent_Declare(
   _project_options
   # Ensure anything that depends on the extracted contents will be rebuilt
   # whenever the URL changes
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-  URL https://github.com/aminya/project_options/archive/refs/tags/v0.25.2.zip)
+  URL https://github.com/aminya/project_options/archive/refs/tags/v0.26.1.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
 
