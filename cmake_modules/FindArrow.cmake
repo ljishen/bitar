@@ -56,13 +56,15 @@ if(NOT BITAR_BUILD_ARROW)
     # Since the Parquet library depends on the Arrow library, finding the
     # Parquet library will import the Arrow library as well.
     #
-    # For Arrow < v10.0.0, `ParquetConfig.cmake` uses `find_dependency(Arrow)`
-    # to load the Arrow-provided `FindArrow.cmake` file. With the existing of
-    # the current file that has the same name in the CMAKE_MODULE_PATH, the
-    # lookup of the Arrow dependency becomes an infinite recursion. Therefore,
-    # we need to temporarily remove the current file from the module search
-    # path.
-    # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/src/parquet/ParquetConfig.cmake.in
+    # `ParquetConfig.cmake` uses `find_dependency(Arrow)` to load the
+    # Arrow-provided `FindArrow.cmake` (was removed in
+    # https://github.com/apache/arrow/commit/93b63e8f3b4880927ccbd5522c967df79e926cda)
+    # in Arrow < v10.0.0 or `ArrowConfig.cmake` in Arrow >= v10.0.0. With the
+    # existing of the current file in the CMAKE_MODULE_PATH, the call of
+    # `find_dependency(Arrow)` will go back to the current file, causing an
+    # infinite loop. To solve this problem, we need to temporarily remove the
+    # current file from the module search path.
+    # https://github.com/apache/arrow/blob/apache-arrow-10.0.0/cpp/src/parquet/ParquetConfig.cmake.in
     list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
     find_package(Parquet QUIET CONFIG)
     list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
@@ -75,7 +77,7 @@ if(NOT BITAR_BUILD_ARROW)
     # Loading the `ArrowConfig.cmake` file will automatically set this to `ON`
     # even though the system may not have the parquet library installed. To be
     # consistent with our configuration, we need to keep this to be `OFF` here.
-    # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/src/arrow/ArrowConfig.cmake.in#L43
+    # https://github.com/apache/arrow/blob/apache-arrow-10.0.0/cpp/src/arrow/ArrowConfig.cmake.in#L42
     set(ARROW_PARQUET
         OFF
         CACHE INTERNAL "Build the Parquet libraries")
@@ -120,7 +122,7 @@ else()
           "Use the Arrow library from the git repository for building when needed"
     )
     set(BITAR_ARROW_GIT_TAG
-        "98943d90dacb0311fe0d7a17a8ef10762e1c0ef2"
+        "8a5aa6718295eaa3f336125eace4a343a65c922f"
         CACHE
           STRING
           "Use the source at the git branch, tag or commit hash from the Arrow repository for building when needed"
@@ -287,7 +289,6 @@ find_package_handle_standard_args(
   required_vars
   VERSION_VAR version_var)
 unset(required_vars)
-unset(version_var)
 
 if(TARGET arrow_static)
   set(_arrow_library arrow_static)
@@ -317,10 +318,13 @@ foreach(_library_name ${_libraries})
                                            "${_${_library_name}_include_dirs}")
       unset(_${_library_name}_include_dirs)
     else()
-      if(${_library_name} STREQUAL parquet)
-        # The Arrow-provided `ParquetConfig.cmake` will create the
-        # thrift::thrift target via `FindThrift.cmake`
-        # https://github.com/apache/arrow/blob/apache-arrow-9.0.0/cpp/cmake_modules/FindThrift.cmake#L28
+      if(${_library_name} STREQUAL parquet
+         AND TARGET parquet_static
+         AND version_var VERSION_LESS 10.0.0)
+        # The parquet_static target created by the Arrow-provided
+        # `ParquetConfig.cmake` depends on the thrift::thrift target. But they
+        # are not properly linked in Arrow < v10.0.0.
+        # https://issues.apache.org/jira/browse/ARROW-17394
         target_link_libraries(Arrow::${_library_name} INTERFACE thrift::thrift)
       endif()
     endif()
@@ -329,3 +333,5 @@ foreach(_library_name ${_libraries})
   endif()
 endforeach()
 unset(_libraries)
+
+unset(version_var)
