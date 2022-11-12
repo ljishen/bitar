@@ -101,7 +101,11 @@ if [[ "$OS_ID_CODENAME" == "ubuntu_"* ]]; then
     # Use the Kitware APT repository, but it only supports
     # Xenial (16.04), Bionic (18.04), and Focal (20.04).
     # See https://apt.kitware.com/
-    curl -fsSL https://apt.kitware.com/kitware-archive.sh | sudo sh
+    if [[ "$OS_ID_CODENAME" == *"_xenial" ||
+        "$OS_ID_CODENAME" == *"_bionic" ||
+        "$OS_ID_CODENAME" == *"_focal" ]]; then
+        curl -fsSL https://apt.kitware.com/kitware-archive.sh | sudo sh
+    fi
     $APT_NO_RECOMMENDS install cmake cmake-curses-gui
 elif [[ "$OS_ID_CODENAME" == "debian_"* ]]; then
     cat <<EOF | sudo tee /etc/apt/sources.list.d/backports.list >/dev/null
