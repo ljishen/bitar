@@ -3,7 +3,7 @@
   "name": "bitar",
   "homepage": "https://github.com/ljishen/bitar",
   "description": "Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators.",
-  "builtin-baseline": "e6a79ac0183043994ab21a2c4e0f9cdad8a5421c",
+  "builtin-baseline": "6f7ffeb18f99796233b958aaaf14ec7bd4fb64b2",
   "dependencies": [
     {
       "name": "abseil",
