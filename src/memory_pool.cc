@@ -24,7 +24,9 @@
 
 #include <arrow/memory_pool.h>
 #include <arrow/status.h>
+#include <arrow/type_fwd.h>
 #include <arrow/util/logging.h>
+#include <arrow/util/macros.h>
 #include <fmt/format.h>
 #include <rte_common.h>
 #include <rte_cycles.h>
@@ -53,27 +55,29 @@ namespace bitar {
 
 namespace {
 
-constexpr std::uint32_t kAlignment = 64;
 constexpr std::int64_t kDebugXorSuffix = -0x181fe80e0b464188LL;
 
 // A static piece of memory for 0-size allocations, so as to return
 // an aligned non-null pointer.  Note the correct value for DebugAllocator
 // checks is hardcoded.
 // NOLINTNEXTLINE
-alignas(kAlignment) std::int64_t zero_size_area[1] = {kDebugXorSuffix};
+alignas(arrow::kDefaultBufferAlignment) std::int64_t zero_size_area[1] = {
+    kDebugXorSuffix};
 // NOLINTNEXTLINE
 std::uint8_t* const kZeroSizeArea = reinterpret_cast<std::uint8_t*>(&zero_size_area);
 
+/* jscpd:ignore-start */
 class RtemallocAllocator {
  public:
-  static arrow::Status AllocateAligned(std::int64_t size, std::uint8_t** out) {
+  static arrow::Status AllocateAligned(std::int64_t size, std::int64_t alignment,
+                                       std::uint8_t** out) {
     if (size == 0) {
       *out = kZeroSizeArea;
       return arrow::Status::OK();
     }
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    *out = reinterpret_cast<std::uint8_t*>(
-        rte_malloc(nullptr, static_cast<std::size_t>(size), kAlignment));
+    *out = reinterpret_cast<std::uint8_t*>(rte_malloc(
+        nullptr, static_cast<std::size_t>(size), static_cast<std::uint32_t>(alignment)));
     if (*out == nullptr) {
       return arrow::Status::OutOfMemory("malloc of size ", size, " failed");
     }
@@ -81,20 +85,20 @@ class RtemallocAllocator {
   }
 
   static arrow::Status ReallocateAligned(std::int64_t old_size, std::int64_t new_size,
-                                         std::uint8_t** ptr) {
+                                         std::int64_t alignment, std::uint8_t** ptr) {
     std::uint8_t* previous_ptr = *ptr;
     if (previous_ptr == kZeroSizeArea) {
       ARROW_DCHECK_EQ(old_size, 0);
-      return AllocateAligned(new_size, ptr);
+      return AllocateAligned(new_size, alignment, ptr);
     }
     if (new_size == 0) {
-      DeallocateAligned(previous_ptr, old_size);
+      DeallocateAligned(previous_ptr, old_size, alignment);
       *ptr = kZeroSizeArea;
       return arrow::Status::OK();
     }
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    *ptr = reinterpret_cast<std::uint8_t*>(
-        rte_realloc(*ptr, static_cast<std::size_t>(new_size), kAlignment));
+    *ptr = reinterpret_cast<std::uint8_t*>(rte_realloc(
+        *ptr, static_cast<std::size_t>(new_size), static_cast<std::uint32_t>(alignment)));
     if (*ptr == nullptr) {
       *ptr = previous_ptr;
       return arrow::Status::OutOfMemory("realloc of size ", new_size, " failed");
@@ -102,7 +106,8 @@ class RtemallocAllocator {
     return arrow::Status::OK();
   }
 
-  static void DeallocateAligned(std::uint8_t* ptr, std::int64_t size) {
+  static void DeallocateAligned(std::uint8_t* ptr, std::int64_t size,
+                                std::int64_t ARROW_ARG_UNUSED(alignment) /*unused*/) {
     if (ptr == kZeroSizeArea) {
       ARROW_DCHECK_EQ(size, 0);
     } else {
@@ -113,12 +118,14 @@ class RtemallocAllocator {
   // DPDK automatically manages unused memory
   static void ReleaseUnused() {}
 };
+/* jscpd:ignore-end */
 
 }  // namespace
 
 class RtememzoneAllocator {
  public:
-  static arrow::Status AllocateAligned(std::int64_t size, std::uint8_t** out) {
+  static arrow::Status AllocateAligned(std::int64_t size, std::int64_t alignment,
+                                       std::uint8_t** out) {
     if (size == 0) {
       *out = kZeroSizeArea;
       return arrow::Status::OK();
@@ -127,7 +134,8 @@ class RtememzoneAllocator {
     fmt::format_int name(rte_rdtsc());
     const auto* memzone = rte_memzone_reserve_aligned(
         name.c_str(), static_cast<std::size_t>(size),
-        static_cast<std::int32_t>(rte_socket_id()), RTE_MEMZONE_IOVA_CONTIG, kAlignment);
+        static_cast<std::int32_t>(rte_socket_id()), RTE_MEMZONE_IOVA_CONTIG,
+        static_cast<std::uint32_t>(alignment));
     if (memzone == nullptr) {
       return arrow::Status::OutOfMemory("Reserving memzone of ", size,
                                         " bytes failed. [Error ", rte_errno, ": ",
@@ -141,21 +149,21 @@ class RtememzoneAllocator {
   }
 
   static arrow::Status ReallocateAligned(std::int64_t old_size, std::int64_t new_size,
-                                         std::uint8_t** ptr) {
+                                         std::int64_t alignment, std::uint8_t** ptr) {
     std::uint8_t* previous_ptr = *ptr;
     if (previous_ptr == kZeroSizeArea) {
       ARROW_DCHECK_EQ(old_size, 0);
-      return AllocateAligned(new_size, ptr);
+      return AllocateAligned(new_size, alignment, ptr);
     }
     if (new_size == 0) {
-      DeallocateAligned(previous_ptr, old_size);
+      DeallocateAligned(previous_ptr, old_size, alignment);
       *ptr = kZeroSizeArea;
       return arrow::Status::OK();
     }
 
     // Allocate new chunk
     std::uint8_t* out = nullptr;
-    ARROW_RETURN_NOT_OK(AllocateAligned(new_size, &out));
+    ARROW_RETURN_NOT_OK(AllocateAligned(new_size, alignment, &out));
     ARROW_DCHECK(out);
 
     // Copy contents and release old memory chunk
@@ -165,7 +173,8 @@ class RtememzoneAllocator {
     return arrow::Status::OK();
   }
 
-  static void DeallocateAligned(std::uint8_t* ptr, std::int64_t size) {
+  static void DeallocateAligned(std::uint8_t* ptr, std::int64_t size,
+                                std::int64_t ARROW_ARG_UNUSED(alignment) /*unused*/) {
     if (ptr == kZeroSizeArea) {
       ARROW_DCHECK_EQ(size, 0);
     } else {
@@ -187,14 +196,15 @@ static constexpr std::uint8_t kDeallocPoison = 0xBE;
 template <typename Allocator>
 class BaseMemoryPoolImpl : public arrow::MemoryPool {
  public:
-  arrow::Status Allocate(std::int64_t size, std::uint8_t** out) override {
+  arrow::Status Allocate(std::int64_t size, std::int64_t alignment,
+                         std::uint8_t** out) override {
     if (size < 0) {
       return arrow::Status::Invalid("negative malloc size");
     }
     if (static_cast<std::uint64_t>(size) >= std::numeric_limits<std::size_t>::max()) {
       return arrow::Status::OutOfMemory("malloc size overflows size_t");
     }
-    ARROW_RETURN_NOT_OK(Allocator::AllocateAligned(size, out));
+    ARROW_RETURN_NOT_OK(Allocator::AllocateAligned(size, alignment, out));
 #ifndef NDEBUG
     // Poison data
     if (size > 0) {
@@ -212,14 +222,14 @@ class BaseMemoryPoolImpl : public arrow::MemoryPool {
   }
 
   arrow::Status Reallocate(std::int64_t old_size, std::int64_t new_size,
-                           std::uint8_t** ptr) override {
+                           std::int64_t alignment, std::uint8_t** ptr) override {
     if (new_size < 0) {
       return arrow::Status::Invalid("negative realloc size");
     }
     if (static_cast<std::uint64_t>(new_size) >= std::numeric_limits<std::size_t>::max()) {
       return arrow::Status::OutOfMemory("realloc overflows size_t");
     }
-    ARROW_RETURN_NOT_OK(Allocator::ReallocateAligned(old_size, new_size, ptr));
+    ARROW_RETURN_NOT_OK(Allocator::ReallocateAligned(old_size, new_size, alignment, ptr));
 #ifndef NDEBUG
     // Poison data
     if (new_size > old_size) {
@@ -236,7 +246,7 @@ class BaseMemoryPoolImpl : public arrow::MemoryPool {
     return arrow::Status::OK();
   }
 
-  void Free(std::uint8_t* buffer, std::int64_t size) override {
+  void Free(std::uint8_t* buffer, std::int64_t size, std::int64_t alignment) override {
 #ifndef NDEBUG
     // Poison data
     if (size > 0) {
@@ -247,7 +257,7 @@ class BaseMemoryPoolImpl : public arrow::MemoryPool {
       // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
 #endif
-    Allocator::DeallocateAligned(buffer, size);
+    Allocator::DeallocateAligned(buffer, size, alignment);
 
     stats_.UpdateAllocatedBytes(-size);
   }
