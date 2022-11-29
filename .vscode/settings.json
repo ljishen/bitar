@@ -1,5 +1,5 @@
 {
-  "C_Cpp.clang_format_style": "Google",
+  "C_Cpp.clang_format_fallbackStyle": "Google",
   "C_Cpp.formatting": "clangFormat",
   "clang-tidy.compilerArgs": [
     "-DALLOW_EXPERIMENTAL_API",
@@ -142,6 +142,6 @@
   },
   "sshfs.flags": ["DEBUG_SSH2"],
   "terminal.integrated.env.linux": {
-    "MACHINE_HARDWARE_NAME": "x64"
+    "MACHINE_HARDWARE_NAME": "aarch64"
   }
 }

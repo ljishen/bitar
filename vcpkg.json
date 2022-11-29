@@ -3,7 +3,7 @@
   "name": "bitar",
   "homepage": "https://github.com/ljishen/bitar",
   "description": "Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators.",
-  "builtin-baseline": "ab310f1df8988bbfbdae9e701d6ae05ee48f772a",
+  "builtin-baseline": "e82778a710538de07955dea6eb785132c3804d63",
   "dependencies": [
     {
       "name": "abseil",
@@ -17,12 +17,12 @@
     {
       "$explanation": ["Dependency for system-installed Apache Arrow library"],
       "name": "curl",
-      "version>=": "7.86.0",
+      "version>=": "7.86.0#1",
       "default-features": false
     },
     {
       "name": "fmt",
-      "version>=": "9.1.0"
+      "version>=": "9.1.0#1"
     },
     {
       "name": "magic-enum",
@@ -54,7 +54,7 @@
       "dependencies": [
         {
           "name": "catch2",
-          "version>=": "3.1.1#2"
+          "version>=": "3.2.0"
         }
       ]
     }
