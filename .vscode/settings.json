@@ -7,20 +7,20 @@
     "-isystem",
     "/home/coder/opt/dpdk-v22.07-${buildKitTargetArch}/include",
     "-isystem",
-    "/home/coder/projects/bitar/build-${buildKitTargetArch}/vcpkg_installed/arm64-linux/include",
+    "${workspaceFolder}/build-${buildKitTargetArch}/vcpkg_installed/arm64-linux/include",
     "-isystem",
-    "/home/coder/projects/bitar/build-${buildKitTargetArch}/vcpkg_installed/x64-linux/include"
+    "${workspaceFolder}/build-${buildKitTargetArch}/vcpkg_installed/x64-linux/include"
   ],
   "cmake.buildDirectory": "${workspaceFolder}/build-${buildKitTargetArch}",
   "cmake.configureOnEdit": false,
   "cmake.configureOnOpen": true,
   "cmake.configureSettings": {
-    "BITAR_BUILD_APPS": true,
-    "BITAR_BUILD_ARROW": false,
-    "BITAR_BUILD_TESTS": true,
     "CMAKE_BUILD_TYPE": "RelWithDebInfo",
     "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/opt/${buildKitTargetArch}/src/vcpkg/scripts/buildsystems/vcpkg.cmake",
-    "ENABLE_DEVELOPER_MODE": true
+    "ENABLE_DEVELOPER_MODE": true,
+    "BITAR_BUILD_APPS": true,
+    "BITAR_BUILD_ARROW": false,
+    "BITAR_BUILD_TESTS": true
   },
   "cmake.defaultVariants": {
     "buildType": {

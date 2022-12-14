@@ -197,7 +197,8 @@ if [[ -d "$IWYU_SOURCE_DIR" ]]; then
         git fetch origin clang_$LLVM_VERSION &&
         git reset --hard origin/clang_$LLVM_VERSION) ||
         (echo "[INFO] Failed to update the source repository. Removing it before re-cloning..." &&
-            cd .. && rm --force --recursive "$IWYU_SOURCE_DIR")
+            cd .. &&
+            rm --force --recursive "$IWYU_SOURCE_DIR")
 fi
 
 if ! [[ -d "$IWYU_SOURCE_DIR" ]]; then
@@ -206,18 +207,17 @@ if ! [[ -d "$IWYU_SOURCE_DIR" ]]; then
         "$IWYU_SOURCE_DIR" && cd "$IWYU_SOURCE_DIR"
 fi
 
-IWYU_BUILD_DIRNAME=build
+IWYU_BUILD_DIRNAME=build-$MACHINE_HARDWARE_NAME
 CURRENT_COMMIT_HASH=$(git rev-parse HEAD)
 if ! [[ -x "$IWYU_INSTALL_DIR"/bin/include-what-you-use ]] ||
     [[ "${OLD_COMMIT_HASH:-}" != "$CURRENT_COMMIT_HASH" ]]; then
     rm --force --recursive "$IWYU_BUILD_DIRNAME" &&
         mkdir "$IWYU_BUILD_DIRNAME" && cd "$IWYU_BUILD_DIRNAME"
-    cmake -G "Unix Makefiles" \
+    cmake .. -G Ninja \
         -DCMAKE_PREFIX_PATH="/usr/lib/llvm-$LLVM_VERSION" \
-        -DCMAKE_INSTALL_PREFIX="$IWYU_INSTALL_DIR" ..
+        -DCMAKE_INSTALL_PREFIX="$IWYU_INSTALL_DIR"
     # Generate executable "$IWYU_INSTALL_DIR"/bin/include-what-you-use
-    cmake --build . -j
-    cmake --install .
+    ninja install
 else
     echo "[INFO] Nothing to update"
 fi

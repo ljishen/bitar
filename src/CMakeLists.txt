@@ -50,6 +50,9 @@ target_link_system_libraries(${PROJECT_NAME} PRIVATE absl::span fmt::fmt
 # Force the use of compile-time format string checks:
 # https://fmt.dev/latest/api.html#compile-time-format-string-checks
 target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_ENFORCE_COMPILE_STRING)
+# Optimize 'enum_switch' to have O(1) complexity
+# https://github.com/Neargye/magic_enum/releases/tag/v0.8.2
+target_compile_definitions(${PROJECT_NAME} PRIVATE MAGIC_ENUM_ENABLE_HASH)
 
 set(PUBLIC_DEPENDENCIES "dpdk ${dpdk_minimum_required_version}")
 foreach(DEPENDENCY ${PUBLIC_DEPENDENCIES})

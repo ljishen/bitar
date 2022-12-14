@@ -114,7 +114,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> ReadRawData(
     const std::shared_ptr<arrow::io::MemoryMappedFile>& file,
     std::int64_t num_bytes_want) {
   ARROW_ASSIGN_OR_RAISE(auto file_size, file->GetSize());
-  std::int64_t num_bytes_to_read = GetNumBytesToRead(num_bytes_want, file_size);
+  const std::int64_t num_bytes_to_read = GetNumBytesToRead(num_bytes_want, file_size);
 
   ARROW_ASSIGN_OR_RAISE(
       auto buffer,
@@ -155,7 +155,7 @@ arrow::Result<std::shared_ptr<arrow::Buffer>> SerializeTable(
       arrow::ipc::MakeStreamWriter(&mock_output_stream, table->schema(), write_options));
   ARROW_RETURN_NOT_OK(mock_writer->WriteTable(*table));
   ARROW_RETURN_NOT_OK(mock_writer->Close());
-  std::int64_t table_size = mock_output_stream.GetExtentBytesWritten();
+  const std::int64_t table_size = mock_output_stream.GetExtentBytesWritten();
 
   std::shared_ptr<arrow::Buffer> serialized_table;
 
@@ -264,7 +264,7 @@ bool WaitForAsyncCompletion(
   for (std::uint32_t idx = 0; idx < num_parallel_tests(); ++idx) {
     const auto& device = devices[device_id];
 
-    int ret = rte_eal_wait_lcore(device->LcoreOf(queue_pair_id));
+    const int ret = rte_eal_wait_lcore(device->LcoreOf(queue_pair_id));
     if (ret == 0) {
       RTE_LOG(ERR, USER1,
               "Unable to start async operation for queue pair %hu of compress device "
@@ -402,7 +402,7 @@ arrow::Status BenchmarkCompressAsync(
     Advance(device_id, queue_pair_id, device->num_qps());
   }
 
-  bool async_success = WaitForAsyncCompletion(devices);
+  const bool async_success = WaitForAsyncCompletion(devices);
 
   // Avoid missing the opportunity to recycle by waiting till results from all worker
   // lcores are known
@@ -468,7 +468,7 @@ arrow::Status BenchmarkDecompressAsync(
     Advance(device_id, queue_pair_id, device->num_qps());
   }
 
-  bool async_success = WaitForAsyncCompletion(devices);
+  const bool async_success = WaitForAsyncCompletion(devices);
 
   if (!async_success) {
     return arrow::Status::IOError("Failed to complete async decompression");

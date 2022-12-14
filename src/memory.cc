@@ -244,12 +244,12 @@ arrow::Status QueuePairMemory<Class, Enable>::Preallocate() {
   // A burst contains src mbufs and dst mbufs
   auto num_mbufs_in_burst = static_cast<std::uint32_t>(
       configuration_->burst_size() * configuration_->max_sgl_segs() * 2);
-  std::uint32_t mbuf_pool_cache_size =
+  const std::uint32_t mbuf_pool_cache_size =
       RTE_MIN(num_mbufs_in_burst * kCacheSizeAmplifier,
               static_cast<std::uint32_t>(RTE_MEMPOOL_CACHE_MAX_SIZE));
-  std::uint32_t num_inflight_mbufs =
+  const std::uint32_t num_inflight_mbufs =
       RTE_MIN(num_mbufs_in_burst * kMaxInflightOps, kMaxInflightMbufs);
-  std::uint32_t num_mbufs_in_pool =
+  const std::uint32_t num_mbufs_in_pool =
       num_inflight_mbufs + mbuf_pool_cache_size + num_mbufs_in_burst;
 
   auto mbuf_pool_name =
@@ -265,7 +265,7 @@ arrow::Status QueuePairMemory<Class, Enable>::Preallocate() {
   auto operation_pool_cache_size = static_cast<std::uint32_t>(RTE_MIN(
       configuration_->burst_size() * kCacheSizeAmplifier, RTE_MEMPOOL_CACHE_MAX_SIZE));
   // Round up division of `(num_mbufs_in_pool / 2) / configuration_->max_sgl_segs()`
-  std::uint32_t num_ops_in_pool =
+  const std::uint32_t num_ops_in_pool =
       (num_mbufs_in_pool / 2 + configuration_->max_sgl_segs() - 1) /
       configuration_->max_sgl_segs();
 

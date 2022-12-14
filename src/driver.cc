@@ -43,6 +43,7 @@
 #include <vector>
 
 #include <magic_enum.hpp>
+#include <magic_enum_switch.hpp>
 
 #include "include/device.h"
 #include "include/util.h"
@@ -55,8 +56,8 @@ arrow::Status HasDeviceIds(const std::vector<std::uint8_t>& avail_dev_ids,
                            const std::vector<std::uint8_t>& device_ids) {
   std::vector<std::uint8_t> not_avail_dev_ids;
   for (const auto& device_id : device_ids) {
-    bool exists = std::find(std::begin(avail_dev_ids), std::end(avail_dev_ids),
-                            device_id) != std::end(avail_dev_ids);
+    const bool exists = std::find(std::begin(avail_dev_ids), std::end(avail_dev_ids),
+                                  device_id) != std::end(avail_dev_ids);
     if (!exists) {
       not_avail_dev_ids.emplace_back(device_id);
     }
@@ -87,14 +88,13 @@ arrow::Result<T> GetPCIId(const char* device_name) {
       internal::ReadFileContent(fmt::format(
           FMT_STRING("/sys/class/infiniband/{}/device/{}"), device_name, type_name)));
 
-  try {
-    auto pci_id_opt = magic_enum::enum_cast<T>(
-        static_cast<std::uint16_t>(std::stoi(pci_id_str, nullptr, 0)));
-    return pci_id_opt.value();
-  } catch (...) {
+  auto pci_id_opt = magic_enum::enum_cast<T>(
+      static_cast<std::uint16_t>(std::stoi(pci_id_str, nullptr, 0)));
+  if (!pci_id_opt.has_value()) {
     return arrow::Status::NotImplemented("Compress device with ", type_name, "_id '",
                                          pci_id_str, "' is not supported.");
   }
+  return pci_id_opt.value();
 }
 
 arrow::Result<std::vector<std::unique_ptr<MLX5CompressDevice>>> CreateDevices(

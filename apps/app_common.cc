@@ -64,7 +64,7 @@ void InstallSignalHandler() {
 
 std::uint32_t num_parallel_tests() {
   // Reserve one of the lcores as the main lcore
-  static std::uint32_t kNumParallelTests = rte_lcore_count() - 1;
+  static const std::uint32_t kNumParallelTests = rte_lcore_count() - 1;
   return kNumParallelTests;
 }
 

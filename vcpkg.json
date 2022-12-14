@@ -1,9 +1,9 @@
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "bitar",
   "homepage": "https://github.com/ljishen/bitar",
   "description": "Bitar is a C++ library to simplify accessing hardware compression/decompression accelerators.",
-  "builtin-baseline": "e82778a710538de07955dea6eb785132c3804d63",
+  "builtin-baseline": "71f51b100be2b5d32e3907572d99dc2f97088c8d",
   "dependencies": [
     {
       "name": "abseil",
@@ -26,10 +26,12 @@
     },
     {
       "name": "magic-enum",
-      "version>=": "0.8.1"
+      "version>=": "0.8.2"
     },
     {
-      "$explanation": ["Dependency for system-installed Apache Arrow library and DPDK"],
+      "$explanation": [
+        "Dependency for system-installed Apache Arrow library and DPDK"
+      ],
       "name": "openssl"
     }
   ],
@@ -54,7 +56,7 @@
       "dependencies": [
         {
           "name": "catch2",
-          "version>=": "3.2.0"
+          "version>=": "3.2.1"
         }
       ]
     }

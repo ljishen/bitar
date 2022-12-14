@@ -131,7 +131,7 @@ class RtememzoneAllocator {
       return arrow::Status::OK();
     }
 
-    fmt::format_int name(rte_rdtsc());
+    const fmt::format_int name(rte_rdtsc());
     const auto* memzone = rte_memzone_reserve_aligned(
         name.c_str(), static_cast<std::size_t>(size),
         static_cast<std::int32_t>(rte_socket_id()), RTE_MEMZONE_IOVA_CONTIG,
