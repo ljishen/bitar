@@ -59,13 +59,13 @@ if(BITAR_FETCHCONTENT_OVERWRITE_CONFIGURATION)
   set(FETCHCONTENT_BASE_DIR "${MACHINE_OPTIONAL_DIR}/_deps")
 endif()
 
-# Add project_options v0.26.2
+# Add project_options v0.26.3
 FetchContent_Declare(
   _project_options
   # Ensure anything that depends on the extracted contents will be rebuilt
   # whenever the URL changes
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-  URL https://github.com/aminya/project_options/archive/refs/tags/v0.26.2.zip)
+  URL https://github.com/aminya/project_options/archive/refs/tags/v0.26.3.zip)
 FetchContent_MakeAvailable(_project_options)
 include("${_project_options_SOURCE_DIR}/Index.cmake")
 
@@ -75,7 +75,7 @@ set(VCPKG_ROOT
 get_filename_component(_vcpkg_parent_dir "${VCPKG_ROOT}" DIRECTORY)
 file(MAKE_DIRECTORY "${_vcpkg_parent_dir}")
 # Use vcpkg for library management - should be called before defining project():
-# https://github.com/microsoft/vcpkg/tree/2022.11.14#vcpkg-as-a-submodule. If
+# https://github.com/microsoft/vcpkg/tree/2023.01.09#vcpkg-as-a-submodule. If
 # updating vcpkg dependencies is required, use "-DENABLE_VCPKG_UPDATE:BOOL=ON"
 run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
           "https://github.com/microsoft/vcpkg.git" ENABLE_VCPKG_UPDATE)
@@ -83,7 +83,7 @@ run_vcpkg(VCPKG_DIR "${VCPKG_ROOT}" VCPKG_URL
 # Environment variable VCPKG_FORCE_SYSTEM_BINARIES must be set on arm, s390x,
 # and ppc64le platforms before running the vcpkg toolchain that is invoked by
 # the project command. See
-# https://github.com/microsoft/vcpkg-tool/blob/2022-12-14/src/vcpkg.cpp#L275-L284
+# https://github.com/microsoft/vcpkg-tool/blob/2023-01-24/src/vcpkg.cpp#L275-L284
 # The variable CMAKE_HOST_SYSTEM_PROCESSOR cannot be used for checking the host
 # system architecture, because it is set only after the project command.
 if((machine_hardware_name_lower MATCHES "^arm"
