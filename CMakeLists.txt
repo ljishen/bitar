@@ -151,7 +151,7 @@ if(NOT BITAR_BUILD_ARROW)
       ""
       CACHE PATH "Arrow library installation prefix")
 endif()
-set(arrow_minimum_required_version 10.0.0)
+set(arrow_minimum_required_version 11.0.0)
 
 set(IWYU_ROOT
     "${MACHINE_OPTIONAL_DIR}"

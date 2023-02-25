@@ -259,7 +259,7 @@ class BaseMemoryPoolImpl : public arrow::MemoryPool {
 #endif
     Allocator::DeallocateAligned(buffer, size, alignment);
 
-    stats_.UpdateAllocatedBytes(-size);
+    stats_.UpdateAllocatedBytes(-size, /*is_free*/ true);
   }
 
   void ReleaseUnused() override { Allocator::ReleaseUnused(); }
@@ -269,6 +269,14 @@ class BaseMemoryPoolImpl : public arrow::MemoryPool {
   }
 
   [[nodiscard]] std::int64_t max_memory() const override { return stats_.max_memory(); }
+
+  [[nodiscard]] int64_t total_bytes_allocated() const override {
+    return stats_.total_bytes_allocated();
+  }
+
+  [[nodiscard]] int64_t num_allocations() const override {
+    return stats_.num_allocations();
+  }
 
  private:
   arrow::internal::MemoryPoolStats stats_;

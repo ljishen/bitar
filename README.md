@@ -25,7 +25,7 @@ in either DPU mode or separated host mode.
 - For Linux, glibc >= 2.7 (reported by `ldd --version`)
 - GCC >= 9 (C++17 compliant compiler)
 - [DPDK](https://github.com/DPDK/dpdk) >= v21.11 (can be installed via vcpkg)
-- [Apache Arrow](https://github.com/apache/arrow) >= 10.0.0 (build automatically
+- [Apache Arrow](https://github.com/apache/arrow) >= 11.0.0 (build automatically
   if not found)
 
 ## Supported Hardware
@@ -99,13 +99,13 @@ $ ./build-$(uname -m)/apps/demo_app --in-memory --lcores 5@(0-7),6-7 \
 
 - `BITAR_ARROW_GIT_TAG`: use the source at the git branch, tag or commit hash
   from the Arrow repository for building when needed (default
-  `apache-arrow-10.0.0`)
+  `apache-arrow-11.0.0`)
 
 - `BITAR_INSTALL_ARROW`: install the Arrow library as part of the cmake
   installation process if Arrow is built by this project (default: `OFF`)
 
 - Any
-  [Arrow supported CMake options](https://github.com/apache/arrow/blob/apache-arrow-10.0.0/cpp/cmake_modules/DefineOptions.cmake),
+  [Arrow supported CMake options](https://github.com/apache/arrow/blob/apache-arrow-11.0.0/cpp/cmake_modules/DefineOptions.cmake),
   e.g., `ARROW_WITH_LZ4`, `ARROW_WITH_ZSTD`, and `ARROW_WITH_SNAPPY`.
 
 ## Known Issues

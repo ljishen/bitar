@@ -753,7 +753,7 @@ int main(int argc, char* argv[]) {
     auto file_read_mode_opt = magic_enum::enum_cast<bitar::app::FileReadMode>(
         parse_result["mode"].as<std::uint8_t>());
     file_read_mode = file_read_mode_opt.value_or(bitar::app::FileReadMode::kRaw);
-  } catch (const cxxopts::OptionException& e) {
+  } catch (const cxxopts::exceptions::exception& e) {
     bitar::CleanupAndExit(EXIT_FAILURE, e.what());
   }
 
